@@ -54,7 +54,6 @@ functions/
   api/ticket.js                    GET  /api/ticket?token=
   api/checkin.js                   GET  /api/checkin?token=   (legacy link: 302 to the ticket)
   api/door.js                      GET/POST /api/door          (staff scanner API)
-  api/guests.js                    GET  /api/guests?q=         (legacy, unused by UI)
   ticket/[token].js                GET  /ticket/:token         (ticket page)
   staff/rose-door-10.js            GET  /staff/rose-door-10    (camera QR scanner)
 sql/schema.sql                     Full schema for a fresh Supabase project
@@ -108,7 +107,6 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
 | GET | `/api/checkin?token=` | `functions/api/checkin.js` | Read-only. `302` to `checkInRedirectPath(token)`: `/ticket/<token>`, or `/` for a missing/malformed token |
 | GET | `/api/door` | `functions/api/door.js` | The 80 most recent check-ins, guest and plus-one as separate entries (`doorScans`) |
 | POST | `/api/door` | `functions/api/door.js` | Body `{token\|value\|url}` (parsed by `tokenFromValue`) → finds the guest or plus-one ticket → PATCHes `checked_in_at` or `plus_one_checked_in_at` (`is.null` guard) → `checked_in` / `already_checked_in`; the ticket object never includes tokens or ids |
-| GET | `/api/guests?q=` | `functions/api/guests.js` | Legacy guest-list search (duplicates helpers inline) |
 | GET | `/ticket/:token` | `functions/ticket/[token].js` | Server-rendered ticket page |
 | GET | `/staff/rose-door-10` | `functions/staff/rose-door-10.js` | Server-rendered camera scanner |
 
