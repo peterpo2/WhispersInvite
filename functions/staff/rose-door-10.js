@@ -4,30 +4,43 @@ export async function onRequestGet() {
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#070605"/>
 <title>WHISPERS Door</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&amp;family=Jost:wght@300;400&amp;display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#0B0908;--bg2:#12100E;--gold:#D9AE78;--red:#A31621;--bone:#EDE6DA;--muted:#8C8176;--serif:'Cormorant Garamond',Cambria,Georgia,serif;--sans:'Jost','Helvetica Neue',Arial,sans-serif}
-*{box-sizing:border-box}body{margin:0;min-height:100svh;background:var(--bg);color:var(--bone);font-family:var(--sans);font-weight:300;padding:calc(18px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
-body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 0,rgba(217,174,120,.12),transparent 38%);pointer-events:none}
-main{position:relative;max-width:1100px;margin:0 auto}.top{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:6px 0 18px}
-.k{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}h1{font-family:var(--serif);font-weight:300;font-size:36px;margin:5px 0 0}
-.panel{border:1px solid rgba(217,174,120,.36);background:var(--bg2);padding:16px;margin-bottom:14px}
-.camera{position:relative;aspect-ratio:3/4;max-height:72svh;background:#000;overflow:hidden;display:grid;place-items:center}.camera video{width:100%;height:100%;object-fit:cover}.scanline{position:absolute;left:8%;right:8%;height:1px;background:var(--gold);box-shadow:0 0 18px var(--gold);animation:sweep 2.2s ease-in-out infinite}@keyframes sweep{0%,100%{top:18%}50%{top:82%}}
-@media(min-width:640px){.camera{aspect-ratio:4/3;max-height:68svh}}
-@media(min-width:1024px){.camera{aspect-ratio:16/9;max-height:65svh}}
+:root{--bg:#070605;--gold:#D9AE78;--gold-hi:#EBCB95;--red:#A31621;--bone:#EDE6DA;--muted:#B4A99D;--line:rgba(217,174,120,.24);--serif:'Cormorant Garamond',Cambria,Georgia,serif;--sans:'Jost','Helvetica Neue',Arial,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}html{background:var(--bg)}
+body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--bone);font-family:var(--sans);font-weight:300;font-size:16px;padding:calc(16px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(20px + env(safe-area-inset-bottom))}
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(70% 40% at 50% -6%,rgba(217,174,120,.1),transparent 62%),radial-gradient(120% 60% at 50% 112%,rgba(90,11,19,.36),transparent 64%),linear-gradient(180deg,#0A0807,#070605 55%,#060404)}
+main{position:relative;max-width:1100px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}.brand img{width:46px;height:46px;flex:0 0 46px;filter:drop-shadow(0 0 16px rgba(163,22,33,.3))}
+.k{font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold)}h1{font-family:var(--serif);font-weight:300;font-size:32px;line-height:1.05;margin:2px 0 0}
+.panel{padding:16px 0;margin:0;border-bottom:1px solid var(--line)}
+.camera{position:relative;aspect-ratio:3/4;max-height:64svh;width:100%;background:#000;overflow:hidden;display:grid;place-items:center;padding:0;border:1px solid rgba(217,174,120,.4);border-radius:3px;margin-bottom:4px}
+.camera video{width:100%;height:100%;object-fit:cover}
+.camera:before,.camera:after{content:"";position:absolute;z-index:1;width:26px;height:26px;border:solid var(--gold);pointer-events:none}.camera:before{top:12px;left:12px;border-width:2px 0 0 2px}.camera:after{bottom:12px;right:12px;border-width:0 2px 2px 0}
+.scanline{position:absolute;left:8%;right:8%;height:1px;background:var(--gold);box-shadow:0 0 18px var(--gold);animation:sweep 2.2s ease-in-out infinite}@keyframes sweep{0%,100%{top:18%}50%{top:82%}}
+@media(min-width:640px){.camera{aspect-ratio:4/3;max-height:60svh}}
+@media(min-width:1024px){.camera{aspect-ratio:16/9;max-height:58svh}}
 @media (prefers-reduced-motion:reduce){.scanline{animation:none;top:50%}}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}button,input{height:48px;border:1px solid rgba(217,174,120,.55);background:rgba(255,255,255,.035);color:var(--bone);padding:0 14px;font:300 12px var(--sans);letter-spacing:.3em;text-transform:uppercase}button.primary{background:rgba(217,174,120,.16);color:#F3C78F}button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-offset:2px}.manual{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:10px}.manual input{text-transform:none;letter-spacing:0;font-size:16px;min-width:0}
-.result{min-height:104px}.result h2{font-family:var(--serif);font-weight:300;font-size:31px;margin:0 0 8px}.result p{color:#D8CEC2;line-height:1.5;margin:4px 0}.ok h2{color:#E8C28B}.bad h2{color:#FF9F9F}
-.warn{border-color:var(--red);background:rgba(163,22,33,.16)}.warn h2{color:#E0707A}.warn p{color:var(--bone)}
-.list{display:grid;gap:8px}.row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid rgba(217,174,120,.16);padding-top:10px}.row b{font-family:var(--serif);font-weight:400;font-size:17px}.row span{color:var(--muted);font-size:12px;text-align:right}.small{color:#B5AA9E;font-size:12px;line-height:1.5}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button,input{min-height:54px;border:1px solid rgba(217,174,120,.58);border-radius:3px;background:rgba(8,6,5,.4);color:var(--bone);padding:0 14px;font:400 13px var(--sans);letter-spacing:.26em;text-transform:uppercase;cursor:pointer}
+button.primary{color:#1C130A;border-color:#E6C48C;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%)}
+button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+.manual{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:10px}.manual input{text-transform:none;letter-spacing:0;font:400 18px var(--serif);min-width:0;cursor:text}
+.result{min-height:112px}.result h2{font-family:var(--serif);font-weight:300;font-size:40px;line-height:1.05;margin:0 0 8px}.result p{color:#D8CEC2;font-size:18px;line-height:1.45;margin:4px 0}.result b{font-family:var(--serif);font-weight:400;font-size:26px;color:#F6EFE4}
+.ok h2{color:var(--gold-hi)}.bad h2{color:#FF9F9F}
+.warn{background:rgba(163,22,33,.18);border:1px solid var(--red);border-radius:3px;padding:16px;margin:12px 0}.warn h2{color:#E8808A}.warn p{color:var(--bone)}
+.list{display:grid;margin-top:8px}.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid rgba(217,174,120,.14);padding:12px 0}.row:first-child{border-top:0}.row b{font-family:var(--serif);font-weight:400;font-size:21px;min-width:0;overflow-wrap:anywhere}.row span{color:var(--muted);font-size:13px;text-align:right;white-space:nowrap}
+.small{color:var(--muted);font-size:14px;line-height:1.55;margin:12px 0 0}
 </style>
 </head>
 <body>
 <main>
-<div class="top"><div><div class="k">WHISPERS</div><h1>Door scanner</h1></div><button id="refresh">Refresh</button></div>
+<div class="top"><div class="brand"><img src="/assets/whispers-mark.png" alt=""/><div><div class="k">WHISPERS</div><h1>Door</h1></div></div><button id="refresh">Refresh</button></div>
 <section class="panel camera"><video id="video" playsinline muted></video><div class="scanline"></div></section>
 <section class="panel">
 <div class="actions"><button class="primary" id="start">Open camera</button><button id="stop">Stop</button></div>

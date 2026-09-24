@@ -19,35 +19,46 @@ export async function onRequestGet({ params, request }) {
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#070605"/>
 <title>WHISPERS Ticket</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&amp;family=Jost:wght@300;400&amp;display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#0B0908;--bg2:#12100E;--gold:#D9AE78;--bone:#EDE6DA;--mute:#8C8176;--paper:#F1E9DC;--serif:'Cormorant Garamond',Cambria,Georgia,serif;--sans:'Jost','Helvetica Neue',Arial,sans-serif}
-*{box-sizing:border-box}body{margin:0;min-height:100svh;background:var(--bg);color:var(--bone);font-family:var(--serif);font-weight:300;display:grid;place-items:center;padding:calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
-body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 8%,rgba(217,174,120,.12),transparent 38%);pointer-events:none}
-.ticket{position:relative;width:min(390px,100%);border:1px solid rgba(217,174,120,.48);padding:clamp(24px,6vw,38px) clamp(18px,6vw,28px);text-align:center;background:var(--bg2);box-shadow:0 28px 90px rgba(0,0,0,.62)}
-.rose,.code,.state{font-family:var(--sans);font-weight:300;text-transform:uppercase;letter-spacing:.3em}
-.rose{font-size:11px;color:var(--gold);margin-bottom:14px}
-h1{font-weight:300;font-size:clamp(28px,8vw,36px);line-height:1.1;margin:10px 0 2px;overflow-wrap:anywhere}.role{font-style:italic;color:#CDBB9F;margin:0 0 14px;font-size:17px}.rule{height:1px;background:linear-gradient(90deg,transparent,rgba(217,174,120,.58),transparent);margin:clamp(14px,3vh,21px) 0}
-.code{font-size:14px;letter-spacing:.24em;color:var(--gold)}.qr{width:168px;height:168px;margin:clamp(12px,3vh,20px) auto;background:var(--paper);padding:10px;display:grid;place-items:center}.qr canvas{width:148px!important;height:148px!important}
-.qr.fallback{width:auto;height:auto;color:var(--bg);font:400 12px/1.5 var(--sans);letter-spacing:.02em;overflow-wrap:anywhere;text-align:left}
-.meta{font-size:18px;line-height:1.6;color:var(--bone);margin:8px 0}.meta b{font-weight:400;color:#FAF6EF}.small{font-size:15px;line-height:1.6;color:#CFC5BA;margin-top:14px}
-.state{font-size:11px;color:var(--gold);margin-top:14px;min-height:14px}
+:root{--bg:#070605;--gold:#D9AE78;--gold-hi:#EBCB95;--bone:#EDE6DA;--mute:#BDB2A5;--paper:#F1E9DC;--line:rgba(217,174,120,.26);--serif:'Cormorant Garamond',Cambria,Georgia,serif;--sans:'Jost','Helvetica Neue',Arial,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}html{background:var(--bg)}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;background:var(--bg);color:var(--bone);font-family:var(--serif);font-weight:300;padding:calc(24px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom))}
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 40% at 50% 36%,rgba(120,78,36,.26),transparent 72%),radial-gradient(120% 60% at 50% 112%,rgba(90,11,19,.4),transparent 64%),linear-gradient(180deg,#0A0807,#070605 55%,#060404)}
+body:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.6) 100%)}
+.ticket{width:100%;max-width:480px;margin:auto;text-align:center}
+.mark{display:block;width:60px;height:60px;margin:0 auto;filter:drop-shadow(0 0 22px rgba(163,22,33,.3))}
+.rose{font-weight:300;font-size:22px;letter-spacing:.44em;margin:12px 0 0 .44em;color:var(--gold)}
+.rose:after{content:"";display:block;width:48px;height:1px;margin:16px auto 0;background:rgba(217,174,120,.65)}
+h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 0 6px;color:#F7F0E6;overflow-wrap:anywhere}
+.role{font-style:italic;color:#CDB894;margin:0;font-size:22px}
+.rule{position:relative;width:84px;height:1px;margin:22px auto;background:linear-gradient(90deg,transparent,rgba(217,174,120,.85),transparent)}
+.rule:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;background:var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
+.code,.state{font-family:var(--sans);font-weight:300;text-transform:uppercase}
+.code{font-size:21px;letter-spacing:.24em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,174,120,.4)}
+.qr{width:min(62vw,230px);height:min(62vw,230px);margin:22px auto;background:var(--paper);padding:10px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
+.qr.fallback{width:auto;height:auto;color:var(--bg);font:400 13px/1.5 var(--sans);overflow-wrap:anywhere;text-align:left}
+.meta{font-size:21px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}.meta b{font-weight:400;color:#F6EFE4}
+#bringing{display:block;border-top:1px solid rgba(217,174,120,.14);padding-top:10px;margin-top:10px}#bringing:empty{display:none}
+.small{font-style:italic;font-size:19px;line-height:1.55;color:#CFC3B3;margin:22px auto 0;max-width:360px}
+.state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
 </style>
 </head>
 <body>
 <main class="ticket">
+<img class="mark" src="/assets/whispers-mark.png" alt=""/>
 <div class="rose">WHISPERS</div>
 <h1 id="guest">…</h1>
 <p class="role">Private guest</p>
 <div class="rule"></div>
 <div class="code" id="code">WSP · 10</div>
 <div class="qr" id="qr"></div>
-<p class="meta">Saturday <b>10 October</b><br/>Doors <b>22:00</b><br/>Sofia Center</p>
-<p class="meta" id="bringing"></p>
-<div class="rule"></div>
+<p class="meta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/>Sofia Center<span id="bringing"></span></p>
 <p class="small">Show this seal at the door. The QR confirms your place in the WHISPERS list.</p>
 <p class="state" id="state"></p>
 </main>
@@ -70,7 +81,7 @@ h1{font-weight:300;font-size:clamp(28px,8vw,36px);line-height:1.1;margin:10px 0 
   $('state').textContent=t.checked_in_at?'Already checked in':'Ready for the door';
   const qr=$('qr');
   const fallback=()=>{qr.classList.add('fallback');qr.textContent=ticketUrl;};
-  if(window.QRCode){QRCode.toCanvas(ticketUrl,{width:148,margin:1,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else qr.appendChild(canvas);});}else{fallback();}
+  if(window.QRCode){QRCode.toCanvas(ticketUrl,{width:384,margin:1,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else qr.appendChild(canvas);});}else{fallback();}
 })();
 </script>
 </body>
