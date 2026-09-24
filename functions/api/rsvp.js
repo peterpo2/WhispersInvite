@@ -1,8 +1,9 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { buildCheckInUrl, buildRsvpRow, buildTicketUrl, isDuplicatePlusOneEmail, validateRsvpPayload } from "../_shared/rsvp.js";
+import { buildCheckInUrl, buildRsvpRow, buildTicketUrl, isDuplicatePlusOneEmail, isDuplicateSealCode, validateRsvpPayload } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const DUPLICATE_EMAIL = "This email is already on the guest list.";
+const MAX_SEAL_CODE_RETRIES = 3;
 
 export async function onRequestPost({ request, env }) {
   let body;
@@ -15,7 +16,7 @@ export async function onRequestPost({ request, env }) {
   const valid = validateRsvpPayload(body);
   if (valid.error) return json({ error: valid.error }, 400);
 
-  const row = buildRsvpRow(body);
+  let row = buildRsvpRow(body);
 
   if (row.plus_one_email) {
     const duplicate = await supabaseFetch(
@@ -32,25 +33,31 @@ export async function onRequestPost({ request, env }) {
     }
   }
 
-  const saved = await supabaseFetch(env, "/rest/v1/rsvps", {
-    method: "POST",
-    headers: {
-      Prefer: "return=minimal",
-    },
-    body: JSON.stringify(row),
-  });
+  for (let attempt = 1; ; attempt += 1) {
+    const saved = await supabaseFetch(env, "/rest/v1/rsvps", {
+      method: "POST",
+      headers: {
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(row),
+    });
 
-  if (saved.error) return saved.error;
-  if (saved.response.status === 409) {
+    if (saved.error) return saved.error;
+    if (saved.response.ok) break;
+    if (saved.response.status !== 409) return json({ error: "Could not save RSVP" }, 502);
+
     const pgError = await saved.response.json().catch(() => null);
     if (isDuplicatePlusOneEmail(pgError)) return json({ error: DUPLICATE_EMAIL }, 409);
-    return json({ error: "Could not save RSVP" }, 502);
+    if (!isDuplicateSealCode(pgError) || attempt > MAX_SEAL_CODE_RETRIES) {
+      return json({ error: "Could not save RSVP" }, 502);
+    }
+    row = buildRsvpRow(body);
   }
-  if (!saved.response.ok) return json({ error: "Could not save RSVP" }, 502);
 
   return json({
     ok: true,
     ticketToken: row.ticket_token,
+    sealCode: row.seal_code,
     ticketUrl: buildTicketUrl(request.url, row.ticket_token),
     checkInUrl: buildCheckInUrl(request.url, row.ticket_token),
   });

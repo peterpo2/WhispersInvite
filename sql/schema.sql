@@ -24,6 +24,9 @@ create index if not exists guest_list_name_idx on guest_list using gin (to_tsvec
 create unique index if not exists rsvps_event_plus_one_email_unique
   on rsvps (event_key, lower(plus_one_email))
   where plus_one_email is not null;
+create unique index if not exists rsvps_event_seal_code_unique
+  on rsvps (event_key, seal_code)
+  where seal_code is not null;
 create unique index if not exists rsvps_ticket_token_unique
   on rsvps (ticket_token)
   where ticket_token is not null;
