@@ -96,7 +96,7 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
 ### Routes (Pages Functions, file-based routing)
 | Method | Path | File | Behaviour |
 |---|---|---|---|
-| POST | `/api/rsvp` | `functions/api/rsvp.js` | Validate → reject a plus-one email already used by an attending guest of this event (`409`) → plain insert into `rsvps` (`Prefer: return=minimal`; an insert `409` also maps to the duplicate-email error) → returns only `{ ok, ticketToken, ticketUrl, checkInUrl }` |
+| POST | `/api/rsvp` | `functions/api/rsvp.js` | Validate → reject a plus-one email already used by an attending guest of this event (`409`) → plain insert into `rsvps` (`Prefer: return=minimal`; an insert `409` maps to the duplicate-email error only when `isDuplicatePlusOneEmail(pgError)` is true; any other `409` returns `502`) → returns only `{ ok, ticketToken, ticketUrl, checkInUrl }` |
 | GET | `/api/ticket?token=` | `functions/api/ticket.js` | Ticket JSON for an attending RSVP |
 | GET | `/api/checkin?token=` | `functions/api/checkin.js` | Sets `checked_in_at` and returns a small HTML result page |
 | GET | `/api/door` | `functions/api/door.js` | The 80 most recent check-ins |
@@ -148,6 +148,8 @@ first, so the result is "already checked in".
   - `tokenFromValue(value)`: pulls a ticket token from a scanned check-in URL, ticket URL or
     bare token. It returns `""` unless the result is 32–40 alphanumeric chars.
   - `normalizeEmail`: trims and lowercases.
+  - `isDuplicatePlusOneEmail(pgError)`: true only for a Postgres `23505` unique violation whose
+    message mentions `plus_one_email`.
   - `validateGuestQuery(q)`: queries must be 2–80 chars.
   - `siteOriginFromRequestUrl`, `buildTicketUrl`, `buildCheckInUrl`: build absolute URLs from
     the request origin.
@@ -197,7 +199,8 @@ first, so the result is "already checked in".
   `schema.sql` to match.
 - `2026-09-24-rsvp-columns.sql` idempotently adds the columns and indexes that production may be
   missing: `checked_in_at` was indexed but never added by the door-scanner migration, and the
-  plus-one email unique index was never created. Run it by hand in the Supabase SQL editor.
+  plus-one email unique index was never created. It also drops the legacy
+  `rsvps_guest_id_fkey`. Run it by hand in the Supabase SQL editor.
 
 ## Coding conventions
 
