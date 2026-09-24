@@ -34,7 +34,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 .result{min-height:112px}.result h2{font-family:var(--serif);font-weight:300;font-size:40px;line-height:1.05;margin:0 0 8px}.result p{color:#D8CEC2;font-size:18px;line-height:1.45;margin:4px 0}.result b{font-family:var(--serif);font-weight:400;font-size:26px;color:#F6EFE4}
 .ok h2{color:var(--gold-hi)}.bad h2{color:#FF9F9F}
 .warn{background:rgba(163,22,33,.18);border:1px solid var(--red);border-radius:3px;padding:16px;margin:12px 0}.warn h2{color:#E8808A}.warn p{color:var(--bone)}
-.list{display:grid;margin-top:8px}.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid rgba(217,174,120,.14);padding:12px 0}.row:first-child{border-top:0}.row b{font-family:var(--serif);font-weight:400;font-size:21px;min-width:0;overflow-wrap:anywhere}.row b small{display:block;font:300 13px var(--sans);color:var(--muted);margin-top:2px}.row span{color:var(--muted);font-size:13px;text-align:right;white-space:nowrap}
+.list{display:grid;margin-top:8px}.row.latest{background:rgba(217,174,120,.1);box-shadow:-10px 0 0 rgba(217,174,120,.1),10px 0 0 rgba(217,174,120,.1);animation:latest 1.2s ease}@keyframes latest{from{background:rgba(217,174,120,.32)}}.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid rgba(217,174,120,.14);padding:12px 0}.row:first-child{border-top:0}.row b{font-family:var(--serif);font-weight:400;font-size:21px;min-width:0;overflow-wrap:anywhere}.row b small{display:block;font:300 13px var(--sans);color:var(--muted);margin-top:2px}.row span{color:var(--muted);font-size:13px;text-align:right;white-space:nowrap}
 .small{color:var(--muted);font-size:14px;line-height:1.55;margin:12px 0 0}
 </style>
 </head>
@@ -60,8 +60,9 @@ function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&l
 function hhmm(iso){return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
 async function scanValue(value,manual){
   if(!value) return;
-  if(!manual){const last=seen.get(value),now=Date.now();seen.set(value,now);if(last&&now-last<REPEAT_MS) return;}
+  if(!manual){const last=seen.get(value),now=Date.now();seen.set(value,now);if(last&&now-last<REPEAT_MS) return;stopCamera();}
   show('', 'Checking…', '<p>Reading the seal.</p>');
+  revealResult();
   let res,data;
   try{res=await fetch('/api/door',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({value})});data=await res.json().catch(()=>({}));}
   catch(e){seen.delete(value);show('warn','No connection.','<p>Try again.</p>');return;}
@@ -74,8 +75,10 @@ async function scanValue(value,manual){
   }else{
     show('ok','Confirmed.','<p><b>'+esc(t.guest_name)+'</b></p>'+who+'<p>'+esc(t.seal_code||'')+'</p>');
   }
-  loadList();
+  await loadList(data.status==='checked_in');
+  revealResult();
 }
+function revealResult(){result.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});}
 // Native detector where the browser has one (Android Chrome); jsQR everywhere else (iPhone).
 let detector=null;
 try{if('BarcodeDetector' in window)detector=new BarcodeDetector({formats:['qr_code']});}catch(_){detector=null;}
@@ -141,6 +144,7 @@ async function startCamera(deviceId){
   video.setAttribute('playsinline','');video.muted=true;
   video.srcObject=stream;await video.play();
   document.getElementById('switch').disabled=cameras.length<2;
+  document.querySelector('.camera').scrollIntoView({behavior:'smooth',block:'start'});
   show('', 'Scanning…', '<p>Hold the QR inside the frame, 20–40 cm away. Tap the picture to refocus.</p>');
   scheduleScan();
 }
@@ -158,13 +162,14 @@ video.addEventListener('click',async(e)=>{
   try{if(caps.focusMode&&caps.focusMode.includes('single-shot'))await track.applyConstraints({advanced:[{pointsOfInterest:[point],focusMode:'single-shot'}]});}catch(_){}
   try{if(caps.focusMode&&caps.focusMode.includes('continuous'))await track.applyConstraints({advanced:[{focusMode:'continuous'}]});}catch(_){}
 });
-function stopCamera(){if(loop)clearTimeout(loop);loop=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}video.srcObject=null;}
-async function loadList(){
+function stopCamera(){if(loop)clearTimeout(loop);loop=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;document.getElementById('start').textContent='Scan next';}video.srcObject=null;}
+async function loadList(markLatest){
   let res,data;
   try{res=await fetch('/api/door',{headers:{'Accept':'application/json'}});data=await res.json().catch(()=>({}));}
   catch(e){list.innerHTML='<p class="small">No connection. Try again.</p>';return;}
   if(!res.ok){list.innerHTML='<p class="small">Could not load the list. Try again.</p>';return;}
   list.innerHTML=(data.scans||[]).map(s=>'<div class="row"><b>'+esc(s.guest_name)+(s.brought_by?'<small>Guest of '+esc(s.brought_by)+'</small>':'')+'</b><span>'+esc(s.seal_code||'')+'<br>'+esc(hhmm(s.checked_in_at))+'</span></div>').join('')||'<p class="small">No scanned tickets yet.</p>';
+  const first=list.querySelector('.row');if(markLatest&&first)first.classList.add('latest');
 }
 document.getElementById('switch').onclick=switchCamera;
 document.getElementById('start').onclick=()=>startCamera().catch(e=>{stopCamera();show('bad','Camera blocked.','<p>Allow camera access or paste the QR value manually.</p>');});
