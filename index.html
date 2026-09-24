@@ -372,7 +372,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 (function(){
   const $ = (s) => document.querySelector(s);
   const SUBMIT_URL = '/api/rsvp';
-  const state = { guestName:null, guestId:null, attending:null, plusOne:null, sealCode:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null };
+  const state = { guestName:null, guestId:null, referral:null, attending:null, plusOne:null, sealCode:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null };
 
   // ── Token personalisation ──────────────────────────
   const urlToken = new URLSearchParams(window.location.search).get('token') || null;
@@ -381,6 +381,8 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data || !data.found || state.guestName) return;
+        // Referral link: no name on the seal; the guest writes their own after the details.
+        if (data.referral) { state.referral = urlToken; return; }
         state.guestName = data.name;
         state.guestId   = data.id || urlToken;
         // Show name on seal screen
@@ -458,7 +460,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 
   async function submitRSVP(extra){
     if(!state.guestName) return {ok:false,error:'Please give your full name.'};
-    const payload={guestName:state.guestName,guestId:state.guestId||undefined,status:extra.status,plusOne:extra.plusOne||null};
+    const payload={guestName:state.guestName,guestId:state.referral?undefined:state.guestId||undefined,referral:state.referral||undefined,status:extra.status,plusOne:extra.plusOne||null};
     const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),12000);
     try{
       const res=await fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),signal:ctl.signal});
@@ -483,10 +485,11 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
     state.ticketUrl=result.data?.ticketUrl||(tkn?window.location.origin+'/ticket/'+encodeURIComponent(tkn):null);
     if(!state.ticketUrl){setBusy(false,$('#pstate'));$('#perr').textContent='We could not save your RSVP. Please try again.';return;}
     $('#pstate').textContent='';
-    state.plusOne=plusOne;state.sealCode=result.data?.sealCode||'WSP · 10';
-    state.plusTicketUrl=plusOne?result.data?.plusOneTicketUrl||null:null;state.plusSealCode=result.data?.plusOneSealCode||null;
+    state.plusTicketUrl=result.data?.plusOneTicketUrl||null;state.plusSealCode=result.data?.plusOneSealCode||null;
+    const plusName=state.plusTicketUrl?(result.data?.plusOneName||plusOne?.name||null):null;
+    state.plusOne=plusName?{name:plusName}:null;state.sealCode=result.data?.sealCode||'WSP · 10';
     $('#passname').textContent=state.guestName;$('#passcode').textContent=state.sealCode;
-    $('#bringingLine').innerHTML=plusOne?'Bringing <b>'+escapeHtml(plusOne.name)+'</b>':'Coming on your own';
+    $('#bringingLine').innerHTML=state.plusOne?'Bringing <b>'+escapeHtml(state.plusOne.name)+'</b>':'Coming on your own';
     makeQR(state.ticketUrl);
     show('#s-done');
     buildTicketCards();

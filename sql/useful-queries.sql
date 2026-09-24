@@ -31,11 +31,35 @@ select
   r.plus_one_name,
   r.seal_code,
   r.submitted_at,
-  'https://whispers-invite.pages.dev/hi/' || g.id         as invitation_link
+  'https://whispers-invite.pages.dev/hi/' || g.id         as invitation_link,
+  'https://whispers-invite.pages.dev/hi/' || g.id || 'referral' as referral_link
 from public.guest_list g
 left join public.rsvps r
   on r.guest_id = g.id and r.event_key = 'whispers-2026-10-10'
 order by g.name;
+
+
+-- ── 2b. WHO CAME THROUGH A REFERRAL LINK (READ) ──────────────────────
+-- guest_id looks like '<inviter id>/referral/<typed name>'.
+select
+  split_part(r.guest_id, '/referral/', 1) as invited_by_id,
+  g.name                                   as invited_by,
+  r.guest_name,
+  r.status,
+  r.plus_one_name,
+  r.submitted_at
+from public.rsvps r
+left join public.guest_list g on g.id = split_part(r.guest_id, '/referral/', 1)
+where r.event_key = 'whispers-2026-10-10' and r.guest_id like '%/referral/%'
+order by invited_by, r.submitted_at;
+
+-- How many each guest brought in through their referral link:
+select split_part(guest_id, '/referral/', 1) as invited_by_id,
+       count(*) filter (where status = 'attending') as attending,
+       count(*) filter (where status = 'attending' and plus_one_name is not null) as with_plus_one
+from public.rsvps
+where event_key = 'whispers-2026-10-10' and guest_id like '%/referral/%'
+group by 1 order by 2 desc;
 
 
 -- ── 3. EVERYONE ATTENDING, ONE ROW PER PERSON (READ) ─────────────────
@@ -70,7 +94,7 @@ where event_key = 'whispers-2026-10-10' and status = 'attending'
 order by guest_name;
 
 
--- ── 6. REPLIES FROM THE PLAIN LINK (no personal /hi/ invitation) (READ)
+-- ── 6. REPLIES FROM THE PLAIN LINK (no personal or referral link) (READ)
 select guest_name, status, plus_one_name, submitted_at
 from public.rsvps
 where event_key = 'whispers-2026-10-10' and guest_id = ticket_token

@@ -25,6 +25,8 @@ All SQL you may need: [`sql/useful-queries.sql`](sql/useful-queries.sql)
 - [ ] RSVP deadline (names fixed after the 7th).
 
 ## Done
+- [x] Referral links `/hi/<id>referral`: no name on the seal, the guest writes their own, +1 allowed.
+- [x] Repeat RSVP keeps an earlier +1 unless a different +1 is entered.
 - [x] Invitation flow: seal, film, details, RSVP, plus-one, ticket, decline.
 - [x] Personal links `/hi/<id>` (name on the seal); the plain link asks for a full name.
 - [x] Cinematic full-screen design, new logo files, iPhone ring fix.

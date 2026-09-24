@@ -1,9 +1,10 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { buildCheckInUrl, buildRsvpRow, buildRsvpUpdate, buildTicketUrl, isDuplicatePlusOneEmail, isDuplicateSealCode, validateRsvpPayload } from "../_shared/rsvp.js";
+import { buildCheckInUrl, buildRsvpRow, buildRsvpUpdate, buildTicketUrl, isDuplicatePlusOneEmail, isDuplicateSealCode, referralBase, referralGuestId, validateRsvpPayload } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const DUPLICATE_EMAIL = "This email is already on the guest list.";
 const ALREADY_INSIDE = "This invitation has already been used at the door.";
+const INVALID_LINK = "This invitation link is not valid.";
 const MAX_SEAL_CODE_RETRIES = 3;
 
 export async function onRequestPost({ request, env }) {
@@ -16,6 +17,19 @@ export async function onRequestPost({ request, env }) {
 
   const valid = validateRsvpPayload(body);
   if (valid.error) return json({ error: valid.error }, 400);
+
+  // Referral link (/hi/<id>referral): the inviter must be on the guest list. The server,
+  // not the browser, decides the guest id: one RSVP per typed name on that link.
+  if (body.referral) {
+    const base = referralBase(body.referral);
+    if (!base) return json({ error: INVALID_LINK }, 400);
+    const inviter = await supabaseFetch(env, `/rest/v1/guest_list?select=id&id=eq.${encodeURIComponent(base)}&limit=1`);
+    if (inviter.error) return inviter.error;
+    if (!inviter.response.ok) return json({ error: "Could not save RSVP" }, 502);
+    const [found] = await inviter.response.json();
+    if (!found) return json({ error: INVALID_LINK }, 404);
+    body = { ...body, guestId: referralGuestId(found.id, body.guestName) };
+  }
 
   let row = buildRsvpRow(body);
   const guestFilter = `event_key=eq.${encodeURIComponent(row.event_key)}&guest_id=eq.${encodeURIComponent(row.guest_id)}`;
@@ -36,7 +50,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   if (body.guestId) {
-    const lookup = await supabaseFetch(env, `/rest/v1/rsvps?select=ticket_token,seal_code,checked_in_at,plus_one_email,plus_one_ticket_token,plus_one_seal_code,plus_one_checked_in_at&${guestFilter}&limit=1`);
+    const lookup = await supabaseFetch(env, `/rest/v1/rsvps?select=ticket_token,seal_code,checked_in_at,plus_one_name,plus_one_email,plus_one_ticket_token,plus_one_seal_code,plus_one_checked_in_at&${guestFilter}&limit=1`);
     if (lookup.error) return lookup.error;
     if (!lookup.response.ok) return json({ error: "Could not save RSVP" }, 502);
 
@@ -66,7 +80,7 @@ export async function onRequestPost({ request, env }) {
       const rows = await updated.response.json();
       if (!rows.length) return json({ error: ALREADY_INSIDE }, 409);
 
-      return ticketResponse(request.url, existing.ticket_token, patch.seal_code, patch.plus_one_ticket_token, patch.plus_one_seal_code);
+      return ticketResponse(request.url, existing.ticket_token, patch.seal_code, patch.plus_one_ticket_token, patch.plus_one_seal_code, patch.plus_one_name);
     }
   }
 
@@ -91,10 +105,10 @@ export async function onRequestPost({ request, env }) {
     row = buildRsvpRow(body);
   }
 
-  return ticketResponse(request.url, row.ticket_token, row.seal_code, row.plus_one_ticket_token, row.plus_one_seal_code);
+  return ticketResponse(request.url, row.ticket_token, row.seal_code, row.plus_one_ticket_token, row.plus_one_seal_code, row.plus_one_name);
 }
 
-function ticketResponse(requestUrl, ticketToken, sealCode, plusOneTicketToken, plusOneSealCode) {
+function ticketResponse(requestUrl, ticketToken, sealCode, plusOneTicketToken, plusOneSealCode, plusOneName) {
   return json({
     ok: true,
     ticketToken,
@@ -103,6 +117,7 @@ function ticketResponse(requestUrl, ticketToken, sealCode, plusOneTicketToken, p
     checkInUrl: buildCheckInUrl(requestUrl, ticketToken),
     plusOneTicketToken: plusOneTicketToken || null,
     plusOneSealCode: plusOneSealCode || null,
+    plusOneName: plusOneTicketToken ? plusOneName || null : null,
     plusOneTicketUrl: plusOneTicketToken ? buildTicketUrl(requestUrl, plusOneTicketToken) : null,
   });
 }

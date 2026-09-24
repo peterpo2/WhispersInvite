@@ -2,6 +2,8 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
 const TOKEN_RE = /^[A-Za-z0-9]{32,40}$/;
 const MAX_NAME = 120;
 const MAX_EMAIL = 254;
+const REFERRAL_SUFFIX = "referral";
+const REFERRAL_RE = /^([A-Za-z0-9_-]+)referral$/i;
 const REDIRECT_TOKEN_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
 export const EVENT_KEY = "whispers-2026-10-10";
@@ -24,6 +26,10 @@ export function validateRsvpPayload(body) {
   }
 
   if (body.guestId != null && (typeof body.guestId !== "string" || body.guestId.length > MAX_NAME)) {
+    return { error: "Invalid RSVP" };
+  }
+
+  if (body.referral != null && (typeof body.referral !== "string" || body.referral.length > MAX_NAME + REFERRAL_SUFFIX.length)) {
     return { error: "Invalid RSVP" };
   }
 
@@ -80,27 +86,49 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
   };
 }
 
-// The PATCH for a repeat RSVP from the same invitation. The guest keeps their ticket.
-// The plus-one keeps theirs only if it is the same person (same email); a new person
-// gets a new ticket, and the old one stops working.
+// Names compare without case, extra spaces or Unicode look-alikes.
+export function nameKey(value) {
+  return String(value || "").normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+// The PATCH for a repeat RSVP from the same invitation. The guest always keeps their ticket.
+// - No plus-one given this time (and still attending): the existing plus-one stays as is.
+// - The same plus-one (same name and email): they keep their ticket.
+// - A different plus-one: a new ticket; the old one stops working.
+// - Declining: the plus-one and their ticket are cleared.
 export function buildRsvpUpdate(row, existing) {
+  const keepPlusOne = row.status === "attending" && !row.plus_one_email && Boolean(existing.plus_one_ticket_token);
   const samePlusOne = Boolean(
     row.plus_one_email &&
     existing.plus_one_ticket_token &&
-    normalizeEmail(existing.plus_one_email) === row.plus_one_email
+    normalizeEmail(existing.plus_one_email) === row.plus_one_email &&
+    nameKey(existing.plus_one_name) === nameKey(row.plus_one_name)
   );
   const patch = {
     guest_name: row.guest_name,
     status: row.status,
-    plus_one_name: row.plus_one_name,
-    plus_one_email: row.plus_one_email,
+    plus_one_name: keepPlusOne ? existing.plus_one_name : row.plus_one_name,
+    plus_one_email: keepPlusOne ? existing.plus_one_email : row.plus_one_email,
     seal_code: existing.seal_code || row.seal_code,
-    plus_one_ticket_token: samePlusOne ? existing.plus_one_ticket_token : row.plus_one_ticket_token,
-    plus_one_seal_code: samePlusOne ? existing.plus_one_seal_code || row.plus_one_seal_code : row.plus_one_seal_code,
+    plus_one_ticket_token: keepPlusOne || samePlusOne ? existing.plus_one_ticket_token : row.plus_one_ticket_token,
+    plus_one_seal_code: keepPlusOne || samePlusOne ? existing.plus_one_seal_code || row.plus_one_seal_code : row.plus_one_seal_code,
     submitted_at: row.submitted_at,
   };
-  if (!samePlusOne) patch.plus_one_checked_in_at = null;
+  if (!keepPlusOne && !samePlusOne) patch.plus_one_checked_in_at = null;
   return patch;
+}
+
+// "michellegreferral" → "michelleg": the inviter's guest_list id, or null.
+export function referralBase(token) {
+  if (typeof token !== "string") return null;
+  const match = REFERRAL_RE.exec(token.trim());
+  return match ? match[1] : null;
+}
+
+// Everyone who joins through a referral link gets their own RSVP, keyed by the typed name,
+// so the same name on the same link finds the same ticket again.
+export function referralGuestId(baseId, name) {
+  return `${baseId}/referral/${nameKey(name)}`;
 }
 
 // One RSVP row holds up to two tickets. Return the one this token opens, for its holder.

@@ -155,8 +155,17 @@ first, so the result is "already checked in".
   - Each plus-one has their **own ticket**: `plus_one_ticket_token`, `plus_one_seal_code`,
     `plus_one_checked_in_at` (the second `makeId()` / `makeSeal()` call in `buildRsvpRow`).
     `/api/rsvp` returns `plusOneTicketToken`, `plusOneSealCode`, `plusOneTicketUrl`.
-  - `buildRsvpUpdate` keeps the plus-one's ticket only when the email is unchanged; a new plus-one
-    gets a new ticket. `/api/rsvp` refuses (409) to replace a plus-one who is already inside.
+  - `buildRsvpUpdate` rules for a repeat RSVP from the same link: no plus-one given this time →
+    the existing plus-one and their ticket stay; the same plus-one (`nameKey` name and email) →
+    same ticket; a different plus-one → a new ticket and the old one stops working; declining →
+    the plus-one is cleared. `/api/rsvp` refuses (409) to replace a plus-one who is already
+    inside, and returns `plusOneName` so the page can show a kept plus-one's ticket.
+  - Referral links `/hi/<id>referral` (or `/?token=<id>referral`): `referralBase(token)` gives
+    the inviter's id. `/api/guest-check` answers `{ found, referral: true }` with no name, the page
+    asks for the guest's name, and the RSVP body carries `referral`. `/api/rsvp` checks the
+    inviter exists in `guest_list` and sets `guest_id = referralGuestId(id, name)`
+    (`<id>/referral/<nameKey(name)>`), ignoring any client `guestId`. Unlimited people per link;
+    the same typed name finds the same ticket.
   - `buildRsvpUpdate(row, existing)`: the PATCH for a repeat RSVP from the same invitation. It
     carries name, status, plus-one and `submitted_at`, keeps `existing.seal_code` (a guest who
     first declined gets the new one), and never touches `ticket_token`, `guest_id` or `event_key`.
