@@ -1,22 +1,17 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
+import { tokenFromValue } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
-
-function tokenFromValue(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  try {
-    const parsed = new URL(raw);
-    return parsed.searchParams.get("token") || parsed.pathname.split("/").filter(Boolean).pop() || "";
-  } catch {
-    return raw;
-  }
-}
 
 async function findTicket(env, token) {
   return supabaseFetch(
     env,
     `/rest/v1/rsvps?select=id,guest_name,plus_one_name,seal_code,checked_in_at,status,submitted_at&ticket_token=eq.${encodeURIComponent(token)}&limit=1`
   );
+}
+
+function publicTicket(ticket) {
+  const { id, status, ...rest } = ticket;
+  return rest;
 }
 
 export async function onRequestGet({ env }) {
@@ -36,6 +31,7 @@ export async function onRequestPost({ request, env }) {
   } catch {
     return json({ error: "Invalid scan" }, 400);
   }
+  if (!body || typeof body !== "object") return json({ error: "Invalid scan" }, 400);
 
   const token = tokenFromValue(body.token || body.value || body.url);
   if (!token) return json({ error: "Missing ticket token" }, 400);
@@ -51,11 +47,11 @@ export async function onRequestPost({ request, env }) {
 
   const ticket = rows[0];
   if (ticket.checked_in_at) {
-    return json({ ok: true, status: "already_checked_in", ticket });
+    return json({ ok: true, status: "already_checked_in", ticket: publicTicket(ticket) });
   }
 
   const checkedAt = new Date().toISOString();
-  const update = await supabaseFetch(env, `/rest/v1/rsvps?id=eq.${encodeURIComponent(ticket.id)}`, {
+  const update = await supabaseFetch(env, `/rest/v1/rsvps?id=eq.${encodeURIComponent(ticket.id)}&checked_in_at=is.null`, {
     method: "PATCH",
     headers: {
       Prefer: "return=representation",
@@ -67,7 +63,11 @@ export async function onRequestPost({ request, env }) {
   if (!update.response.ok) return json({ error: "Could not check in ticket" }, 502);
 
   const updatedRows = await update.response.json();
-  return json({ ok: true, status: "checked_in", ticket: updatedRows[0] || { ...ticket, checked_in_at: checkedAt } });
+  if (!updatedRows.length) {
+    return json({ ok: true, status: "already_checked_in", ticket: publicTicket(ticket) });
+  }
+
+  return json({ ok: true, status: "checked_in", ticket: publicTicket({ ...ticket, checked_in_at: checkedAt }) });
 }
 
 export async function onRequest() {

@@ -64,7 +64,7 @@ export async function onRequestGet({ request, env }) {
   }
 
   const checkedAt = new Date().toISOString();
-  const update = await supabaseFetch(env, `/rest/v1/rsvps?id=eq.${encodeURIComponent(ticket.id)}`, {
+  const update = await supabaseFetch(env, `/rest/v1/rsvps?id=eq.${encodeURIComponent(ticket.id)}&checked_in_at=is.null`, {
     method: "PATCH",
     headers: {
       Prefer: "return=representation",
@@ -73,6 +73,15 @@ export async function onRequestGet({ request, env }) {
   });
   if (update.error) return update.error;
   if (!update.response.ok) return page("Ticket error", `<p class="k">WHISPERS</p><h1>Could not check in.</h1><p>Please try again.</p>`, 502);
+
+  const updatedRows = await update.response.json();
+  if (!updatedRows.length) {
+    return page(
+      "Already checked in",
+      `<p class="k">WHISPERS</p><h1>Already inside.</h1><p><b>${escapeHtml(ticket.guest_name)}</b>${ticket.plus_one_name ? ` with <b>${escapeHtml(ticket.plus_one_name)}</b>` : ""}</p>`,
+      200
+    );
+  }
 
   return page(
     "Checked in",
