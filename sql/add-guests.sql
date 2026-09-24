@@ -3,7 +3,7 @@
 --  Run in Supabase SQL Editor to add guests and get their links.
 --
 --  Each guest gets a unique token (their invitation URL).
---  Link format: https://whispers-invite.pages.dev/?token=michelleg
+--  Link format: https://whispers-invite.pages.dev/hi/michelleg
 -- ══════════════════════════════════════════════════════════════
 
 -- ── Test guests (use these until you have the real list) ──────
@@ -20,7 +20,7 @@ SELECT
   id,
   name,
   email,
-  'https://whispers-invite.pages.dev/?token=' || id AS invitation_link,
+  'https://whispers-invite.pages.dev/hi/' || id AS invitation_link,
   created_at
 FROM public.guest_list
 ORDER BY name;

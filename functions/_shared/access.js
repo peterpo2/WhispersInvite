@@ -10,8 +10,9 @@ const PUBLIC_PATHS = new Set([
 ]);
 
 const TICKET_PATH_RE = /^\/ticket\/[^/]+$/;
+const HI_PATH_RE = /^\/hi\/[^/]+$/;
 
 export function isPublicPath(pathname) {
   if (typeof pathname !== "string") return false;
-  return PUBLIC_PATHS.has(pathname) || TICKET_PATH_RE.test(pathname);
+  return PUBLIC_PATHS.has(pathname) || TICKET_PATH_RE.test(pathname) || HI_PATH_RE.test(pathname);
 }
