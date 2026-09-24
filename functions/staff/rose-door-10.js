@@ -144,7 +144,6 @@ async function startCamera(deviceId){
   video.setAttribute('playsinline','');video.muted=true;
   video.srcObject=stream;await video.play();
   document.getElementById('switch').disabled=cameras.length<2;
-  document.querySelector('.camera').scrollIntoView({behavior:'smooth',block:'start'});
   show('', 'Scanning…', '<p>Hold the QR inside the frame, 20–40 cm away. Tap the picture to refocus.</p>');
   scheduleScan();
 }
@@ -172,7 +171,8 @@ async function loadList(markLatest){
   const first=list.querySelector('.row');if(markLatest&&first)first.classList.add('latest');
 }
 document.getElementById('switch').onclick=switchCamera;
-document.getElementById('start').onclick=()=>startCamera().catch(e=>{stopCamera();show('bad','Camera blocked.','<p>Allow camera access or paste the QR value manually.</p>');});
+function toTop(){window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+document.getElementById('start').onclick=()=>{toTop();startCamera().catch(e=>{stopCamera();show('bad','Camera blocked.','<p>Allow camera access or paste the QR value manually.</p>');});};
 document.getElementById('stop').onclick=stopCamera;
 document.getElementById('manualBtn').onclick=()=>scanValue(document.getElementById('manual').value.trim(),true);
 document.getElementById('refresh').onclick=loadList;
