@@ -8,6 +8,7 @@ import {
   buildCheckInUrl,
   checkInRedirectPath,
   buildRsvpRow,
+  buildRsvpUpdate,
   buildTicketUrl,
   makeSealCode,
   makeTicketToken,
@@ -287,4 +288,45 @@ test("the old check-in link redirects to the ticket page", () => {
   assert.equal(checkInRedirectPath("//evil.example"), "/");
   assert.equal(checkInRedirectPath("a b"), "/");
   assert.equal(checkInRedirectPath("a".repeat(65)), "/");
+});
+
+test("repeat RSVP update keeps the existing ticket and seal code", () => {
+  const row = buildRsvpRow(
+    { guestId: "michelleg", guestName: "Michelle Georgieva", status: "attending", plusOne: { name: "Simona Ivanova", email: "Simona@Example.com" } },
+    () => "newtoken000000000000000000000000",
+    FIXED_NOW,
+    FIXED_SEAL
+  );
+  const patch = buildRsvpUpdate(row, { ticket_token: TOKEN, seal_code: "WSP·10·KEEP" });
+
+  assert.deepEqual(patch, {
+    guest_name: "Michelle Georgieva",
+    status: "attending",
+    plus_one_name: "Simona Ivanova",
+    plus_one_email: "simona@example.com",
+    seal_code: "WSP·10·KEEP",
+    submitted_at: "2026-09-24T21:00:00.000Z",
+  });
+  assert.equal("ticket_token" in patch, false);
+  assert.equal("guest_id" in patch, false);
+  assert.equal("event_key" in patch, false);
+});
+
+test("repeat RSVP update gives a seal code to a guest who first declined", () => {
+  const row = buildRsvpRow({ guestId: "g1", guestName: "Peter Popov", status: "attending" }, () => TOKEN, FIXED_NOW, FIXED_SEAL);
+  assert.equal(buildRsvpUpdate(row, { ticket_token: TOKEN, seal_code: null }).seal_code, "WSP·10·TEST");
+});
+
+test("repeat RSVP decline clears the plus-one and keeps the seal code", () => {
+  const row = buildRsvpRow(
+    { guestId: "g1", guestName: "Peter Popov", status: "declined", plusOne: { name: "Simona Ivanova", email: "simona@example.com" } },
+    () => TOKEN,
+    FIXED_NOW,
+    FIXED_SEAL
+  );
+  const patch = buildRsvpUpdate(row, { ticket_token: TOKEN, seal_code: "WSP·10·KEEP" });
+  assert.equal(patch.status, "declined");
+  assert.equal(patch.plus_one_name, null);
+  assert.equal(patch.plus_one_email, null);
+  assert.equal(patch.seal_code, "WSP·10·KEEP");
 });

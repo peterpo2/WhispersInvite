@@ -1,8 +1,9 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { buildCheckInUrl, buildRsvpRow, buildTicketUrl, isDuplicatePlusOneEmail, isDuplicateSealCode, validateRsvpPayload } from "../_shared/rsvp.js";
+import { buildCheckInUrl, buildRsvpRow, buildRsvpUpdate, buildTicketUrl, isDuplicatePlusOneEmail, isDuplicateSealCode, validateRsvpPayload } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const DUPLICATE_EMAIL = "This email is already on the guest list.";
+const ALREADY_INSIDE = "This invitation has already been used at the door.";
 const MAX_SEAL_CODE_RETRIES = 3;
 
 export async function onRequestPost({ request, env }) {
@@ -17,11 +18,12 @@ export async function onRequestPost({ request, env }) {
   if (valid.error) return json({ error: valid.error }, 400);
 
   let row = buildRsvpRow(body);
+  const guestFilter = `event_key=eq.${encodeURIComponent(row.event_key)}&guest_id=eq.${encodeURIComponent(row.guest_id)}`;
 
   if (row.plus_one_email) {
     const duplicate = await supabaseFetch(
       env,
-      `/rest/v1/rsvps?select=id&event_key=eq.${encodeURIComponent(row.event_key)}&status=eq.attending&plus_one_email=eq.${encodeURIComponent(row.plus_one_email)}&limit=1`
+      `/rest/v1/rsvps?select=id&event_key=eq.${encodeURIComponent(row.event_key)}&status=eq.attending&plus_one_email=eq.${encodeURIComponent(row.plus_one_email)}&guest_id=neq.${encodeURIComponent(row.guest_id)}&limit=1`
     );
 
     if (duplicate.error) return duplicate.error;
@@ -30,6 +32,38 @@ export async function onRequestPost({ request, env }) {
     const rows = await duplicate.response.json();
     if (rows.length > 0) {
       return json({ error: DUPLICATE_EMAIL }, 409);
+    }
+  }
+
+  if (body.guestId) {
+    const lookup = await supabaseFetch(env, `/rest/v1/rsvps?select=ticket_token,seal_code,checked_in_at&${guestFilter}&limit=1`);
+    if (lookup.error) return lookup.error;
+    if (!lookup.response.ok) return json({ error: "Could not save RSVP" }, 502);
+
+    const [existing] = await lookup.response.json();
+    if (existing) {
+      if (existing.checked_in_at) return json({ error: ALREADY_INSIDE }, 409);
+
+      const patch = buildRsvpUpdate(row, existing);
+      const updated = await supabaseFetch(env, `/rest/v1/rsvps?${guestFilter}&checked_in_at=is.null`, {
+        method: "PATCH",
+        headers: {
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify(patch),
+      });
+
+      if (updated.error) return updated.error;
+      if (!updated.response.ok) {
+        const pgError = await updated.response.json().catch(() => null);
+        if (isDuplicatePlusOneEmail(pgError)) return json({ error: DUPLICATE_EMAIL }, 409);
+        return json({ error: "Could not save RSVP" }, 502);
+      }
+
+      const rows = await updated.response.json();
+      if (!rows.length) return json({ error: ALREADY_INSIDE }, 409);
+
+      return ticketResponse(request.url, existing.ticket_token, patch.seal_code);
     }
   }
 
@@ -54,12 +88,16 @@ export async function onRequestPost({ request, env }) {
     row = buildRsvpRow(body);
   }
 
+  return ticketResponse(request.url, row.ticket_token, row.seal_code);
+}
+
+function ticketResponse(requestUrl, ticketToken, sealCode) {
   return json({
     ok: true,
-    ticketToken: row.ticket_token,
-    sealCode: row.seal_code,
-    ticketUrl: buildTicketUrl(request.url, row.ticket_token),
-    checkInUrl: buildCheckInUrl(request.url, row.ticket_token),
+    ticketToken,
+    sealCode,
+    ticketUrl: buildTicketUrl(requestUrl, ticketToken),
+    checkInUrl: buildCheckInUrl(requestUrl, ticketToken),
   });
 }
 
