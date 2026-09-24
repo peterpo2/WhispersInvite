@@ -34,21 +34,25 @@ test("RSVP requires a selected guest and valid status", () => {
     validateRsvpPayload({ guestName: "Peter Popov", status: "attending" }).ok,
     true
   );
-  assert.equal(
-    validateRsvpPayload({ guestName: "Peter", status: "attending" }).error,
-    "Please give your full name."
-  );
+  assert.equal(validateRsvpPayload({ guestName: "Peter", status: "attending" }).ok, true);
 });
 
-test("plus-one requires full name and valid email", () => {
+test("RSVP rejects a guest id that is not a short string", () => {
+  const base = { guestName: "Peter Popov", status: "attending" };
+  assert.equal(validateRsvpPayload({ ...base, guestId: "petarp" }).ok, true);
+  assert.equal(validateRsvpPayload({ ...base, guestId: 42 }).error, "Invalid RSVP");
+  assert.equal(validateRsvpPayload({ ...base, guestId: "x".repeat(121) }).error, "Invalid RSVP");
+});
+
+test("plus-one requires a name and valid email", () => {
   assert.equal(
     validateRsvpPayload({
       guestId: "g1",
       guestName: "Peter Popov",
       status: "attending",
       plusOne: { name: "Simona", email: "simona@example.com" },
-    }).error,
-    "Please give their full name."
+    }).ok,
+    true
   );
 
   assert.equal(
@@ -143,7 +147,7 @@ test("builds normalized RSVP row for Supabase", () => {
   });
 });
 
-test("RSVP row ignores client-supplied token, guest id, event and timestamp", () => {
+test("RSVP row ignores client-supplied token, event and timestamp", () => {
   const row = buildRsvpRow(
     {
       event: "some-other-event",
@@ -160,8 +164,13 @@ test("RSVP row ignores client-supplied token, guest id, event and timestamp", ()
   assert.equal(EVENT_KEY, "whispers-2026-10-10");
   assert.equal(row.event_key, EVENT_KEY);
   assert.equal(row.ticket_token, TOKEN);
-  assert.equal(row.guest_id, TOKEN);
+  assert.equal(row.guest_id, "g1");
   assert.equal(row.submitted_at, "2026-09-24T21:00:00.000Z");
+});
+
+test("RSVP row falls back to the ticket token when there is no invitation guest id", () => {
+  const row = buildRsvpRow({ guestName: "Peter Popov", status: "attending" }, () => TOKEN, FIXED_NOW);
+  assert.equal(row.guest_id, TOKEN);
 });
 
 test("RSVP row ignores a client-supplied seal code and uses the generated one", () => {

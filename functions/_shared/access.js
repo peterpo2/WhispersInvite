@@ -6,12 +6,14 @@ const PUBLIC_PATHS = new Set([
   "/api/checkin",
   "/api/door",
   "/api/guests",
+  "/api/guest-check",
   "/staff/rose-door-10",
 ]);
 
 const TICKET_PATH_RE = /^\/ticket\/[^/]+$/;
+const HI_PATH_RE = /^\/hi\/[^/]+$/;
 
 export function isPublicPath(pathname) {
   if (typeof pathname !== "string") return false;
-  return PUBLIC_PATHS.has(pathname) || TICKET_PATH_RE.test(pathname);
+  return PUBLIC_PATHS.has(pathname) || TICKET_PATH_RE.test(pathname) || HI_PATH_RE.test(pathname);
 }
