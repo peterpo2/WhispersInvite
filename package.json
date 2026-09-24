@@ -1,0 +1,11 @@
+{
+  "name": "whispers-invite",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "wrangler": "^4.39.0"
+  }
+}

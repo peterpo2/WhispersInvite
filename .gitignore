@@ -1,0 +1,11 @@
+node_modules/
+.wrangler/
+.wrangler-config/
+.dev.vars
+.env
+.env.*
+dist/
+coverage/
+.DS_Store
+Thumbs.db
+New Text Document (2).txt
