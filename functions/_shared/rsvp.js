@@ -37,10 +37,6 @@ export function validateRsvpPayload(body) {
     return { error: "Invalid RSVP" };
   }
 
-  if (wordCount(guestName) < 2) {
-    return { error: "Please give your full name." };
-  }
-
   if (guestName.length > MAX_NAME) {
     return { error: "Please give a shorter name." };
   }
@@ -57,10 +53,6 @@ export function validateRsvpPayload(body) {
 
     const name = plusOne.name.trim();
     const email = normalizeEmail(plusOne.email);
-
-    if (wordCount(name) < 2) {
-      return { error: "Please give their full name." };
-    }
 
     if (name.length > MAX_NAME) {
       return { error: "Please give a shorter name." };
@@ -81,7 +73,7 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
 
   return {
     event_key: EVENT_KEY,
-    guest_id: ticketToken,
+    guest_id: body.guestId ? String(body.guestId).trim() : ticketToken,
     guest_name: String(body.guestName).trim(),
     status,
     plus_one_name: plusOne ? String(plusOne.name || "").trim() : null,
