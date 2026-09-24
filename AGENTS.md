@@ -29,10 +29,9 @@ npx wrangler pages dev .                     # local dev server with Functions
 npx wrangler pages deploy . --project-name whispers-invite --branch main   # deploy
 ```
 
-- The **repo root is the Pages output directory**. `.assetsignore` is meant to keep `api/`,
-  `sql/`, `test/`, `node_modules/`, `package*.json` and `README.txt` out of the upload, but the
-  Pages deploy ignores it. `functions/_middleware.js` is what actually blocks those files: it
-  only lets allowlisted paths through (see Routes).
+- The **repo root is the Pages output directory**, so `sql/`, `test/`, docs and package files
+  are uploaded too. `functions/_middleware.js` keeps them private: it only lets allowlisted
+  paths through (see Routes).
 - Local secrets go in `.dev.vars` (gitignored). They are only needed for `wrangler pages dev`:
   ```
   SUPABASE_URL=...
@@ -69,11 +68,9 @@ README.md                          Setup, Supabase and deployment notes
 whispers-invitation-dev-brief.md   Original client brief: source of truth for design, tone, copy
 ```
 
-**Legacy files. Do not extend them.**
-- `api/guests.js` and `api/rsvp.js` are old Vercel-style handlers and are not deployed.
-- `whispers-invitation.html` is the original prototype. `index.html` is the live page.
-- `README.txt` holds deployment notes for the shared-link package.
-- The brief's per-guest token-link model was replaced by the shared link.
+**Reference, not code:** `whispers-invitation-dev-brief.md` is the original client brief and
+still the source of truth for design, tone and copy. Personal `/hi/<id>` links and the plain
+shared link both exist now (see End-to-end flow).
 
 ## Architecture
 
@@ -123,9 +120,12 @@ first, so the result is "already checked in".
   reach `next()`. Everything else is a no-store 404.
   Add any new route to `isPublicPath` in `functions/_shared/access.js` and its test.
 - `/robots.txt` returns `Disallow: /`.
-- Every response gets `X-Frame-Options: DENY`, HSTS, `Referrer-Policy: no-referrer`,
-  `nosniff`, a `Permissions-Policy` (camera self only) and `X-Robots-Tag: noindex, nofollow`.
-  There is no CSP yet; inline scripts and styles would need one written carefully.
+- Every response gets `SECURITY_HEADERS` from `functions/_shared/security.js` (tested):
+  a Content-Security-Policy (scripts only from the site and `cdn.jsdelivr.net`, styles/fonts
+  from Google Fonts, `connect-src 'self'`, no framing, no plugins), `X-Frame-Options: DENY`,
+  HSTS, `Referrer-Policy: no-referrer`, `nosniff`, `Permissions-Policy` (camera self only),
+  `Cross-Origin-Opener-Policy: same-origin` and `X-Robots-Tag: noindex, nofollow`.
+  **A new external script, font or API host must be added to the CSP**, or the browser blocks it.
 
 ### Shared helpers (`functions/_shared/`)
 - `responses.js`: `json(data, status = 200)` always sets `Cache-Control: no-store`.
@@ -174,7 +174,6 @@ first, so the result is "already checked in".
   - `isDuplicateSealCode(pgError)`: the same, for a message that mentions `seal_code`.
   - `checkInRedirectPath(token)`: `/ticket/<encoded token>` for a 1–64 char `[A-Za-z0-9_-]`
     token, otherwise `/`.
-  - `validateGuestQuery(q)`: queries must be 2–80 chars.
   - `siteOriginFromRequestUrl`, `buildTicketUrl`, `buildCheckInUrl`: build absolute URLs from
     the request origin.
 

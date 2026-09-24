@@ -130,7 +130,6 @@ Implementation: on page load, read `?token=` from URL → hit `/api/ticket?token
 | GET | `/api/ticket?token=` | Fetch ticket data by token |
 | GET | `/api/checkin?token=` | Legacy link: 302 redirect to `/ticket/{token}` (no check-in) |
 | POST/GET | `/api/door` | Door scanner: scan/mark + list tonight's check-ins |
-| GET | `/api/guests?q=` | Guest name search (legacy, not used in current UI) |
 
 ---
 

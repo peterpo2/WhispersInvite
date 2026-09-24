@@ -1,118 +1,84 @@
 # WHISPERS Invite
 
-Private mobile-first invitation experience for the WHISPERS event.
+Private, mobile-first invitation for WHISPERS, Saturday 10 October 2026, doors 22:00.
+Static HTML on Cloudflare Pages, Pages Functions for the API, Supabase for the data.
 
-The site is built for Cloudflare Pages and uses Supabase as the RSVP and check-in database. Guests open the public invitation link, enter their own name, confirm attendance, optionally add one guest, and receive a private ticket link with a QR code. Staff can use a separate scanner page to validate tickets at the door.
+- **What to do next:** [`TASKS.md`](TASKS.md)
+- **Every SQL query you may need:** [`sql/useful-queries.sql`](sql/useful-queries.sql)
+- **Technical reference for developers and agents:** [`AGENTS.md`](AGENTS.md)
 
-## Current Links
+## Links
 
-- Public invitation: `https://whispers-invite.pages.dev/`
-- Current preview seen in testing: `https://9df6e77b.whispers-invite.pages.dev/`
-- Staff scanner route after deploy: `/staff/rose-door-10`
+| URL | What it is |
+|---|---|
+| `https://whispers-invite.pages.dev/` | The shared invitation. Asks for the guest's full name. |
+| `/hi/<id>` | A personal invitation. The name from `guest_list` is shown on the seal. |
+| `/ticket/<token>` | A ticket with its QR code (the guest's or the plus-one's own). |
+| `/staff/rose-door-10` | Door scanner for staff. Not linked from anywhere public. |
 
-## Guest Flow
+Everything else (`sql/`, `test/`, docs, package files) answers 404.
 
-1. Open the invitation.
-2. Press and hold to break the seal.
-3. View the event details.
-4. Enter your own full name.
-5. Choose whether to attend.
-6. If attending, optionally add a plus-one name and email.
-7. Confirm the RSVP.
-8. Receive a private ticket link and QR code.
+## Guest flow
 
-The ticket link is unique per RSVP. It opens a dedicated ticket page that shows the same QR code.
+Seal (press and hold) → short film → event details → name (plain link only) →
+**Will you be there?** → optional plus-one (name + email) → tickets.
 
-## Staff Flow
+- The guest and the plus-one each get their **own ticket**: seal code, QR and check-in.
+- **Private ticket** saves the ticket(s) to the phone as images, named after each person.
+- Replying again from the same `/hi/` link updates the answer and keeps the ticket.
+- The venue appears on tickets once it is set in `event_details` (see `sql/useful-queries.sql`).
 
-Staff open:
+## Door flow
 
-```text
-/staff/rose-door-10
-```
+Open the scanner → **Open camera** → hold the QR 20–40 cm away. After each scan the camera
+stops, the result shows (Confirmed / Already inside / Invalid) and the list of arrivals
+scrolls into view. **Scan next** starts again. **Switch** changes camera if the picture is blurry.
 
-From there they can:
-
-- open the device camera;
-- scan a guest QR code;
-- confirm the main guest and plus-one details;
-- see whether the ticket was already checked in;
-- view recent scanned entries.
-
-This route is intentionally not linked from the public invitation. For stronger protection later, add Cloudflare Access or a password layer.
-
-## Project Structure
+## Project structure
 
 ```text
-index.html                  Main invitation experience
-functions/api/rsvp.js       Creates RSVP records and ticket tokens
-functions/api/ticket.js     Returns ticket details by token
-functions/api/checkin.js    Redirects old check-in links to the ticket page
-functions/api/door.js       Lists recent check-ins for staff
-functions/ticket/[token].js Private ticket page
-functions/staff/rose-door-10.js Staff scanner page
-functions/_shared/          Shared Supabase and RSVP helpers
-sql/schema.sql              Full database schema
-sql/2026-09-24-door-scanner.sql Upgrade migration for existing database
-test/                       Node test suite
+index.html                       The invitation (inline CSS/JS, no build step)
+assets/                          Seal, mark and rose images; ticket-card.js (ticket images)
+functions/_middleware.js         Path allowlist + security headers on every response
+functions/_shared/               Tested helpers: RSVP rules, access list, security headers
+functions/api/                   rsvp, ticket, door, checkin (old links), guest-check
+functions/ticket/[token].js      Ticket page
+functions/hi/[token].js          Personal invitation link → /?token=
+functions/staff/rose-door-10.js  Door scanner
+sql/                             Schema, migrations, add-guests.sql, useful-queries.sql
+test/                            node --test suites
+docs/project-spec.md             Product spec
+whispers-invitation-dev-brief.md Original client brief (design, tone and copy)
 ```
 
-## Supabase Setup
+## Setup
 
-Required Cloudflare environment variables:
+Cloudflare Pages needs two environment variables, set only in the Pages project settings.
+Never commit them.
 
 ```text
 SUPABASE_URL
 SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Never commit real values for these keys. Set them only inside Cloudflare Pages project settings.
+For a fresh Supabase project run `sql/schema.sql`. The production database already has every
+migration in `sql/2026-09-*.sql`.
 
-For a fresh Supabase project, run:
-
-```text
-sql/schema.sql
-```
-
-For the existing WHISPERS database, run:
-
-```text
-sql/2026-09-24-door-scanner.sql
-```
-
-That migration adds the ticket token/check-in fields needed by the QR scanner flow.
-
-## Local Checks
-
-Install dependencies:
+## Commands
 
 ```bash
-npm install
+npm install     # dev dependency: wrangler
+npm test        # node --test
+npx wrangler pages dev .    # local server with Functions (needs .dev.vars)
 ```
 
-Run tests:
+Deploys come from GitHub: merging to `main` publishes production, and any other branch gets
+a preview at `https://<branch>.whispers-invite.pages.dev` (previews have no database).
 
-```bash
-npm test
-```
+## Security
 
-Deploy manually to Cloudflare Pages:
-
-```bash
-npx wrangler pages deploy . --project-name whispers-invite --branch main
-```
-
-## Security Notes
-
-- Do not commit `.env`, `.dev.vars`, API tokens, Supabase keys, or Cloudflare credentials.
-- `SUPABASE_SERVICE_ROLE_KEY` must only live in Cloudflare environment variables.
-- The staff scanner link is private-by-link for now. Use Cloudflare Access before sharing it broadly.
-- QR codes should be treated as tickets: anyone with the ticket URL can present it.
-
-## Next Deployment Checklist
-
-1. Apply the Supabase migration.
-2. Set Cloudflare Pages environment variables.
-3. Deploy the latest `main` branch.
-4. Test the full mobile guest flow.
-5. Test the ticket page and staff scanner on a real phone.
+- The Supabase service-role key lives only in Cloudflare; the browser never sees it.
+- The middleware serves only the pages and API routes above; everything else is a 404.
+- Every response has a Content-Security-Policy (scripts only from the site and jsDelivr,
+  data only to the site), no framing, no referrer, HSTS and `noindex`.
+- User input is validated on the server and escaped wherever it is shown.

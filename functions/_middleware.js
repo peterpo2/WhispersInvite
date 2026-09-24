@@ -1,13 +1,5 @@
 import { isPublicPath } from "./_shared/access.js";
-
-const SECURITY_HEADERS = {
-  "X-Frame-Options": "DENY",
-  "Strict-Transport-Security": "max-age=31536000",
-  "Referrer-Policy": "no-referrer",
-  "X-Content-Type-Options": "nosniff",
-  "Permissions-Policy": "camera=(self), microphone=(), geolocation=()",
-  "X-Robots-Tag": "noindex, nofollow",
-};
+import { SECURITY_HEADERS } from "./_shared/security.js";
 
 function withSecurityHeaders(response) {
   const secured = new Response(response.body, response);

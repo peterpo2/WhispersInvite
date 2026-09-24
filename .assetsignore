@@ -1,9 +1,0 @@
-api/
-node_modules/
-sql/
-test/
-package.json
-package-lock.json
-README.txt
-.wrangler/
-.wrangler-config/

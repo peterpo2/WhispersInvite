@@ -14,17 +14,6 @@ export function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-export function validateGuestQuery(q) {
-  const query = String(q || "").trim();
-  if (query.length < 2) return { query, guests: [] };
-  if (query.length > 80) return { error: "Search is too long" };
-  return { query };
-}
-
-function wordCount(value) {
-  return value.split(/\s+/).filter(Boolean).length;
-}
-
 export function validateRsvpPayload(body) {
   if (!body || typeof body !== "object") {
     return { error: "Invalid RSVP" };
