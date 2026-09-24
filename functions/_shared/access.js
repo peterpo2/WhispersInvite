@@ -6,6 +6,7 @@ const PUBLIC_PATHS = new Set([
   "/api/checkin",
   "/api/door",
   "/api/guests",
+  "/api/guest-check",
   "/staff/rose-door-10",
 ]);
 
