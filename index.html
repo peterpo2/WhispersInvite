@@ -345,6 +345,7 @@ body{font-size:16px}
 <div class="rule"></div>
 <button class="btn primary" id="yes">I'll be there</button>
 <button class="btn ghost" id="no">Not this time</button>
+<p class="err" id="rerr"></p>
 </div>
 </section>
 <!-- ══ 5. PLUS ONE ══ -->
@@ -400,8 +401,7 @@ body{font-size:16px}
 <script>
 (function(){
   const $ = (s) => document.querySelector(s);
-  const KEY = 'whispers-rsvp-shared-v2';
-  const SUBMIT_URL = '/api/rsvp'; // Production endpoint. Falls back to local prototype mode when unavailable.
+  const SUBMIT_URL = '/api/rsvp';
   const state = { guestName:null, attending:null, plusOne:null, sealCode:null, ticketUrl:null, checkInUrl:null };
   function show(id){
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
@@ -445,7 +445,7 @@ body{font-size:16px}
 
   // RSVP
   $('#yes').addEventListener('click',()=>{state.attending=true;show('#s-plus')});
-  $('#no').addEventListener('click',async()=>{state.attending=false;await submitRSVP({status:'declined'});show('#s-decline')});
+  $('#no').addEventListener('click',async()=>{state.attending=false;$('#rerr').textContent='Sending your reply…';$('#no').disabled=true;const result=await submitRSVP({status:'declined'});$('#no').disabled=false;if(!result.ok){$('#rerr').textContent=result.error;return;}$('#rerr').textContent='';show('#s-decline')});
   $('#backRsvp').addEventListener('click',()=>show('#s-rsvp'));
 
   const plusToggle=$('#bringPlusOne');
@@ -462,19 +462,14 @@ body{font-size:16px}
   }
 
   async function submitRSVP(extra){
-    if(!state.guestName) return {ok:false};
-    const payload={
-      event:'whispers-2026-10-10', guestName:state.guestName,
-      status:extra.status, plusOne:extra.plusOne||null, sealCode:extra.sealCode||null,
-      submittedAt:new Date().toISOString()
-    };
+    if(!state.guestName) return {ok:false,error:'Please give your full name.'};
+    const payload={guestName:state.guestName,status:extra.status,plusOne:extra.plusOne||null,sealCode:extra.sealCode||null};
     try{
       const res=await fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)});
-      if(res.ok){const data=await res.json().catch(()=>({}));return {ok:true,data};}
-    }catch(e){}
-    // Prototype fallback: persists the exact payload locally so the UX is testable without a backend.
-    try{localStorage.setItem(KEY,JSON.stringify(payload));}catch(e){}
-    return {ok:true,prototype:true,payload};
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok) return {ok:false,error:data.error||'We could not save your RSVP. Please try again.'};
+      return {ok:true,data};
+    }catch(e){return {ok:false,error:'The invitation could not reach us. Please try again.'}}
   }
 
   $('#confirm').addEventListener('click',async()=>{
@@ -489,8 +484,9 @@ body{font-size:16px}
     const code=seal(state.guestName+'|'+(plusOne?.email||'solo'));
     const result=await submitRSVP({status:'attending',plusOne,sealCode:code});
     $('#confirm').disabled=false;
-    if(!result.ok){$('#perr').textContent='We could not save your RSVP. Please try again.';return;}
-    state.plusOne=plusOne;state.sealCode=code;state.ticketUrl=result.data?.ticketUrl||null;state.checkInUrl=result.data?.checkInUrl||result.data?.ticketUrl||code;
+    if(!result.ok){$('#perr').textContent=result.error;return;}
+    if(!result.data?.ticketUrl||!result.data?.checkInUrl){$('#perr').textContent='We could not save your RSVP. Please try again.';return;}
+    $('#perr').textContent='';state.plusOne=plusOne;state.sealCode=code;state.ticketUrl=result.data.ticketUrl;state.checkInUrl=result.data.checkInUrl;
     $('#passname').textContent=state.guestName;$('#passcode').textContent=code;
     $('#bringingLine').innerHTML=plusOne?'Bringing <b>'+escapeHtml(plusOne.name)+'</b>':'Coming on your own';
     const ticketLink=$('#ticketLink');
@@ -499,7 +495,7 @@ body{font-size:16px}
   });
   function escapeHtml(s){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
-  function reset(){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}
+  function reset(){location.reload()}
   $('#reset').addEventListener('click',reset);$('#reset2').addEventListener('click',reset);
 })();
 </script></body>
