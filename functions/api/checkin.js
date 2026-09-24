@@ -10,7 +10,7 @@ function escapeHtml(value) {
   })[char]);
 }
 
-function page(title, body, status = 200) {
+function page(title, body, status = 200, kind = "") {
   return new Response(`<!doctype html>
 <html lang="en">
 <head>
@@ -24,9 +24,12 @@ main{width:min(520px,calc(100vw - 40px));text-align:center;border:1px solid rgba
 h1{font-weight:400;font-size:42px;margin:18px 0 10px}
 p{line-height:1.65;color:#cfc5ba;margin:8px 0}
 b{color:#f5eee5;font-weight:400}
+main.warn{border-color:#a31621;background:rgba(163,22,33,.16)}
+.warn h1{color:#e0707a}
+.warn p{color:#ede6da}
 </style>
 </head>
-<body><main>${body}</main></body>
+<body><main${kind ? ` class="${kind}"` : ""}>${body}</main></body>
 </html>`, {
     status,
     headers: {
@@ -58,8 +61,9 @@ export async function onRequestGet({ request, env }) {
   if (ticket.checked_in_at) {
     return page(
       "Already checked in",
-      `<p class="k">WHISPERS</p><h1>Already inside.</h1><p><b>${escapeHtml(ticket.guest_name)}</b>${ticket.plus_one_name ? ` with <b>${escapeHtml(ticket.plus_one_name)}</b>` : ""}</p><p>Checked in at ${escapeHtml(new Date(ticket.checked_in_at).toLocaleString("en-GB"))}.</p>`,
-      200
+      `<p class="k">WHISPERS</p><h1>Already inside.</h1><p><b>${escapeHtml(ticket.guest_name)}</b>${ticket.plus_one_name ? ` with <b>${escapeHtml(ticket.plus_one_name)}</b>` : ""}</p><p>First checked in at ${escapeHtml(new Date(ticket.checked_in_at).toLocaleString("en-GB"))}.</p>`,
+      200,
+      "warn"
     );
   }
 
@@ -79,7 +83,8 @@ export async function onRequestGet({ request, env }) {
     return page(
       "Already checked in",
       `<p class="k">WHISPERS</p><h1>Already inside.</h1><p><b>${escapeHtml(ticket.guest_name)}</b>${ticket.plus_one_name ? ` with <b>${escapeHtml(ticket.plus_one_name)}</b>` : ""}</p>`,
-      200
+      200,
+      "warn"
     );
   }
 
