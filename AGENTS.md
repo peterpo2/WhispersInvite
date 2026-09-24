@@ -86,7 +86,12 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
    - Scanning the QR with a phone camera opens `/api/checkin`, which checks the guest in. A
      second scan shows "Already inside".
    - Staff can scan on `/staff/rose-door-10`, which POSTs to `/api/door` and lists recent
-     check-ins.
+     check-ins. Camera scans are deduped per page session with a `Set` (manual Check always
+     re-checks). "Already inside." is a crimson `warn` result with the first check-in time and
+     a vibration, clearly different from "Confirmed."; `/api/checkin` uses the same warning.
+   - The ticket page and scanner use the brief's fonts and colour tokens. The ticket page shows
+     a retry message if the ticket fetch fails and the ticket link as text if the QR library
+     does not load.
 
 ### Routes (Pages Functions, file-based routing)
 | Method | Path | File | Behaviour |
@@ -157,12 +162,23 @@ first, so the result is "already checked in".
   `s-identify`, `s-rsvp`, `s-plus`, `s-done`, `s-decline`. `show()` swaps the `.on` class.
 - Seal: press and hold for `HOLD=1250` ms with a gold progress ring. `Enter ›` is the escape
   path.
+  - Pointer events only (with `setPointerCapture`); don't add touch/mouse handlers. `start()`
+    returns early while `raf` is set and `stop()` resets `raf=null`, so only one rAF loop runs.
+  - Keyboard: `#sealwrap` is `role="button" tabindex="0"`; holding Space/Enter works the same
+    (key repeat ignored).
+  - `#skipseal` / `#skipfilm` live outside the `.screen` sections so their `z-index` can sit
+    above the `body::after` vignette. `show()` toggles their `display`.
 - `submitRSVP()` POSTs `{ guestName, status, plusOne, sealCode }` to `SUBMIT_URL = '/api/rsvp'`.
   - There is **no localStorage fallback**. A non-2xx response returns
     `{ ok:false, error: data.error }`, and a network error returns a "could not reach us"
     message.
   - Errors appear in the `.err` element of the current screen (`#perr` on `s-plus`, `#rerr` on
-    `s-rsvp`), and the guest stays on the form so they can retry.
+    `s-rsvp`), and the guest stays on the form so they can retry. `.err` is `role="alert"` and
+    uses `#E0707A` (crimson `#A31621` is too dark for text on `--bg`).
+  - The pending state ("Sealing…") goes in the neutral `.submit-state` line (`#pstate`,
+    `#rstate`), never in `.err`. While a request is in flight `setBusy()` disables `#yes`,
+    `#no` and `#confirm`; they are re-enabled only on error.
+  - The fetch aborts after 12 s (`AbortController`); an abort shows the network error.
   - The `s-done` QR is drawn only from the server's `checkInUrl`. The seal code is display text
     only.
 
