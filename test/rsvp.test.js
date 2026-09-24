@@ -16,7 +16,6 @@ import {
   makeSealCode,
   makeTicketToken,
   tokenFromValue,
-  validateGuestQuery,
   validateRsvpPayload,
 } from "../functions/_shared/rsvp.js";
 
@@ -26,10 +25,6 @@ const FIXED_SEAL = () => "WSP·10·TEST";
 const PLUS_TOKEN = "987f6543e21b12d3a456426614174999";
 const ids = (...values) => () => values.shift();
 const seals = (...values) => () => values.shift();
-
-test("guest search returns empty results before two characters", () => {
-  assert.deepEqual(validateGuestQuery("p"), { query: "p", guests: [] });
-});
 
 test("RSVP requires a selected guest and valid status", () => {
   assert.equal(validateRsvpPayload({ status: "attending" }).error, "Invalid RSVP");

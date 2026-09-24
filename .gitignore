@@ -10,3 +10,7 @@ coverage/
 Thumbs.db
 New Text Document (2).txt
 .superpowers/
+
+# Local-only material: logo source files (web versions live in assets/) and screenshots
+logo/
+viber_image_*.png
