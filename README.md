@@ -13,6 +13,7 @@ Static HTML on Cloudflare Pages, Pages Functions for the API, Supabase for the d
 |---|---|
 | `https://whispers-invite.pages.dev/` | The shared invitation. Asks for the guest's full name. |
 | `/hi/<id>` | A personal invitation. The name from `guest_list` is shown on the seal. |
+| `/hi/<id>referral` | A referral link from that guest: no name on the seal; each person writes their own name (and may add a +1). |
 | `/ticket/<token>` | A ticket with its QR code (the guest's or the plus-one's own). |
 | `/staff/rose-door-10` | Door scanner for staff. Not linked from anywhere public. |
 
@@ -25,7 +26,10 @@ Seal (press and hold) → short film → event details → name (plain link only
 
 - The guest and the plus-one each get their **own ticket**: seal code, QR and check-in.
 - **Private ticket** saves the ticket(s) to the phone as images, named after each person.
-- Replying again from the same `/hi/` link updates the answer and keeps the ticket.
+- Replying again from the same link shows the same ticket. Confirming without ticking
+  "I'm bringing someone" keeps an earlier plus-one; a different plus-one replaces the old one
+  (their old ticket stops working).
+- On a referral link, the same typed name finds the same ticket again.
 - The venue appears on tickets once it is set in `event_details` (see `sql/useful-queries.sql`).
 
 ## Door flow

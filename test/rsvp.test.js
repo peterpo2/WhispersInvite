@@ -9,6 +9,8 @@ import {
   checkInRedirectPath,
   buildRsvpRow,
   buildRsvpUpdate,
+  referralBase,
+  referralGuestId,
   doorScans,
   publicVenue,
   ticketForToken,
@@ -303,6 +305,7 @@ test("repeat RSVP update keeps the existing ticket and seal code", () => {
   const patch = buildRsvpUpdate(row, {
     ticket_token: TOKEN,
     seal_code: "WSP·10·KEEP",
+    plus_one_name: "Simona Ivanova",
     plus_one_email: "simona@example.com",
     plus_one_ticket_token: PLUS_TOKEN,
     plus_one_seal_code: "WSP·10·PKEP",
@@ -379,12 +382,78 @@ test("repeat RSVP with a different plus-one issues them a new ticket", () => {
   assert.equal(patch.plus_one_checked_in_at, null);
 });
 
-test("repeat RSVP without a plus-one clears their ticket", () => {
+const EXISTING_WITH_PLUS = {
+  ticket_token: TOKEN,
+  seal_code: "WSP·10·KEEP",
+  plus_one_name: "Simona Ivanova",
+  plus_one_email: "simona@example.com",
+  plus_one_ticket_token: PLUS_TOKEN,
+  plus_one_seal_code: "WSP·10·OLDP",
+};
+
+test("confirming again without a plus-one keeps the existing plus-one and their ticket", () => {
   const row = buildRsvpRow({ guestId: "g1", guestName: "Peter Popov", status: "attending" }, () => TOKEN, FIXED_NOW, FIXED_SEAL);
-  const patch = buildRsvpUpdate(row, { ticket_token: TOKEN, seal_code: "WSP·10·KEEP", plus_one_email: "simona@example.com", plus_one_ticket_token: PLUS_TOKEN, plus_one_seal_code: "WSP·10·OLDP" });
-  assert.equal(patch.plus_one_ticket_token, null);
-  assert.equal(patch.plus_one_seal_code, null);
+  const patch = buildRsvpUpdate(row, EXISTING_WITH_PLUS);
+  assert.equal(patch.plus_one_name, "Simona Ivanova");
+  assert.equal(patch.plus_one_email, "simona@example.com");
+  assert.equal(patch.plus_one_ticket_token, PLUS_TOKEN);
+  assert.equal(patch.plus_one_seal_code, "WSP·10·OLDP");
+  assert.equal("plus_one_checked_in_at" in patch, false);
+});
+
+test("a plus-one with the same email but a different name gets a new ticket", () => {
+  const row = buildRsvpRow(
+    { guestId: "g1", guestName: "Peter Popov", status: "attending", plusOne: { name: "Maria Nikolova", email: "simona@example.com" } },
+    ids(TOKEN, "newplus00000000000000000000000000"),
+    FIXED_NOW,
+    seals("WSP·10·NEWG", "WSP·10·NEWP")
+  );
+  const patch = buildRsvpUpdate(row, EXISTING_WITH_PLUS);
+  assert.equal(patch.plus_one_name, "Maria Nikolova");
+  assert.equal(patch.plus_one_ticket_token, "newplus00000000000000000000000000");
   assert.equal(patch.plus_one_checked_in_at, null);
+});
+
+test("the same plus-one typed with different spacing or case keeps their ticket", () => {
+  const row = buildRsvpRow(
+    { guestId: "g1", guestName: "Peter Popov", status: "attending", plusOne: { name: "  simona   IVANOVA ", email: "Simona@Example.com" } },
+    ids(TOKEN, "newplus00000000000000000000000000"),
+    FIXED_NOW,
+    seals("WSP·10·NEWG", "WSP·10·NEWP")
+  );
+  assert.equal(buildRsvpUpdate(row, EXISTING_WITH_PLUS).plus_one_ticket_token, PLUS_TOKEN);
+});
+
+test("declining clears the plus-one and their ticket", () => {
+  const row = buildRsvpRow({ guestId: "g1", guestName: "Peter Popov", status: "declined" }, () => TOKEN, FIXED_NOW, FIXED_SEAL);
+  const patch = buildRsvpUpdate(row, EXISTING_WITH_PLUS);
+  assert.equal(patch.plus_one_name, null);
+  assert.equal(patch.plus_one_ticket_token, null);
+  assert.equal(patch.plus_one_checked_in_at, null);
+});
+
+test("a referral link is the inviter's id followed by 'referral'", () => {
+  assert.equal(referralBase("michellegreferral"), "michelleg");
+  assert.equal(referralBase("wsp-7k3mreferral"), "wsp-7k3m");
+  assert.equal(referralBase("MichelleGReferral"), "MichelleG");
+  assert.equal(referralBase("michelleg"), null);
+  assert.equal(referralBase("referral"), null);
+  assert.equal(referralBase("michellegrefferal"), null);
+  assert.equal(referralBase("bad id!referral"), null);
+  assert.equal(referralBase(42), null);
+});
+
+test("each person on a referral link is keyed by their typed name", () => {
+  assert.equal(referralGuestId("michelleg", "  Maria   Nikolova "), "michelleg/referral/maria nikolova");
+  assert.equal(referralGuestId("michelleg", "МАРИЯ Николова"), "michelleg/referral/мария николова");
+  assert.notEqual(referralGuestId("michelleg", "Maria Nikolova"), referralGuestId("petarp", "Maria Nikolova"));
+});
+
+test("an RSVP may carry a referral token, and only a string one", () => {
+  const base = { guestName: "Maria Nikolova", status: "attending" };
+  assert.equal(validateRsvpPayload({ ...base, referral: "michellegreferral" }).ok, true);
+  assert.equal(validateRsvpPayload({ ...base, referral: 5 }).error, "Invalid RSVP");
+  assert.equal(validateRsvpPayload({ ...base, referral: "x".repeat(200) }).error, "Invalid RSVP");
 });
 
 const ROW = {
