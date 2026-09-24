@@ -3,16 +3,16 @@
 --  Run in Supabase SQL Editor to add guests and get their links.
 --
 --  Each guest gets a unique token (their invitation URL).
---  Link format: https://whispers-invite.pages.dev/?token=<id>
+--  Link format: https://whispers-invite.pages.dev/?token=michelleg
 -- ══════════════════════════════════════════════════════════════
 
 -- ── Test guests (use these until you have the real list) ──────
 INSERT INTO public.guest_list (id, name, email) VALUES
-  ('wsp-test-01', 'Peter Popov',      null),
-  ('wsp-test-02', 'Simona Ivanova',   null),
-  ('wsp-test-03', 'Alex Stoyanov',    null),
-  ('wsp-test-04', 'Maria Nikolova',   null),
-  ('wsp-test-05', 'Georgi Petrov',    null)
+  ('michelleg',   'Michelle Georgieva',  null),
+  ('petarp',      'Petar Popov',         null),
+  ('simonai',     'Simona Ivanova',      null),
+  ('alexs',       'Alex Stoyanov',       null),
+  ('marian',      'Maria Nikolova',      null)
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
 
 -- ── View all guests with their invitation links ───────────────
