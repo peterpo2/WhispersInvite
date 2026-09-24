@@ -44,7 +44,7 @@ h1{font-weight:400;font-size:36px;line-height:1.05;margin:14px 0 2px}.role{font-
 <p class="small">Show this seal at the door. The QR confirms your place in the WHISPERS list.</p>
 <p class="state" id="state"></p>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script>
 (async()=>{
   const api=${JSON.stringify(apiUrl)};
