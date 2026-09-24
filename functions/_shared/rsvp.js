@@ -2,9 +2,13 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
 const TOKEN_RE = /^[A-Za-z0-9]{32,40}$/;
 const MAX_NAME = 120;
 const MAX_EMAIL = 254;
-const MAX_SEAL_CODE = 32;
+const REDIRECT_TOKEN_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
 export const EVENT_KEY = "whispers-2026-10-10";
+// The brief's unambiguous alphabet: no 0/O, 1/I/L, 5/S, 8/B.
+export const SEAL_ALPHABET = "ACDEFGHJKMNPQRTUVWXYZ234679";
+const SEAL_PREFIX = "WSP·10·";
+const SEAL_LENGTH = 4;
 
 export function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
@@ -30,6 +34,10 @@ export function validateRsvpPayload(body) {
     return { error: "Invalid RSVP" };
   }
 
+  if (body.guestId != null && (typeof body.guestId !== "string" || body.guestId.length > MAX_NAME)) {
+    return { error: "Invalid RSVP" };
+  }
+
   const status = body.status.trim();
   const guestName = body.guestName.trim();
 
@@ -39,10 +47,6 @@ export function validateRsvpPayload(body) {
 
   if (guestName.length > MAX_NAME) {
     return { error: "Please give a shorter name." };
-  }
-
-  if (body.sealCode != null && (typeof body.sealCode !== "string" || body.sealCode.trim().length > MAX_SEAL_CODE)) {
-    return { error: "Invalid RSVP" };
   }
 
   const plusOne = status === "attending" ? body.plusOne || null : null;
@@ -66,7 +70,7 @@ export function validateRsvpPayload(body) {
   return { ok: true };
 }
 
-export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Date()) {
+export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Date(), makeSeal = makeSealCode) {
   const status = String(body.status).trim();
   const plusOne = status === "attending" ? body.plusOne || null : null;
   const ticketToken = makeId();
@@ -78,7 +82,7 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
     status,
     plus_one_name: plusOne ? String(plusOne.name || "").trim() : null,
     plus_one_email: plusOne ? normalizeEmail(plusOne.email) : null,
-    seal_code: body.sealCode ? String(body.sealCode).trim().slice(0, MAX_SEAL_CODE) : null,
+    seal_code: status === "attending" ? makeSeal() : null,
     ticket_token: ticketToken,
     submitted_at: now().toISOString(),
   };
@@ -86,6 +90,23 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
 
 export function makeTicketToken(randomId = () => crypto.randomUUID()) {
   return String(randomId()).replace(/[^a-zA-Z0-9]/g, "").slice(0, 40);
+}
+
+function secureRandomInt(max) {
+  const limit = Math.floor(256 / max) * max;
+  const byte = new Uint8Array(1);
+  do {
+    crypto.getRandomValues(byte);
+  } while (byte[0] >= limit);
+  return byte[0] % max;
+}
+
+export function makeSealCode(randomInt = secureRandomInt) {
+  let code = "";
+  for (let i = 0; i < SEAL_LENGTH; i += 1) {
+    code += SEAL_ALPHABET[randomInt(SEAL_ALPHABET.length)];
+  }
+  return `${SEAL_PREFIX}${code}`;
 }
 
 export function tokenFromValue(value) {
@@ -107,6 +128,16 @@ export function tokenFromValue(value) {
 export function isDuplicatePlusOneEmail(pgError) {
   if (!pgError || pgError.code !== "23505") return false;
   return /plus_one_email/.test(String(pgError.message || ""));
+}
+
+export function isDuplicateSealCode(pgError) {
+  if (!pgError || pgError.code !== "23505") return false;
+  return /seal_code/.test(String(pgError.message || ""));
+}
+
+export function checkInRedirectPath(token) {
+  const value = typeof token === "string" ? token.trim() : "";
+  return REDIRECT_TOKEN_RE.test(value) ? `/ticket/${encodeURIComponent(value)}` : "/";
 }
 
 export function siteOriginFromRequestUrl(requestUrl) {

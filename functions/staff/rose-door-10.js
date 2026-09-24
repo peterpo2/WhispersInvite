@@ -5,18 +5,24 @@ export async function onRequestGet() {
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>WHISPERS Door</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&amp;family=Jost:wght@300;400&amp;display=swap" rel="stylesheet"/>
 <style>
-:root{--gold:#d9ae78;--paper:#f1e9dc;--bg:#050403;--muted:#a99f93}
-*{box-sizing:border-box}body{margin:0;min-height:100svh;background:var(--bg);color:#f5eee5;font-family:Arial,sans-serif;padding:18px}
-body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 0,rgba(217,174,120,.16),transparent 38%),linear-gradient(180deg,#080605,#030202);pointer-events:none}
+:root{--bg:#0B0908;--bg2:#12100E;--gold:#D9AE78;--red:#A31621;--bone:#EDE6DA;--muted:#8C8176;--serif:'Cormorant Garamond',Cambria,Georgia,serif;--sans:'Jost','Helvetica Neue',Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;min-height:100svh;background:var(--bg);color:var(--bone);font-family:var(--sans);font-weight:300;padding:calc(18px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 0,rgba(217,174,120,.12),transparent 38%);pointer-events:none}
 main{position:relative;max-width:1100px;margin:0 auto}.top{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:6px 0 18px}
-.k{font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold)}h1{font-family:Georgia,serif;font-weight:400;font-size:36px;margin:5px 0 0}
-.panel{border:1px solid rgba(217,174,120,.36);background:rgba(255,255,255,.025);padding:16px;margin-bottom:14px}
+.k{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}h1{font-family:var(--serif);font-weight:300;font-size:36px;margin:5px 0 0}
+.panel{border:1px solid rgba(217,174,120,.36);background:var(--bg2);padding:16px;margin-bottom:14px}
 .camera{position:relative;aspect-ratio:3/4;max-height:72svh;background:#000;overflow:hidden;display:grid;place-items:center}.camera video{width:100%;height:100%;object-fit:cover}.scanline{position:absolute;left:8%;right:8%;height:1px;background:var(--gold);box-shadow:0 0 18px var(--gold);animation:sweep 2.2s ease-in-out infinite}@keyframes sweep{0%,100%{top:18%}50%{top:82%}}
 @media(min-width:640px){.camera{aspect-ratio:4/3;max-height:68svh}}
 @media(min-width:1024px){.camera{aspect-ratio:16/9;max-height:65svh}}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}button,input{height:48px;border:1px solid rgba(217,174,120,.55);background:rgba(255,255,255,.035);color:#f5eee5;padding:0 14px;font:12px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}button.primary{background:rgba(217,174,120,.16);color:#f3c78f}.manual{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:10px}.manual input{text-transform:none;letter-spacing:0;font-size:15px}
-.result{min-height:104px}.result h2{font-family:Georgia,serif;font-weight:400;font-size:31px;margin:0 0 8px}.result p{color:#d8cec2;line-height:1.5;margin:4px 0}.ok h2{color:#e8c28b}.bad h2{color:#ff9f9f}.list{display:grid;gap:8px}.row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid rgba(217,174,120,.16);padding-top:10px}.row b{font-family:Georgia,serif;font-weight:400}.row span{color:var(--muted);font-size:12px;text-align:right}.small{color:var(--muted);font-size:12px;line-height:1.5}
+@media (prefers-reduced-motion:reduce){.scanline{animation:none;top:50%}}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}button,input{height:48px;border:1px solid rgba(217,174,120,.55);background:rgba(255,255,255,.035);color:var(--bone);padding:0 14px;font:300 12px var(--sans);letter-spacing:.3em;text-transform:uppercase}button.primary{background:rgba(217,174,120,.16);color:#F3C78F}button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-offset:2px}.manual{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:10px}.manual input{text-transform:none;letter-spacing:0;font-size:16px;min-width:0}
+.result{min-height:104px}.result h2{font-family:var(--serif);font-weight:300;font-size:31px;margin:0 0 8px}.result p{color:#D8CEC2;line-height:1.5;margin:4px 0}.ok h2{color:#E8C28B}.bad h2{color:#FF9F9F}
+.warn{border-color:var(--red);background:rgba(163,22,33,.16)}.warn h2{color:#E0707A}.warn p{color:var(--bone)}
+.list{display:grid;gap:8px}.row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid rgba(217,174,120,.16);padding-top:10px}.row b{font-family:var(--serif);font-weight:400;font-size:17px}.row span{color:var(--muted);font-size:12px;text-align:right}.small{color:#B5AA9E;font-size:12px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -25,46 +31,54 @@ main{position:relative;max-width:1100px;margin:0 auto}.top{display:flex;align-it
 <section class="panel camera"><video id="video" playsinline muted></video><div class="scanline"></div></section>
 <section class="panel">
 <div class="actions"><button class="primary" id="start">Open camera</button><button id="stop">Stop</button></div>
-<div class="manual"><input id="manual" placeholder="Paste QR value or token"/><button id="manualBtn">Check</button></div>
+<div class="manual"><input id="manual" aria-label="QR value or token" placeholder="Paste QR value or token" autocomplete="off" autocapitalize="off" spellcheck="false"/><button id="manualBtn">Check</button></div>
 <p class="small">Camera scanning runs locally in this browser. A valid WHISPERS QR marks the ticket as checked in.</p>
 </section>
-<section class="panel result" id="result"><h2>Ready.</h2><p>Scan a guest ticket.</p></section>
+<section class="panel result" id="result" aria-live="polite"><h2>Ready.</h2><p>Scan a guest ticket.</p></section>
 <section class="panel"><div class="k">Scanned tonight</div><div class="list" id="list"></div></section>
 </main>
 <canvas id="canvas" hidden></canvas>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
 const video=document.getElementById('video'),canvas=document.getElementById('canvas'),result=document.getElementById('result'),list=document.getElementById('list');
-let stream=null,timer=null,lastValue='',lastAt=0;
+let stream=null,timer=null;const seen=new Map(),REPEAT_MS=4000;
 function show(kind,title,body){result.className='panel result '+kind;result.innerHTML='<h2>'+title+'</h2>'+body;}
 function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-async function scanValue(value){
+function hhmm(iso){return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
+async function scanValue(value,manual){
   if(!value) return;
-  if(value===lastValue && Date.now()-lastAt<3500) return;
-  lastValue=value;lastAt=Date.now();
-  show('', 'Checking...', '<p>Reading the seal.</p>');
-  const res=await fetch('/api/door',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({value})});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok){show('bad','Invalid.', '<p>'+esc(data.error||'This ticket could not be confirmed.')+'</p>');return;}
+  if(!manual){const last=seen.get(value),now=Date.now();seen.set(value,now);if(last&&now-last<REPEAT_MS) return;}
+  show('', 'Checking…', '<p>Reading the seal.</p>');
+  let res,data;
+  try{res=await fetch('/api/door',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({value})});data=await res.json().catch(()=>({}));}
+  catch(e){seen.delete(value);show('warn','No connection.','<p>Try again.</p>');return;}
+  if(!res.ok){if(res.status>=500)seen.delete(value);show('bad','Invalid.', '<p>'+esc(data.error||'This ticket could not be confirmed.')+'</p>');return;}
   const t=data.ticket||{};
   const plus=t.plus_one_name?' + '+esc(t.plus_one_name):'';
-  show('ok', data.status==='already_checked_in'?'Already inside.':'Confirmed.', '<p><b>'+esc(t.guest_name)+plus+'</b></p><p>'+esc(t.seal_code||'')+'</p>');
+  if(data.status==='already_checked_in'){
+    if(navigator.vibrate)navigator.vibrate([80,60,80]);
+    show('warn','Already inside.','<p><b>'+esc(t.guest_name)+plus+'</b></p>'+(t.checked_in_at?'<p>First checked in at '+esc(hhmm(t.checked_in_at))+'.</p>':'')+'<p>'+esc(t.seal_code||'')+'</p>');
+  }else{
+    show('ok','Confirmed.','<p><b>'+esc(t.guest_name)+plus+'</b></p><p>'+esc(t.seal_code||'')+'</p>');
+  }
   loadList();
 }
 async function startCamera(){
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
   video.srcObject=stream;await video.play();
-  timer=setInterval(()=>{if(!video.videoWidth||!window.jsQR)return;canvas.width=video.videoWidth;canvas.height=video.videoHeight;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,0);const img=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(img.data,img.width,img.height);if(code)scanValue(code.data);},450);
+  timer=setInterval(()=>{if(!video.videoWidth||!window.jsQR)return;canvas.width=video.videoWidth;canvas.height=video.videoHeight;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,0);const img=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(img.data,img.width,img.height);if(code)scanValue(code.data,false);},450);
 }
 function stopCamera(){if(timer)clearInterval(timer);timer=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}video.srcObject=null;}
 async function loadList(){
-  const res=await fetch('/api/door',{headers:{'Accept':'application/json'}});
-  const data=await res.json().catch(()=>({scans:[]}));
-  list.innerHTML=(data.scans||[]).map(s=>'<div class="row"><b>'+esc(s.guest_name)+(s.plus_one_name?' + '+esc(s.plus_one_name):'')+'</b><span>'+esc(s.seal_code||'')+'<br>'+new Date(s.checked_in_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'</span></div>').join('')||'<p class="small">No scanned tickets yet.</p>';
+  let res,data;
+  try{res=await fetch('/api/door',{headers:{'Accept':'application/json'}});data=await res.json().catch(()=>({}));}
+  catch(e){list.innerHTML='<p class="small">No connection. Try again.</p>';return;}
+  if(!res.ok){list.innerHTML='<p class="small">Could not load the list. Try again.</p>';return;}
+  list.innerHTML=(data.scans||[]).map(s=>'<div class="row"><b>'+esc(s.guest_name)+(s.plus_one_name?' + '+esc(s.plus_one_name):'')+'</b><span>'+esc(s.seal_code||'')+'<br>'+esc(hhmm(s.checked_in_at))+'</span></div>').join('')||'<p class="small">No scanned tickets yet.</p>';
 }
 document.getElementById('start').onclick=()=>startCamera().catch(e=>show('bad','Camera blocked.','<p>Allow camera access or paste the QR value manually.</p>'));
 document.getElementById('stop').onclick=stopCamera;
-document.getElementById('manualBtn').onclick=()=>scanValue(document.getElementById('manual').value.trim());
+document.getElementById('manualBtn').onclick=()=>scanValue(document.getElementById('manual').value.trim(),true);
 document.getElementById('refresh').onclick=loadList;
 loadList();
 </script>

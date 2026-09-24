@@ -1,5 +1,5 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { buildCheckInUrl } from "../_shared/rsvp.js";
+import { buildCheckInUrl, buildTicketUrl } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 export async function onRequestGet({ request, env }) {
@@ -20,6 +20,7 @@ export async function onRequestGet({ request, env }) {
   return json({
     ok: true,
     ticket: rows[0],
+    ticketUrl: buildTicketUrl(request.url, token),
     checkInUrl: buildCheckInUrl(request.url, token),
   });
 }
