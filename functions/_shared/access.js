@@ -12,7 +12,7 @@ const PUBLIC_PATHS = new Set([
 
 const TICKET_PATH_RE = /^\/ticket\/[^/]+$/;
 const HI_PATH_RE = /^\/hi\/[^/]+$/;
-const ASSET_PATH_RE = /^\/assets\/[a-z0-9-]+\.png$/;
+const ASSET_PATH_RE = /^\/assets\/[a-z0-9-]+\.(png|js)$/;
 
 export function isPublicPath(pathname) {
   if (typeof pathname !== "string") return false;

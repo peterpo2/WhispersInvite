@@ -9,6 +9,9 @@ import {
   checkInRedirectPath,
   buildRsvpRow,
   buildRsvpUpdate,
+  doorScans,
+  publicVenue,
+  ticketForToken,
   buildTicketUrl,
   makeSealCode,
   makeTicketToken,
@@ -20,6 +23,9 @@ import {
 const TOKEN = "123e4567e89b12d3a456426614174000";
 const FIXED_NOW = () => new Date("2026-09-24T21:00:00.000Z");
 const FIXED_SEAL = () => "WSP·10·TEST";
+const PLUS_TOKEN = "987f6543e21b12d3a456426614174999";
+const ids = (...values) => () => values.shift();
+const seals = (...values) => () => values.shift();
 
 test("guest search returns empty results before two characters", () => {
   assert.deepEqual(validateGuestQuery("p"), { query: "p", guests: [] });
@@ -130,9 +136,9 @@ test("builds normalized RSVP row for Supabase", () => {
       status: "attending",
       plusOne: { name: " Simona Ivanova ", email: "  Simona@Example.COM " },
     },
-    () => TOKEN,
+    ids(TOKEN, PLUS_TOKEN),
     FIXED_NOW,
-    FIXED_SEAL
+    seals("WSP·10·TEST", "WSP·10·PLUS")
   );
 
   assert.deepEqual(row, {
@@ -144,6 +150,8 @@ test("builds normalized RSVP row for Supabase", () => {
     plus_one_email: "simona@example.com",
     seal_code: "WSP·10·TEST",
     ticket_token: TOKEN,
+    plus_one_ticket_token: PLUS_TOKEN,
+    plus_one_seal_code: "WSP·10·PLUS",
     submitted_at: "2026-09-24T21:00:00.000Z",
   });
 });
@@ -297,7 +305,13 @@ test("repeat RSVP update keeps the existing ticket and seal code", () => {
     FIXED_NOW,
     FIXED_SEAL
   );
-  const patch = buildRsvpUpdate(row, { ticket_token: TOKEN, seal_code: "WSP·10·KEEP" });
+  const patch = buildRsvpUpdate(row, {
+    ticket_token: TOKEN,
+    seal_code: "WSP·10·KEEP",
+    plus_one_email: "simona@example.com",
+    plus_one_ticket_token: PLUS_TOKEN,
+    plus_one_seal_code: "WSP·10·PKEP",
+  });
 
   assert.deepEqual(patch, {
     guest_name: "Michelle Georgieva",
@@ -305,6 +319,8 @@ test("repeat RSVP update keeps the existing ticket and seal code", () => {
     plus_one_name: "Simona Ivanova",
     plus_one_email: "simona@example.com",
     seal_code: "WSP·10·KEEP",
+    plus_one_ticket_token: PLUS_TOKEN,
+    plus_one_seal_code: "WSP·10·PKEP",
     submitted_at: "2026-09-24T21:00:00.000Z",
   });
   assert.equal("ticket_token" in patch, false);
@@ -329,4 +345,120 @@ test("repeat RSVP decline clears the plus-one and keeps the seal code", () => {
   assert.equal(patch.plus_one_name, null);
   assert.equal(patch.plus_one_email, null);
   assert.equal(patch.seal_code, "WSP·10·KEEP");
+});
+
+test("a plus-one gets their own ticket token and seal code", () => {
+  const row = buildRsvpRow(
+    { guestName: "Peter Popov", status: "attending", plusOne: { name: "Simona Ivanova", email: "simona@example.com" } },
+    ids(TOKEN, PLUS_TOKEN),
+    FIXED_NOW,
+    seals("WSP·10·AAAA", "WSP·10·BBBB")
+  );
+  assert.notEqual(row.plus_one_ticket_token, row.ticket_token);
+  assert.equal(row.plus_one_ticket_token, PLUS_TOKEN);
+  assert.equal(row.plus_one_seal_code, "WSP·10·BBBB");
+});
+
+test("a guest on their own has no plus-one ticket", () => {
+  const row = buildRsvpRow({ guestName: "Peter Popov", status: "attending" }, () => TOKEN, FIXED_NOW, FIXED_SEAL);
+  assert.equal(row.plus_one_ticket_token, null);
+  assert.equal(row.plus_one_seal_code, null);
+});
+
+test("repeat RSVP with a different plus-one issues them a new ticket", () => {
+  const row = buildRsvpRow(
+    { guestId: "g1", guestName: "Peter Popov", status: "attending", plusOne: { name: "Maria Nikolova", email: "maria@example.com" } },
+    ids("newguest0000000000000000000000000", "newplus00000000000000000000000000"),
+    FIXED_NOW,
+    seals("WSP·10·NEWG", "WSP·10·NEWP")
+  );
+  const patch = buildRsvpUpdate(row, {
+    ticket_token: TOKEN,
+    seal_code: "WSP·10·KEEP",
+    plus_one_email: "simona@example.com",
+    plus_one_ticket_token: PLUS_TOKEN,
+    plus_one_seal_code: "WSP·10·OLDP",
+  });
+  assert.equal(patch.plus_one_ticket_token, "newplus00000000000000000000000000");
+  assert.equal(patch.plus_one_seal_code, "WSP·10·NEWP");
+  assert.equal(patch.plus_one_checked_in_at, null);
+});
+
+test("repeat RSVP without a plus-one clears their ticket", () => {
+  const row = buildRsvpRow({ guestId: "g1", guestName: "Peter Popov", status: "attending" }, () => TOKEN, FIXED_NOW, FIXED_SEAL);
+  const patch = buildRsvpUpdate(row, { ticket_token: TOKEN, seal_code: "WSP·10·KEEP", plus_one_email: "simona@example.com", plus_one_ticket_token: PLUS_TOKEN, plus_one_seal_code: "WSP·10·OLDP" });
+  assert.equal(patch.plus_one_ticket_token, null);
+  assert.equal(patch.plus_one_seal_code, null);
+  assert.equal(patch.plus_one_checked_in_at, null);
+});
+
+const ROW = {
+  guest_name: "Michelle Georgieva",
+  status: "attending",
+  seal_code: "WSP·10·GGGG",
+  ticket_token: TOKEN,
+  checked_in_at: "2026-10-10T20:00:00.000Z",
+  plus_one_name: "Simona Ivanova",
+  plus_one_seal_code: "WSP·10·PPPP",
+  plus_one_ticket_token: PLUS_TOKEN,
+  plus_one_checked_in_at: null,
+};
+
+test("the guest's token opens the guest's ticket", () => {
+  assert.deepEqual(ticketForToken(ROW, TOKEN), {
+    holder: "guest",
+    guest_name: "Michelle Georgieva",
+    seal_code: "WSP·10·GGGG",
+    checked_in_at: "2026-10-10T20:00:00.000Z",
+    bringing: "Simona Ivanova",
+    brought_by: null,
+  });
+});
+
+test("the plus-one's token opens their own ticket", () => {
+  assert.deepEqual(ticketForToken(ROW, PLUS_TOKEN), {
+    holder: "plus_one",
+    guest_name: "Simona Ivanova",
+    seal_code: "WSP·10·PPPP",
+    checked_in_at: null,
+    bringing: null,
+    brought_by: "Michelle Georgieva",
+  });
+});
+
+test("unknown tokens and declined replies have no ticket", () => {
+  assert.equal(ticketForToken(ROW, "0".repeat(32)), null);
+  assert.equal(ticketForToken({ ...ROW, status: "declined" }, TOKEN), null);
+  assert.equal(ticketForToken(null, TOKEN), null);
+});
+
+test("door list shows the guest and the plus-one as separate check-ins, newest first", () => {
+  const scans = doorScans([
+    { ...ROW, plus_one_checked_in_at: "2026-10-10T20:05:00.000Z" },
+    { guest_name: "Petar Popov", seal_code: "WSP·10·QQQQ", checked_in_at: "2026-10-10T20:02:00.000Z", plus_one_name: null, plus_one_checked_in_at: null },
+  ]);
+  assert.deepEqual(scans, [
+    { guest_name: "Simona Ivanova", seal_code: "WSP·10·PPPP", checked_in_at: "2026-10-10T20:05:00.000Z", brought_by: "Michelle Georgieva" },
+    { guest_name: "Petar Popov", seal_code: "WSP·10·QQQQ", checked_in_at: "2026-10-10T20:02:00.000Z", brought_by: null },
+    { guest_name: "Michelle Georgieva", seal_code: "WSP·10·GGGG", checked_in_at: "2026-10-10T20:00:00.000Z", brought_by: null },
+  ]);
+});
+
+test("the venue stays hidden until it is set and its reveal time has passed", () => {
+  const now = new Date("2026-10-09T14:00:00.000Z");
+  const details = { venue_name: "Hotel Juno", venue_address: "Sofia, Main St 1", map_url: "https://maps.google.com/?q=Hotel+Juno", reveal_at: "2026-10-09T15:00:00.000Z" };
+  assert.equal(publicVenue(null, now), null);
+  assert.equal(publicVenue({ venue_name: null, venue_address: null, reveal_at: null }, now), null);
+  assert.equal(publicVenue(details, now), null);
+  assert.deepEqual(publicVenue(details, new Date("2026-10-09T15:00:00.000Z")), {
+    name: "Hotel Juno",
+    address: "Sofia, Main St 1",
+    mapUrl: "https://maps.google.com/?q=Hotel+Juno",
+  });
+  assert.equal(publicVenue({ ...details, reveal_at: null }, now).name, "Hotel Juno");
+});
+
+test("the venue map link must be https", () => {
+  const details = { venue_name: "Hotel Juno", venue_address: null, map_url: "javascript:alert(1)", reveal_at: null };
+  assert.equal(publicVenue(details, new Date()).mapUrl, null);
 });

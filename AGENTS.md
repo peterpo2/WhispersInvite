@@ -60,6 +60,8 @@ functions/
 sql/schema.sql                     Full schema for a fresh Supabase project
 sql/2026-09-24-door-scanner.sql    Migration for the existing production DB (ticket_token)
 sql/2026-09-24-rsvp-columns.sql    Idempotent migration: missing rsvps columns and unique indexes
+sql/2026-09-25-plus-one-tickets-and-venue.sql  Plus-one ticket columns (+ backfill) and event_details (venue)
+assets/ticket-card.js              Draws tickets as 1080×1920 PNGs and saves/shares them (window.WhispersTickets)
 sql/2026-09-24-seal-code-unique.sql  Idempotent migration: unique (event_key, seal_code) index
 test/rsvp.test.js                  node:test suite for functions/_shared/rsvp.js
 test/access.test.js                node:test suite for functions/_shared/access.js
@@ -102,10 +104,10 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
 | Method | Path | File | Behaviour |
 |---|---|---|---|
 | POST | `/api/rsvp` | `functions/api/rsvp.js` | Validate → reject a plus-one email already used by another attending guest of this event (`409`) → if the body has an invitation `guestId` that already has a row, PATCH that row with `buildRsvpUpdate` (guarded by `checked_in_at=is.null`; same ticket token and seal code; a checked-in guest gets `409` "already been used at the door") → otherwise plain insert into `rsvps` (`Prefer: return=minimal`; an insert `409` maps to the duplicate-email error only when `isDuplicatePlusOneEmail(pgError)` is true; when `isDuplicateSealCode(pgError)` is true it rebuilds the row with a fresh seal code and token and retries, up to 3 retries; any other `409`, or running out of retries, returns `502`) → returns only `{ ok, ticketToken, sealCode, ticketUrl, checkInUrl }` (`sealCode` is null for a decline; the frontend never uses `checkInUrl`) |
-| GET | `/api/ticket?token=` | `functions/api/ticket.js` | Ticket JSON for an attending RSVP, plus `ticketUrl` and `checkInUrl` |
+| GET | `/api/ticket?token=` | `functions/api/ticket.js` | Looks the token up in `ticket_token` **or** `plus_one_ticket_token` and returns `ticketForToken(row, token)` (`holder`, `guest_name`, `seal_code`, `checked_in_at`, `bringing`, `brought_by`), `venue` (`publicVenue` of `event_details`: null until set and past `reveal_at`), `ticketUrl`, `checkInUrl` |
 | GET | `/api/checkin?token=` | `functions/api/checkin.js` | Read-only. `302` to `checkInRedirectPath(token)`: `/ticket/<token>`, or `/` for a missing/malformed token |
-| GET | `/api/door` | `functions/api/door.js` | The 80 most recent check-ins |
-| POST | `/api/door` | `functions/api/door.js` | Body `{token\|value\|url}` (parsed by `tokenFromValue`) → `checked_in` / `already_checked_in`; the ticket object omits `id` and `status` |
+| GET | `/api/door` | `functions/api/door.js` | The 80 most recent check-ins, guest and plus-one as separate entries (`doorScans`) |
+| POST | `/api/door` | `functions/api/door.js` | Body `{token\|value\|url}` (parsed by `tokenFromValue`) → finds the guest or plus-one ticket → PATCHes `checked_in_at` or `plus_one_checked_in_at` (`is.null` guard) → `checked_in` / `already_checked_in`; the ticket object never includes tokens or ids |
 | GET | `/api/guests?q=` | `functions/api/guests.js` | Legacy guest-list search (duplicates helpers inline) |
 | GET | `/ticket/:token` | `functions/ticket/[token].js` | Server-rendered ticket page |
 | GET | `/staff/rose-door-10` | `functions/staff/rose-door-10.js` | Server-rendered camera scanner |
@@ -119,7 +121,7 @@ first, so the result is "already checked in".
 
 `functions/_middleware.js` runs before every request:
 - Only `/`, `/index.html`, the `/api/*` routes above (exact names, so `/api/*.js` is blocked),
-  `/ticket/:token`, `/hi/:token`, `/staff/rose-door-10` and `/assets/<lowercase-name>.png`
+  `/ticket/:token`, `/hi/:token`, `/staff/rose-door-10` and `/assets/<lowercase-name>.png|js`
   reach `next()`. Everything else is a no-store 404.
   Add any new route to `isPublicPath` in `functions/_shared/access.js` and its test.
 - `/robots.txt` returns `Disallow: /`.
@@ -152,6 +154,11 @@ first, so the result is "already checked in".
     - `submitted_at` is `now().toISOString()` (inject `now` in tests).
     - `seal_code` is `makeSeal()` for attending rows and null for declined rows.
     - The email is normalised. Declined rows have null plus-one fields.
+  - Each plus-one has their **own ticket**: `plus_one_ticket_token`, `plus_one_seal_code`,
+    `plus_one_checked_in_at` (the second `makeId()` / `makeSeal()` call in `buildRsvpRow`).
+    `/api/rsvp` returns `plusOneTicketToken`, `plusOneSealCode`, `plusOneTicketUrl`.
+  - `buildRsvpUpdate` keeps the plus-one's ticket only when the email is unchanged; a new plus-one
+    gets a new ticket. `/api/rsvp` refuses (409) to replace a plus-one who is already inside.
   - `buildRsvpUpdate(row, existing)`: the PATCH for a repeat RSVP from the same invitation. It
     carries name, status, plus-one and `submitted_at`, keeps `existing.seal_code` (a guest who
     first declined gets the new one), and never touches `ticket_token`, `guest_id` or `event_key`.

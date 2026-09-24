@@ -16,6 +16,9 @@ create table if not exists rsvps (
   seal_code text,
   ticket_token text,
   checked_in_at timestamptz,
+  plus_one_ticket_token text,
+  plus_one_seal_code text,
+  plus_one_checked_in_at timestamptz,
   submitted_at timestamptz default now(),
   unique(event_key, guest_id)
 );
@@ -31,6 +34,25 @@ create unique index if not exists rsvps_ticket_token_unique
   on rsvps (ticket_token)
   where ticket_token is not null;
 create index if not exists rsvps_checked_in_at_idx on rsvps (checked_in_at);
+create unique index if not exists rsvps_plus_one_ticket_token_unique
+  on rsvps (plus_one_ticket_token)
+  where plus_one_ticket_token is not null;
+create unique index if not exists rsvps_event_plus_one_seal_code_unique
+  on rsvps (event_key, plus_one_seal_code)
+  where plus_one_seal_code is not null;
+
+create table if not exists event_details (
+  event_key text primary key,
+  venue_name text,
+  venue_address text,
+  map_url text,
+  reveal_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+alter table event_details enable row level security;
+insert into event_details (event_key, reveal_at)
+values ('whispers-2026-10-10', '2026-10-09 18:00:00+03')
+on conflict (event_key) do nothing;
 
 insert into guest_list (id, name, email) values
   ('demo-peter-popov', 'Peter Popov', null),

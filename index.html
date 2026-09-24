@@ -37,11 +37,11 @@ img{max-width:100%}
 .a-beam{left:50%;top:-10%;width:130%;height:95%;opacity:0;transform:translateX(-50%);
   background:conic-gradient(from 180deg at 50% 0%,transparent 163deg,rgba(235,203,149,.13) 176deg,rgba(235,203,149,.18) 180deg,rgba(235,203,149,.13) 184deg,transparent 197deg);
   -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 45%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 45%,transparent 100%)}
-.a-rose{left:50%;top:50%;width:min(160vw,960px);aspect-ratio:1;opacity:0;
+.a-rose{left:50%;top:50%;width:min(150vw,900px);aspect-ratio:1;opacity:0;
   transform:translate(-50%,-50%) scale(.92);
-  background:url("/assets/whispers-mark.png") 50% 46%/310% no-repeat;
+  background:url("/assets/whispers-rose.png") center/contain no-repeat;
   -webkit-mask-image:radial-gradient(closest-side,#000 38%,rgba(0,0,0,.5) 62%,transparent 100%);mask-image:radial-gradient(closest-side,#000 38%,rgba(0,0,0,.5) 62%,transparent 100%);
-  filter:blur(3px) saturate(1.1)}
+  filter:blur(2px) saturate(1.1)}
 .a-haze{left:-10%;right:-10%;bottom:-8%;height:48%;opacity:.55;
   background:radial-gradient(60% 70% at 30% 100%,rgba(122,14,24,.34) 0%,transparent 70%),radial-gradient(55% 60% at 78% 100%,rgba(100,10,20,.28) 0%,transparent 70%)}
 body[data-scene="seal"] .a-glow{opacity:1}
@@ -104,14 +104,14 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 .btn.primary:hover{color:#140D06;background:linear-gradient(180deg,#F1D6A6 0%,#DAB47C 48%,#BE935E 100%)}
 .btn.caps{font:400 15px/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;padding-left:12px;padding-right:12px}
 .btn[disabled]{opacity:.4;cursor:default;transform:none}
-.btn:focus-visible,.skip:focus-visible,.ticket-link:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
+.btn:focus-visible,.skip:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
 .err{color:#E58A91;font-size:16px;line-height:1.5;margin:14px 0 0}
 .err:empty,.submit-state:empty{margin:0}
 .submit-state{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--gold);margin-top:12px}
 
 /* ── 1. seal ── */
 #s-seal .inner{display:flex;flex-direction:column;align-items:center}
-.sealwrap{position:relative;width:min(78vw,46dvh,380px);aspect-ratio:1;margin:0 auto 34px;cursor:pointer;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;border-radius:50%}
+.sealwrap{position:relative;width:min(88vw,50dvh,460px);aspect-ratio:1;margin:0 auto 34px;cursor:pointer;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;border-radius:50%}
 .sealwrap::before{content:"";position:absolute;inset:8%;border-radius:50%;pointer-events:none;
   box-shadow:0 0 90px 50px rgba(217,174,120,.1),0 0 160px 90px rgba(163,22,33,.06);animation:sealAmbient 4.6s ease-in-out infinite}
 @keyframes sealAmbient{0%,100%{opacity:.6;transform:scale(.94)}50%{opacity:1;transform:scale(1.05)}}
@@ -122,10 +122,10 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 #s-seal.cracking .sealimg{animation:crack 1.1s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes crack{0%{transform:scale(.965);opacity:1}24%{transform:scale(1.08);filter:drop-shadow(0 0 90px rgba(217,174,120,.8)) brightness(1.4)}100%{transform:scale(1.55);opacity:0;filter:drop-shadow(0 0 120px rgba(217,174,120,0)) blur(6px)}}
 /* explicit size: iOS Safari does not stretch an <svg> with inset alone, which put the ring off-centre */
-.ring{position:absolute;top:-14px;left:-14px;width:calc(100% + 28px);height:calc(100% + 28px);pointer-events:none;overflow:visible}
-.ring circle{fill:none;stroke:var(--gold);stroke-width:.8}
-#prog{stroke-width:1.2;stroke-linecap:round;stroke-dasharray:1 1000;filter:drop-shadow(0 0 3px rgba(235,203,149,.9))}
-#s-seal.pressing #prog{stroke-width:1.6}
+.ring{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.ring circle{fill:none;stroke:var(--gold-hi)}
+#prog{stroke-width:1.4;stroke-linecap:round;stroke-dasharray:1 1000;opacity:0;transition:opacity .25s ease;filter:drop-shadow(0 0 4px rgba(235,203,149,.95))}
+#s-seal.pressing #prog{opacity:1}
 .hint{font-family:var(--serif);font-style:italic;font-size:clamp(23px,6.6vw,28px);line-height:1.3;color:#F1E5D1;letter-spacing:.02em;margin:0}
 .pulse{animation:pulse 2.8s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
@@ -197,8 +197,10 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .passfoot{font-family:var(--serif);font-size:21px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}
 .passfoot b{font-weight:400;color:#F6EFE4}
+.venue-map{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
 .bringing{display:block;margin-top:10px;padding-top:10px;border-top:1px solid rgba(217,174,120,.14)}
-.ticket-link{display:inline-block;margin-top:20px;padding:8px 0;color:var(--gold-hi);font:400 14px var(--sans);letter-spacing:.24em;text-transform:uppercase;text-decoration:none;border-bottom:1px solid rgba(235,203,149,.4)}
+#saveTickets{margin-top:24px}
+.save-state{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--mute);margin:10px 0 0;min-height:1em}
 .tickets-carousel{width:100%}
 .ticket-slide{display:none}
 .ticket-slide.active{display:block;animation:lineIn .5s var(--ease) both}
@@ -242,7 +244,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <div class="inner">
 <div aria-label="Press and hold to break the seal" class="sealwrap" id="sealwrap" role="button" tabindex="0">
 <img alt="Whispers seal" class="sealimg" draggable="false" id="sealimg" src="/assets/whispers-seal.png"/>
-<svg aria-hidden="true" class="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" opacity=".16" r="49"></circle><circle cx="50" cy="50" id="prog" r="49" transform="rotate(-90 50 50)"></circle></svg>
+<svg aria-hidden="true" class="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" id="prog" r="49.2" transform="rotate(-90 50 50)"></circle></svg>
 </div>
 <p class="hint pulse" id="hint">Press and hold to break the seal</p>
 <div class="rule"></div>
@@ -344,11 +346,12 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <p class="code" id="passcode">—</p>
 <p class="codelabel">Your seal</p>
 <div aria-label="QR code" class="qr" id="qr"></div>
-<p class="passfoot">Saturday <b>10 October</b> · Doors <b>22:00</b><br/>Sofia Center · the address reaches you at <b>18:00 on the 9th</b><span class="bringing" id="bringingLine">Coming on your own</span></p>
+<p class="passfoot">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span class="venue-line">Sofia Center · the address reaches you at <b>18:00 on the 9th</b></span><span class="bringing" id="bringingLine">Coming on your own</span></p>
 </div>
 <p class="sub st">Your RSVP has been received. Your seal is ready for the door.</p>
-<a class="ticket-link st" hidden="" href="#" id="ticketLink" rel="noopener" target="_blank">Open private ticket</a>
-<button class="btn caps st" id="reset" style="margin-top:24px">Start over</button>
+<button class="btn primary caps st" id="saveTickets">Private ticket</button>
+<p aria-live="polite" class="save-state st" id="saveState"></p>
+<button class="btn caps st" id="reset" style="margin-top:14px">Start over</button>
 </div>
 </section>
 
@@ -364,11 +367,12 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="/assets/ticket-card.js"></script>
 <script>
 (function(){
   const $ = (s) => document.querySelector(s);
   const SUBMIT_URL = '/api/rsvp';
-  const state = { guestName:null, guestId:null, attending:null, plusOne:null, sealCode:null, ticketUrl:null };
+  const state = { guestName:null, guestId:null, attending:null, plusOne:null, sealCode:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null };
 
   // ── Token personalisation ──────────────────────────
   const urlToken = new URLSearchParams(window.location.search).get('token') || null;
@@ -400,7 +404,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   // Seal hold
   let HOLD=1250,t0=0,raf=null,done=false;
   const prog=$('#prog'),wrap=$('#sealwrap'),sealScreen=$('#s-seal');
-  const C=2*Math.PI*49;
+  const C=2*Math.PI*49.2;
   function tick(){const p=Math.min(1,(Date.now()-t0)/HOLD);prog.setAttribute('stroke-dasharray',(C*p)+' '+C);if(p>=1){openSeal();return;}raf=requestAnimationFrame(tick)}
   function start(e){if(done||raf)return;e.preventDefault();if(e.pointerId!==undefined){try{wrap.setPointerCapture(e.pointerId)}catch(_){}}t0=Date.now();sealScreen.classList.add('pressing');$('#hint').textContent='Hold…';$('#hint').classList.remove('pulse');raf=requestAnimationFrame(tick)}
   function stop(){if(done||!raf)return;cancelAnimationFrame(raf);raf=null;sealScreen.classList.remove('pressing');prog.setAttribute('stroke-dasharray','1 1000');$('#hint').textContent='Press and hold to break the seal';$('#hint').classList.add('pulse')}
@@ -480,13 +484,40 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
     if(!state.ticketUrl){setBusy(false,$('#pstate'));$('#perr').textContent='We could not save your RSVP. Please try again.';return;}
     $('#pstate').textContent='';
     state.plusOne=plusOne;state.sealCode=result.data?.sealCode||'WSP · 10';
+    state.plusTicketUrl=plusOne?result.data?.plusOneTicketUrl||null:null;state.plusSealCode=result.data?.plusOneSealCode||null;
     $('#passname').textContent=state.guestName;$('#passcode').textContent=state.sealCode;
     $('#bringingLine').innerHTML=plusOne?'Bringing <b>'+escapeHtml(plusOne.name)+'</b>':'Coming on your own';
-    const ticketLink=$('#ticketLink');
-    if(state.ticketUrl){ticketLink.href=state.ticketUrl;ticketLink.hidden=false;}else{ticketLink.hidden=true;}
     makeQR(state.ticketUrl);
     show('#s-done');
     buildTicketCards();
+    loadVenue(result.data?.ticketToken).then(prepareImages);
+  });
+
+  // ── Location: shown once it is announced (event_details) ──
+  const VENUE_WAIT='Sofia Center · the address reaches you at <b>18:00 on the 9th</b>';
+  function venueHtml(){const v=state.venue;if(!v)return VENUE_WAIT;const t=escapeHtml([v.name,v.address].filter(Boolean).join(' · '));return v.mapUrl?'<a class="venue-map" href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+t+'</a>':t}
+  function venueText(){const v=state.venue;return v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia Center · the address reaches you at 18:00 on the 9th'}
+  async function loadVenue(token){
+    if(!token)return;
+    try{const r=await fetch('/api/ticket?token='+encodeURIComponent(token),{headers:{'Accept':'application/json'}});const d=await r.json();state.venue=d&&d.venue||null;}catch(_){state.venue=null}
+    document.querySelectorAll('#s-done .venue-line').forEach(el=>el.innerHTML=venueHtml());
+  }
+
+  // ── "Private ticket": save your ticket (and your guest's) to this device ──
+  let imagesReady=null;
+  function ticketImages(){
+    const date='Saturday 10 October · Doors 22:00',note='Show this at the door.';
+    const list=[{name:state.guestName,role:'Founding guest',sealCode:state.sealCode,url:state.ticketUrl,lines:[date,venueText(),state.plusOne?'Bringing '+state.plusOne.name:'Coming on your own'],note}];
+    if(state.plusOne&&state.plusTicketUrl)list.push({name:state.plusOne.name,role:'Guest of '+state.guestName,sealCode:state.plusSealCode,url:state.plusTicketUrl,lines:[date,venueText()],note});
+    return list;
+  }
+  function prepareImages(){imagesReady=window.WhispersTickets?window.WhispersTickets.prepare(ticketImages()).catch(()=>null):Promise.resolve(null);return imagesReady}
+  $('#saveTickets').addEventListener('click',async()=>{
+    const st=$('#saveState');st.textContent='';
+    const files=await(imagesReady||prepareImages());
+    if(!files){st.textContent='Your ticket could not be prepared. Please try again.';imagesReady=null;return;}
+    const how=await window.WhispersTickets.save(files);
+    if(how==='downloaded')st.textContent=files.length>1?'Both tickets are saved to this device.':'Your ticket is saved to this device.';
   });
 
   function buildTicketCards(){
@@ -502,20 +533,20 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
     pass.parentNode.insertBefore(carousel,pass);
     const s1=document.createElement('div');s1.className='ticket-slide active';
     carousel.appendChild(s1);s1.appendChild(pass);
-    // Plus-one card: shares the guest's ticket (same token, seal code and QR target)
+    // Plus-one card: their own ticket (own token, seal code and QR)
     const s2=document.createElement('div');s2.className='ticket-slide';s2.id='plusOneSlide';
     s2.innerHTML='<div class="pass">'
       +'<div class="brand"><img alt="" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>'
       +'<p class="nm">'+escapeHtml(state.plusOne.name)+'</p>'
-      +'<p class="rl">Founding guest</p>'
+      +'<p class="rl">Guest of '+escapeHtml(state.guestName)+'</p>'
       +'<div class="rule"></div>'
-      +'<p class="code">'+escapeHtml(state.sealCode)+'</p>'
-      +'<p class="codelabel">Your seal</p>'
+      +'<p class="code">'+escapeHtml(state.plusSealCode||'WSP · 10')+'</p>'
+      +'<p class="codelabel">Their seal</p>'
       +'<div aria-label="QR code" class="qr" id="qr2"></div>'
-      +'<p class="passfoot">Saturday <b>10 October</b> · Doors <b>22:00</b><br/>Sofia Center · the address reaches you at <b>18:00 on the 9th</b><span class="bringing">Brought by <b>'+escapeHtml(state.guestName)+'</b></span></p>'
+      +'<p class="passfoot">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span class="venue-line">'+venueHtml()+'</span></p>'
       +'</div>';
     carousel.appendChild(s2);
-    if(window.QRCode)QRCode.toCanvas(state.ticketUrl,QR_OPTS,(e,c)=>{const q2=document.getElementById('qr2');if(!e&&q2)q2.appendChild(c);});
+    if(window.QRCode&&state.plusTicketUrl)QRCode.toCanvas(state.plusTicketUrl,QR_OPTS,(e,c)=>{const q2=document.getElementById('qr2');if(!e&&q2)q2.appendChild(c);});
     // Nav
     const nav=document.createElement('div');nav.id='ticketNav';nav.className='ticket-nav';
     nav.innerHTML='<button aria-label="Your ticket" class="ticket-arrow" id="tickPrev">‹</button><div class="ticket-dots"><span class="tdot active"></span><span class="tdot"></span></div><button aria-label="Their ticket" class="ticket-arrow" id="tickNext">›</button>';

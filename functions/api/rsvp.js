@@ -36,7 +36,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   if (body.guestId) {
-    const lookup = await supabaseFetch(env, `/rest/v1/rsvps?select=ticket_token,seal_code,checked_in_at&${guestFilter}&limit=1`);
+    const lookup = await supabaseFetch(env, `/rest/v1/rsvps?select=ticket_token,seal_code,checked_in_at,plus_one_email,plus_one_ticket_token,plus_one_seal_code,plus_one_checked_in_at&${guestFilter}&limit=1`);
     if (lookup.error) return lookup.error;
     if (!lookup.response.ok) return json({ error: "Could not save RSVP" }, 502);
 
@@ -45,6 +45,9 @@ export async function onRequestPost({ request, env }) {
       if (existing.checked_in_at) return json({ error: ALREADY_INSIDE }, 409);
 
       const patch = buildRsvpUpdate(row, existing);
+      if (existing.plus_one_checked_in_at && patch.plus_one_ticket_token !== existing.plus_one_ticket_token) {
+        return json({ error: ALREADY_INSIDE }, 409);
+      }
       const updated = await supabaseFetch(env, `/rest/v1/rsvps?${guestFilter}&checked_in_at=is.null`, {
         method: "PATCH",
         headers: {
@@ -63,7 +66,7 @@ export async function onRequestPost({ request, env }) {
       const rows = await updated.response.json();
       if (!rows.length) return json({ error: ALREADY_INSIDE }, 409);
 
-      return ticketResponse(request.url, existing.ticket_token, patch.seal_code);
+      return ticketResponse(request.url, existing.ticket_token, patch.seal_code, patch.plus_one_ticket_token, patch.plus_one_seal_code);
     }
   }
 
@@ -88,16 +91,19 @@ export async function onRequestPost({ request, env }) {
     row = buildRsvpRow(body);
   }
 
-  return ticketResponse(request.url, row.ticket_token, row.seal_code);
+  return ticketResponse(request.url, row.ticket_token, row.seal_code, row.plus_one_ticket_token, row.plus_one_seal_code);
 }
 
-function ticketResponse(requestUrl, ticketToken, sealCode) {
+function ticketResponse(requestUrl, ticketToken, sealCode, plusOneTicketToken, plusOneSealCode) {
   return json({
     ok: true,
     ticketToken,
     sealCode,
     ticketUrl: buildTicketUrl(requestUrl, ticketToken),
     checkInUrl: buildCheckInUrl(requestUrl, ticketToken),
+    plusOneTicketToken: plusOneTicketToken || null,
+    plusOneSealCode: plusOneSealCode || null,
+    plusOneTicketUrl: plusOneTicketToken ? buildTicketUrl(requestUrl, plusOneTicketToken) : null,
   });
 }
 
