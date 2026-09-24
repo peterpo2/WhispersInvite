@@ -77,8 +77,10 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
 ## Architecture
 
 ### End-to-end flow
-1. The guest opens `/` (`index.html`). The screens are seal → film → letter → identify →
-   rsvp → plus → done / decline.
+1. The guest opens `/hi/<token>` (redirects to `/?token=<token>`) or the plain `/`
+   (`index.html`). The screens are seal → film → letter → [identify] → rsvp → plus →
+   done / decline. With a token, `/api/guest-check` supplies the name (shown on the seal) and
+   identify is skipped. Without one, identify asks for a full name (2+ words).
 2. `submitRSVP()` POSTs to `/api/rsvp`, which returns `ticketToken`, `sealCode`, `ticketUrl`
    and `checkInUrl`.
 3. `/ticket/:token` renders the ticket page. It fetches `/api/ticket` on the client and draws a
@@ -117,12 +119,13 @@ first, so the result is "already checked in".
 
 `functions/_middleware.js` runs before every request:
 - Only `/`, `/index.html`, the `/api/*` routes above (exact names, so `/api/*.js` is blocked),
-  `/ticket/:token` and `/staff/rose-door-10` reach `next()`. Everything else is a no-store 404.
+  `/ticket/:token`, `/hi/:token`, `/staff/rose-door-10` and `/assets/<lowercase-name>.png`
+  reach `next()`. Everything else is a no-store 404.
   Add any new route to `isPublicPath` in `functions/_shared/access.js` and its test.
 - `/robots.txt` returns `Disallow: /`.
 - Every response gets `X-Frame-Options: DENY`, HSTS, `Referrer-Policy: no-referrer`,
   `nosniff`, a `Permissions-Policy` (camera self only) and `X-Robots-Tag: noindex, nofollow`.
-  There is no CSP yet; inline scripts and base64 images would need one written carefully.
+  There is no CSP yet; inline scripts and styles would need one written carefully.
 
 ### Shared helpers (`functions/_shared/`)
 - `responses.js`: `json(data, status = 200)` always sets `Cache-Control: no-store`.
@@ -171,11 +174,20 @@ first, so the result is "already checked in".
     the request origin.
 
 ### Frontend: `index.html`
-- Inline CSS and JS. Images are embedded as base64 `data:` URIs.
+- Inline CSS and JS. The two images live in `assets/`: `whispers-seal.png` (the seal on the
+  first screen, preloaded) and `whispers-mark.png` (the transparent mark, reused on every screen,
+  the ticket page, the scanner and, heavily blurred and masked, as the rose in the background).
+- Visual system: one fixed `.atmos` layer behind all screens (warm glow, film light beam, rose,
+  crimson haze). `show()` sets `body[data-scene]`, and CSS fades/moves the layers per scene.
+  Screens are frameless, full-height (`100dvh` with a `100vh` fallback) and pad for safe areas;
+  long screens scroll inside themselves. `show()` also gives the outgoing screen `.out` for
+  a 700 ms blur/fade exit. Primary buttons are gold-filled (`.btn.primary`), secondary are thin
+  outlines; `.caps` switches a button to Jost uppercase.
+- The seal's progress ring `<svg>` needs an explicit width/height: iOS Safari does not stretch
+  an SVG from `inset` alone, and the ring rendered off-centre.
 - It loads the QR library from jsDelivr (`qrcode@1.5.1/build/qrcode.min.js`, which is also used by
   `ticket/[token].js`) and Google Fonts (Cormorant Garamond, Jost). Don't bump to 1.5.4: that
   version has no `build/` folder and the URL returns 404.
-- **It is huge. Never read it whole.** Use grep or offset/partial reads.
 - Screens are `<section class="screen" id="s-*">`: `s-seal`, `s-film`, `s-letter`,
   `s-identify`, `s-rsvp`, `s-plus`, `s-done`, `s-decline`. `show()` swaps the `.on` class.
 - Seal: press and hold for `HOLD=1250` ms with a gold progress ring. `Enter ›` is the escape
