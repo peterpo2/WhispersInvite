@@ -81,10 +81,12 @@ Generated client-side from FNV-1a hash of `guestName|plusOneEmail` (or `guestNam
 
 After RSVP submit, backend returns:
 - `ticketToken` — URL-safe random string (40 chars, alphanumeric)
+- `sealCode` — server-generated, unique per event: `WSP·10·XXXX`
 - `ticketUrl` — `https://whispers-invite.pages.dev/ticket/{token}`
 - `checkInUrl` — `https://whispers-invite.pages.dev/api/checkin?token={token}`
 
-QR on the confirmed screen encodes the `checkInUrl`.  
+QR codes (confirmed screen and ticket page) encode the `ticketUrl`. Only the staff scanner checks guests in;
+`/api/checkin` just redirects to the ticket page.  
 The ticket page (`/ticket/{token}`) shows the full pass with a new QR.
 
 ### Token URL Edge Cases (TODO — not yet implemented in `index.html`)
@@ -126,7 +128,7 @@ Implementation: on page load, read `?token=` from URL → hit `/api/ticket?token
 |---|---|---|
 | POST | `/api/rsvp` | Submit RSVP (attending/declined), returns ticketToken + ticketUrl |
 | GET | `/api/ticket?token=` | Fetch ticket data by token |
-| GET | `/api/checkin?token=` | Mark check-in (used by QR scan), returns HTML |
+| GET | `/api/checkin?token=` | Legacy link: 302 redirect to `/ticket/{token}` (no check-in) |
 | POST/GET | `/api/door` | Door scanner: scan/mark + list tonight's check-ins |
 | GET | `/api/guests?q=` | Guest name search (legacy, not used in current UI) |
 
@@ -152,7 +154,7 @@ Implementation: on page load, read `?token=` from URL → hit `/api/ticket?token
 | status | text | `attending` or `declined` |
 | plus_one_name | text | nullable |
 | plus_one_email | text | nullable |
-| seal_code | text | WSP·10·XXXX |
+| seal_code | text | WSP·10·XXXX, server-generated, unique per event |
 | ticket_token | text | unique, URL-safe |
 | checked_in_at | timestamptz | null until door scan |
 | submitted_at | timestamptz | auto |

@@ -52,7 +52,7 @@ functions/
   _shared/rsvp.js                  Pure validation / row-building / URL helpers (tested)
   api/rsvp.js                      POST /api/rsvp
   api/ticket.js                    GET  /api/ticket?token=
-  api/checkin.js                   GET  /api/checkin?token=   (QR target, HTML result)
+  api/checkin.js                   GET  /api/checkin?token=   (legacy link: 302 to the ticket)
   api/door.js                      GET/POST /api/door          (staff scanner API)
   api/guests.js                    GET  /api/guests?q=         (legacy, unused by UI)
   ticket/[token].js                GET  /ticket/:token         (ticket page)
@@ -60,6 +60,7 @@ functions/
 sql/schema.sql                     Full schema for a fresh Supabase project
 sql/2026-09-24-door-scanner.sql    Migration for the existing production DB (ticket_token)
 sql/2026-09-24-rsvp-columns.sql    Idempotent migration: missing rsvps columns and unique indexes
+sql/2026-09-24-seal-code-unique.sql  Idempotent migration: unique (event_key, seal_code) index
 test/rsvp.test.js                  node:test suite for functions/_shared/rsvp.js
 test/access.test.js                node:test suite for functions/_shared/access.js
 docs/project-spec.md               Project spec
@@ -78,17 +79,19 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
 ### End-to-end flow
 1. The guest opens `/` (`index.html`). The screens are seal → film → letter → identify →
    rsvp → plus → done / decline.
-2. `submitRSVP()` POSTs to `/api/rsvp`, which returns `ticketToken`, `ticketUrl` and
-   `checkInUrl`.
+2. `submitRSVP()` POSTs to `/api/rsvp`, which returns `ticketToken`, `sealCode`, `ticketUrl`
+   and `checkInUrl`.
 3. `/ticket/:token` renders the ticket page. It fetches `/api/ticket` on the client and draws a
-   QR code that encodes the check-in URL.
-4. At the door there are two paths:
-   - Scanning the QR with a phone camera opens `/api/checkin`, which checks the guest in. A
-     second scan shows "Already inside".
-   - Staff can scan on `/staff/rose-door-10`, which POSTs to `/api/door` and lists recent
+   QR code that encodes the ticket's own URL (`/ticket/<token>`, built server-side from the
+   token).
+4. **Every QR encodes the ticket URL, never the check-in URL.** Opening a QR with a phone camera
+   only shows the ticket. Only door staff check guests in:
+   - `/api/checkin` no longer mutates anything. It 302s to `/ticket/<token>` so QR codes and
+     links issued before this change still land on the ticket.
+   - Staff scan on `/staff/rose-door-10`, which POSTs to `/api/door` and lists recent
      check-ins. The camera ignores the same value repeated within 4 s (a `Map` of value →
      last-seen time, refreshed on each repeat); manual Check always re-checks. "Already inside." is a crimson `warn` result with the first check-in time and
-     a vibration, clearly different from "Confirmed."; `/api/checkin` uses the same warning.
+     a vibration, clearly different from "Confirmed.".
    - The ticket page and scanner use the brief's fonts and colour tokens. The ticket page shows
      a retry message if the ticket fetch fails and the ticket link as text if the QR library
      does not load.
@@ -96,9 +99,9 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
 ### Routes (Pages Functions, file-based routing)
 | Method | Path | File | Behaviour |
 |---|---|---|---|
-| POST | `/api/rsvp` | `functions/api/rsvp.js` | Validate → reject a plus-one email already used by an attending guest of this event (`409`) → plain insert into `rsvps` (`Prefer: return=minimal`; an insert `409` maps to the duplicate-email error only when `isDuplicatePlusOneEmail(pgError)` is true; any other `409` returns `502`) → returns only `{ ok, ticketToken, ticketUrl, checkInUrl }` |
-| GET | `/api/ticket?token=` | `functions/api/ticket.js` | Ticket JSON for an attending RSVP |
-| GET | `/api/checkin?token=` | `functions/api/checkin.js` | Sets `checked_in_at` and returns a small HTML result page |
+| POST | `/api/rsvp` | `functions/api/rsvp.js` | Validate → reject a plus-one email already used by an attending guest of this event (`409`) → plain insert into `rsvps` (`Prefer: return=minimal`; an insert `409` maps to the duplicate-email error only when `isDuplicatePlusOneEmail(pgError)` is true; when `isDuplicateSealCode(pgError)` is true it rebuilds the row with a fresh seal code and token and retries, up to 3 retries; any other `409`, or running out of retries, returns `502`) → returns only `{ ok, ticketToken, sealCode, ticketUrl, checkInUrl }` (`sealCode` is null for a decline; the frontend never uses `checkInUrl`) |
+| GET | `/api/ticket?token=` | `functions/api/ticket.js` | Ticket JSON for an attending RSVP, plus `ticketUrl` and `checkInUrl` |
+| GET | `/api/checkin?token=` | `functions/api/checkin.js` | Read-only. `302` to `checkInRedirectPath(token)`: `/ticket/<token>`, or `/` for a missing/malformed token |
 | GET | `/api/door` | `functions/api/door.js` | The 80 most recent check-ins |
 | POST | `/api/door` | `functions/api/door.js` | Body `{token\|value\|url}` (parsed by `tokenFromValue`) → `checked_in` / `already_checked_in`; the ticket object omits `id` and `status` |
 | GET | `/api/guests?q=` | `functions/api/guests.js` | Legacy guest-list search (duplicates helpers inline) |
@@ -108,7 +111,7 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
 Handlers export `onRequestGet` / `onRequestPost`, plus a catch-all `onRequest` that returns
 `methodNotAllowed()` (405).
 
-Check-in is atomic: both `checkin.js` and `door.js` PATCH with `&checked_in_at=is.null` and
+Check-in happens only in `door.js`. It is atomic: `door.js` PATCHes with `&checked_in_at=is.null` and
 `Prefer: return=representation`. Zero returned rows means someone else checked the ticket in
 first, so the result is "already checked in".
 
@@ -133,23 +136,30 @@ first, so the result is "already checked in".
     - `guestName` and `status` must be strings. `guestName` needs at least 2 words and at most
       120 chars.
     - `status` must be `attending` or `declined`.
-    - An optional `sealCode` must be a string of at most 32 chars.
     - For `attending`, an optional `plusOne` must be an object with a string 2-word name
       (at most 120 chars) and a valid string email (at most 254 chars). For `declined`, the
       plus-one is ignored.
-  - `buildRsvpRow(body, makeId, now)` produces the DB row. The server owns identity: the
-    client's `ticketToken`, `guestId`, `event` and `submittedAt` are ignored.
+  - `buildRsvpRow(body, makeId, now, makeSeal)` produces the DB row. The server owns identity:
+    the client's `ticketToken`, `guestId`, `event`, `submittedAt` and `sealCode` are ignored.
     - `ticket_token` = `guest_id` = `makeId()`.
     - `event_key` is always `EVENT_KEY` (`"whispers-2026-10-10"`).
     - `submitted_at` is `now().toISOString()` (inject `now` in tests).
-    - The email is normalised. `seal_code` is capped at 32 chars. Declined rows have null
-      plus-one fields.
+    - `seal_code` is `makeSeal()` for attending rows and null for declined rows.
+    - The email is normalised. Declined rows have null plus-one fields.
+  - `makeSealCode(randomInt)`: `WSP·10·XXXX` (the brief's format), four characters drawn from
+    `SEAL_ALPHABET` (`ACDEFGHJKMNPQRTUVWXYZ234679`: no 0/O, 1/I/L, 5/S, 8/B).
+    `randomInt(max)` returns an integer in `[0, max)`; the default uses
+    `crypto.getRandomValues` with rejection sampling. Uniqueness is enforced by the DB index,
+    not by the generator.
   - `makeTicketToken(randomId)`: a UUID reduced to alphanumerics, at most 40 chars.
-  - `tokenFromValue(value)`: pulls a ticket token from a scanned check-in URL, ticket URL or
-    bare token. It returns `""` unless the result is 32–40 alphanumeric chars.
+  - `tokenFromValue(value)`: pulls a ticket token from a scanned ticket URL (what QRs encode),
+    legacy check-in URL or bare token. It returns `""` unless the result is 32–40 alphanumeric chars.
   - `normalizeEmail`: trims and lowercases.
   - `isDuplicatePlusOneEmail(pgError)`: true only for a Postgres `23505` unique violation whose
     message mentions `plus_one_email`.
+  - `isDuplicateSealCode(pgError)`: the same, for a message that mentions `seal_code`.
+  - `checkInRedirectPath(token)`: `/ticket/<encoded token>` for a 1–64 char `[A-Za-z0-9_-]`
+    token, otherwise `/`.
   - `validateGuestQuery(q)`: queries must be 2–80 chars.
   - `siteOriginFromRequestUrl`, `buildTicketUrl`, `buildCheckInUrl`: build absolute URLs from
     the request origin.
@@ -172,7 +182,8 @@ first, so the result is "already checked in".
     (key repeat ignored).
   - `#skipseal` / `#skipfilm` live outside the `.screen` sections so their `z-index` can sit
     above the `body::after` vignette. `show()` toggles their `display`.
-- `submitRSVP()` POSTs `{ guestName, status, plusOne, sealCode }` to `SUBMIT_URL = '/api/rsvp'`.
+- `submitRSVP()` POSTs `{ guestName, status, plusOne }` to `SUBMIT_URL = '/api/rsvp'`. The
+  client does not make seal codes.
   - There is **no localStorage fallback**. A non-2xx response returns
     `{ ok:false, error: data.error }`, and a network error returns a "could not reach us"
     message.
@@ -185,8 +196,15 @@ first, so the result is "already checked in".
     shows the server's `result.error` (e.g. the duplicate-email 409), falling back to the
     generic message.
   - The fetch aborts after 12 s (`AbortController`); an abort shows the network error.
-  - The `s-done` QR is drawn only from the server's `checkInUrl`. The seal code is display text
-    only.
+  - Both `s-done` QRs (`#qr` on the guest card and `#qr2` on the plus-one card in the
+    `buildTicketCards()` carousel) encode `state.ticketUrl` only: the server's `ticketUrl`, or
+    `/ticket/<ticketToken>` if it is missing. With neither, the guest sees the save error.
+    Never encode `checkInUrl` or the seal code.
+  - `#passcode` shows the server's `sealCode`. The plus-one shares the guest's row and token,
+    so their card shows the same seal code and QR (the brief's one-code-per-person model would
+    need its own plus-one row). Before submit the code reads `—`.
+  - `s-plus` uses the brief's copy: "One person. Choose well." / "Their name and address go on
+    the door list with yours. Names cannot be changed after the seventh."
 
 ### Database (`sql/`)
 - `rsvps` columns:
@@ -198,6 +216,7 @@ first, so the result is "already checked in".
   - `(event_key, guest_id)`
   - `(event_key, lower(plus_one_email))` where not null
   - `ticket_token` where not null
+  - `(event_key, seal_code)` where not null
 - `guest_list` is a legacy/demo table.
 - Put schema changes in a new dated migration, `sql/YYYY-MM-DD-<topic>.sql`, and update
   `schema.sql` to match.
@@ -205,6 +224,9 @@ first, so the result is "already checked in".
   missing: `checked_in_at` was indexed but never added by the door-scanner migration, and the
   plus-one email unique index was never created. It also drops the legacy
   `rsvps_guest_id_fkey`. Run it by hand in the Supabase SQL editor.
+- `2026-09-24-seal-code-unique.sql` idempotently adds `rsvps_event_seal_code_unique`. Old
+  client-hashed codes can collide, so run its commented duplicate check (and the commented
+  fix-up if needed) first. Run it by hand in the Supabase SQL editor.
 
 ## Coding conventions
 
@@ -221,7 +243,7 @@ first, so the result is "already checked in".
   Never return upstream error bodies or stack traces to the client.
 - Parse request bodies inside `try/catch` and return `400` with a short user-facing message.
 - Any user data rendered into HTML must be escaped:
-  - Server-side: `escapeHtml`, defined locally in `checkin.js` and `ticket/[token].js`.
+  - Server-side: `escapeHtml`, defined locally in `ticket/[token].js`.
   - Client-side on the scanner page: `esc()`.
 - Put validation and normalisation logic as **pure functions** in `functions/_shared/rsvp.js`.
   Inject randomness, IDs and clocks as dependencies (see `makeTicketToken(randomId)` and

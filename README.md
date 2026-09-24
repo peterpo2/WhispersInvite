@@ -47,7 +47,7 @@ This route is intentionally not linked from the public invitation. For stronger 
 index.html                  Main invitation experience
 functions/api/rsvp.js       Creates RSVP records and ticket tokens
 functions/api/ticket.js     Returns ticket details by token
-functions/api/checkin.js    Confirms scanned tickets
+functions/api/checkin.js    Redirects old check-in links to the ticket page
 functions/api/door.js       Lists recent check-ins for staff
 functions/ticket/[token].js Private ticket page
 functions/staff/rose-door-10.js Staff scanner page
