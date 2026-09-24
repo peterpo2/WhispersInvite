@@ -86,8 +86,8 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
    - Scanning the QR with a phone camera opens `/api/checkin`, which checks the guest in. A
      second scan shows "Already inside".
    - Staff can scan on `/staff/rose-door-10`, which POSTs to `/api/door` and lists recent
-     check-ins. Camera scans are deduped per page session with a `Set` (manual Check always
-     re-checks). "Already inside." is a crimson `warn` result with the first check-in time and
+     check-ins. The camera ignores the same value repeated within 4 s (a `Map` of value →
+     last-seen time, refreshed on each repeat); manual Check always re-checks. "Already inside." is a crimson `warn` result with the first check-in time and
      a vibration, clearly different from "Confirmed."; `/api/checkin` uses the same warning.
    - The ticket page and scanner use the brief's fonts and colour tokens. The ticket page shows
      a retry message if the ticket fetch fails and the ticket link as text if the QR library
@@ -166,6 +166,8 @@ first, so the result is "already checked in".
   path.
   - Pointer events only (with `setPointerCapture`); don't add touch/mouse handlers. `start()`
     returns early while `raf` is set and `stop()` resets `raf=null`, so only one rAF loop runs.
+    `#sealimg` is `draggable="false"` with `-webkit-user-drag:none`, because an iOS image drag
+    would fire `pointercancel` mid-hold.
   - Keyboard: `#sealwrap` is `role="button" tabindex="0"`; holding Space/Enter works the same
     (key repeat ignored).
   - `#skipseal` / `#skipfilm` live outside the `.screen` sections so their `z-index` can sit
@@ -179,7 +181,9 @@ first, so the result is "already checked in".
     uses `#E0707A` (crimson `#A31621` is too dark for text on `--bg`).
   - The pending state ("Sealing…") goes in the neutral `.submit-state` line (`#pstate`,
     `#rstate`), never in `.err`. While a request is in flight `setBusy()` disables `#yes`,
-    `#no` and `#confirm`; they are re-enabled only on error.
+    `#no`, `#confirm` and `#backRsvp`; they are re-enabled only on error. The confirm error
+    shows the server's `result.error` (e.g. the duplicate-email 409), falling back to the
+    generic message.
   - The fetch aborts after 12 s (`AbortController`); an abort shows the network error.
   - The `s-done` QR is drawn only from the server's `checkInUrl`. The seal code is display text
     only.
