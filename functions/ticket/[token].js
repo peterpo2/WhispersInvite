@@ -101,7 +101,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   }
   const qr=$('qr');
   const fallback=()=>{qr.classList.add('fallback');qr.textContent=ticketUrl;};
-  if(window.QRCode){QRCode.toCanvas(ticketUrl,{width:384,margin:1,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else qr.appendChild(canvas);});}else{fallback();}
+  if(window.QRCode){QRCode.toCanvas(ticketUrl,{width:384,margin:2,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else qr.appendChild(canvas);});}else{fallback();}
 })();
 </script>
 </body>

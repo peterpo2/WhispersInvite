@@ -446,7 +446,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   $('#p1name').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#p1mail').focus()}});
   plusToggle.addEventListener('change',()=>{$('#plusFields').hidden=!plusToggle.checked;$('#confirm').textContent=plusToggle.checked?'Confirm both places':'Confirm my place';$('#perr').textContent=''});
 
-  const QR_OPTS={width:384,margin:1,color:{dark:'#0B0908',light:'#F1E9DC'}};
+  const QR_OPTS={width:384,margin:2,color:{dark:'#0B0908',light:'#F1E9DC'}};
   function makeQR(value){
     const qr=$('#qr');qr.innerHTML='';
     if(window.QRCode){

@@ -51,7 +51,7 @@
 
   async function qrCanvas(url) {
     const c = document.createElement("canvas");
-    await window.QRCode.toCanvas(c, url, { width: 560, margin: 1, color: { dark: "#0B0908", light: "#F1E9DC" } });
+    await window.QRCode.toCanvas(c, url, { width: 560, margin: 2, color: { dark: "#0B0908", light: "#F1E9DC" } });
     return c;
   }
 
@@ -108,16 +108,30 @@
     return new Promise((resolve) => canvas.toBlob((b) => resolve(new File([b], name, { type: "image/png" })), "image/png"));
   }
 
-  function slug(s) {
-    return String(s).normalize("NFKD").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "guest";
+  // "Simona Ivanova.png": the person's own name, any alphabet, minus characters that
+  // file systems reject.
+  const CYR = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh", щ: "sht", ъ: "a", ы: "y", ь: "y", э: "e", ю: "yu", я: "ya", є: "ye", і: "i", ї: "yi", ґ: "g", ђ: "dj", ј: "j", љ: "lj", њ: "nj", ћ: "c", џ: "dz" };
+  function latin(text) {
+    return [...String(text)].map((ch) => {
+      const lower = ch.toLowerCase(), out = CYR[lower];
+      if (out === undefined) return ch;
+      return ch === lower ? out : out.charAt(0).toUpperCase() + out.slice(1);
+    }).join("").normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+  }
+  function fileName(name, used) {
+    const base = latin(name || "").replace(/[\\/:*?"<>|\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "WHISPERS ticket";
+    let n = base, i = 2;
+    while (used.has(n.toLowerCase())) n = base + " (" + i++ + ")";
+    used.add(n.toLowerCase());
+    return n + ".png";
   }
 
   async function prepare(tickets) {
     if (!window.QRCode) throw new Error("QR library missing");
     try { await Promise.all([document.fonts.load(`300 104px ${SERIF}`), document.fonts.load(`italic 400 46px ${SERIF}`), document.fonts.load(`300 52px ${SANS}`)]); } catch (_) {}
     const [mark, rose] = await Promise.all([loadImage("/assets/whispers-mark.png"), loadImage("/assets/whispers-rose.png")]);
-    const files = [];
-    for (const t of tickets) files.push(await toFile(await draw(t, { mark, rose }), `whispers-ticket-${slug(t.name)}.png`));
+    const files = [], used = new Set();
+    for (const t of tickets) files.push(await toFile(await draw(t, { mark, rose }), fileName(t.name, used)));
     return files;
   }
 
