@@ -1,0 +1,17 @@
+const PUBLIC_PATHS = new Set([
+  "/",
+  "/index.html",
+  "/api/rsvp",
+  "/api/ticket",
+  "/api/checkin",
+  "/api/door",
+  "/api/guests",
+  "/staff/rose-door-10",
+]);
+
+const TICKET_PATH_RE = /^\/ticket\/[^/]+$/;
+
+export function isPublicPath(pathname) {
+  if (typeof pathname !== "string") return false;
+  return PUBLIC_PATHS.has(pathname) || TICKET_PATH_RE.test(pathname);
+}
