@@ -47,6 +47,10 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 #bringing{display:block;border-top:1px solid rgba(217,174,120,.14);padding-top:10px;margin-top:10px}#bringing:empty{display:none}
 .small{font-style:italic;font-size:19px;line-height:1.55;color:#CFC3B3;margin:22px auto 0;max-width:360px}
 .state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
+.meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
+.save{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:400 15px/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6)}
+.save[hidden]{display:none}.save:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
+.saved{font-style:italic;font-size:18px;color:var(--mute);margin:10px 0 0;min-height:1em}
 </style>
 </head>
 <body>
@@ -58,11 +62,14 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <div class="rule"></div>
 <div class="code" id="code">WSP · 10</div>
 <div class="qr" id="qr"></div>
-<p class="meta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/>Sofia Center<span id="bringing"></span></p>
+<p class="meta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia Center · the address reaches you at <b>18:00 on the 9th</b></span><span id="bringing"></span></p>
 <p class="small">Show this seal at the door. The QR confirms your place in the WHISPERS list.</p>
 <p class="state" id="state"></p>
+<button class="save" hidden id="save" type="button">Private ticket</button>
+<p aria-live="polite" class="saved" id="saved"></p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="/assets/ticket-card.js"></script>
 <script>
 (async()=>{
   const api=${JSON.stringify(apiUrl)},ticketUrl=${JSON.stringify(ticketUrl)};
@@ -75,10 +82,23 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   try{data=await res.json();}catch(e){failed();return;}
   const t=data&&data.ticket;
   if(!t){failed();return;}
+  const role=t.brought_by?'Guest of '+t.brought_by:'Founding guest';
   $('guest').textContent=t.guest_name;
+  document.querySelector('.role').textContent=role;
   $('code').textContent=t.seal_code||'WSP · 10';
-  $('bringing').innerHTML=t.plus_one_name?'Bringing <b>'+escapeHtml(t.plus_one_name)+'</b>':'Coming on your own';
+  $('bringing').innerHTML=t.bringing?'Bringing <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'':'Coming on your own');
+  const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia Center · the address reaches you at 18:00 on the 9th';
+  if(v)$('venue').innerHTML=v.mapUrl?'<a href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+escapeHtml(venueText)+'</a>':escapeHtml(venueText);
   $('state').textContent=t.checked_in_at?'Already checked in':'Ready for the door';
+  if(window.WhispersTickets){
+    const lines=['Saturday 10 October · Doors 22:00',venueText];
+    if(t.bringing)lines.push('Bringing '+t.bringing);
+    const spec=[{name:t.guest_name,role,sealCode:t.seal_code,url:ticketUrl,lines,note:'Show this at the door.'}];
+    const prep=()=>window.WhispersTickets.prepare(spec).catch(()=>null);
+    let ready=prep();
+    $('save').hidden=false;
+    $('save').onclick=async()=>{$('saved').textContent='';const files=await ready;if(!files){$('saved').textContent='Your ticket could not be prepared. Please try again.';ready=prep();return;}if(await window.WhispersTickets.save(files)==='downloaded')$('saved').textContent='Your ticket is saved to this device.';};
+  }
   const qr=$('qr');
   const fallback=()=>{qr.classList.add('fallback');qr.textContent=ticketUrl;};
   if(window.QRCode){QRCode.toCanvas(ticketUrl,{width:384,margin:1,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else qr.appendChild(canvas);});}else{fallback();}

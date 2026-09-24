@@ -74,6 +74,7 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
   const status = String(body.status).trim();
   const plusOne = status === "attending" ? body.plusOne || null : null;
   const ticketToken = makeId();
+  const sealCode = status === "attending" ? makeSeal() : null;
 
   return {
     event_key: EVENT_KEY,
@@ -82,21 +83,82 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
     status,
     plus_one_name: plusOne ? String(plusOne.name || "").trim() : null,
     plus_one_email: plusOne ? normalizeEmail(plusOne.email) : null,
-    seal_code: status === "attending" ? makeSeal() : null,
+    seal_code: sealCode,
     ticket_token: ticketToken,
+    plus_one_ticket_token: plusOne ? makeId() : null,
+    plus_one_seal_code: plusOne ? makeSeal() : null,
     submitted_at: now().toISOString(),
   };
 }
 
+// The PATCH for a repeat RSVP from the same invitation. The guest keeps their ticket.
+// The plus-one keeps theirs only if it is the same person (same email); a new person
+// gets a new ticket, and the old one stops working.
 export function buildRsvpUpdate(row, existing) {
-  return {
+  const samePlusOne = Boolean(
+    row.plus_one_email &&
+    existing.plus_one_ticket_token &&
+    normalizeEmail(existing.plus_one_email) === row.plus_one_email
+  );
+  const patch = {
     guest_name: row.guest_name,
     status: row.status,
     plus_one_name: row.plus_one_name,
     plus_one_email: row.plus_one_email,
     seal_code: existing.seal_code || row.seal_code,
+    plus_one_ticket_token: samePlusOne ? existing.plus_one_ticket_token : row.plus_one_ticket_token,
+    plus_one_seal_code: samePlusOne ? existing.plus_one_seal_code || row.plus_one_seal_code : row.plus_one_seal_code,
     submitted_at: row.submitted_at,
   };
+  if (!samePlusOne) patch.plus_one_checked_in_at = null;
+  return patch;
+}
+
+// One RSVP row holds up to two tickets. Return the one this token opens, for its holder.
+export function ticketForToken(row, token) {
+  if (!row || row.status !== "attending" || !token) return null;
+  if (row.ticket_token === token) {
+    return {
+      holder: "guest",
+      guest_name: row.guest_name,
+      seal_code: row.seal_code,
+      checked_in_at: row.checked_in_at || null,
+      bringing: row.plus_one_name || null,
+      brought_by: null,
+    };
+  }
+  if (row.plus_one_ticket_token === token) {
+    return {
+      holder: "plus_one",
+      guest_name: row.plus_one_name,
+      seal_code: row.plus_one_seal_code,
+      checked_in_at: row.plus_one_checked_in_at || null,
+      bringing: null,
+      brought_by: row.guest_name,
+    };
+  }
+  return null;
+}
+
+export function doorScans(rows, limit = 80) {
+  const scans = [];
+  for (const row of rows || []) {
+    if (row.checked_in_at) {
+      scans.push({ guest_name: row.guest_name, seal_code: row.seal_code, checked_in_at: row.checked_in_at, brought_by: null });
+    }
+    if (row.plus_one_checked_in_at) {
+      scans.push({ guest_name: row.plus_one_name, seal_code: row.plus_one_seal_code, checked_in_at: row.plus_one_checked_in_at, brought_by: row.guest_name });
+    }
+  }
+  return scans.sort((a, b) => b.checked_in_at.localeCompare(a.checked_in_at)).slice(0, limit);
+}
+
+// The address is secret until it is set in event_details and its reveal time has passed.
+export function publicVenue(details, now = new Date()) {
+  if (!details || (!details.venue_name && !details.venue_address)) return null;
+  if (details.reveal_at && now < new Date(details.reveal_at)) return null;
+  const mapUrl = typeof details.map_url === "string" && /^https:\/\//i.test(details.map_url) ? details.map_url : null;
+  return { name: details.venue_name || null, address: details.venue_address || null, mapUrl };
 }
 
 export function makeTicketToken(randomId = () => crypto.randomUUID()) {

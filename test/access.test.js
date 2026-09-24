@@ -15,6 +15,7 @@ test("allows the invitation, API routes, ticket pages and the staff scanner", ()
     "/staff/rose-door-10",
     "/assets/whispers-mark.png",
     "/assets/whispers-seal.png",
+    "/assets/ticket-card.js",
   ]) {
     assert.equal(isPublicPath(path), true, path);
   }
@@ -57,6 +58,8 @@ test("blocks repository files and anything not on the allowlist", () => {
     "/assets/sub/whispers-mark.png",
     "/assets/../sql/schema.sql",
     "/assets/notes.md",
+    "/assets/ticket-card.JS",
+    "/assets/x.json",
     "//",
     "",
   ]) {

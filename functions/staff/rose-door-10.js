@@ -34,7 +34,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 .result{min-height:112px}.result h2{font-family:var(--serif);font-weight:300;font-size:40px;line-height:1.05;margin:0 0 8px}.result p{color:#D8CEC2;font-size:18px;line-height:1.45;margin:4px 0}.result b{font-family:var(--serif);font-weight:400;font-size:26px;color:#F6EFE4}
 .ok h2{color:var(--gold-hi)}.bad h2{color:#FF9F9F}
 .warn{background:rgba(163,22,33,.18);border:1px solid var(--red);border-radius:3px;padding:16px;margin:12px 0}.warn h2{color:#E8808A}.warn p{color:var(--bone)}
-.list{display:grid;margin-top:8px}.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid rgba(217,174,120,.14);padding:12px 0}.row:first-child{border-top:0}.row b{font-family:var(--serif);font-weight:400;font-size:21px;min-width:0;overflow-wrap:anywhere}.row span{color:var(--muted);font-size:13px;text-align:right;white-space:nowrap}
+.list{display:grid;margin-top:8px}.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid rgba(217,174,120,.14);padding:12px 0}.row:first-child{border-top:0}.row b{font-family:var(--serif);font-weight:400;font-size:21px;min-width:0;overflow-wrap:anywhere}.row b small{display:block;font:300 13px var(--sans);color:var(--muted);margin-top:2px}.row span{color:var(--muted);font-size:13px;text-align:right;white-space:nowrap}
 .small{color:var(--muted);font-size:14px;line-height:1.55;margin:12px 0 0}
 </style>
 </head>
@@ -67,12 +67,12 @@ async function scanValue(value,manual){
   catch(e){seen.delete(value);show('warn','No connection.','<p>Try again.</p>');return;}
   if(!res.ok){if(res.status>=500)seen.delete(value);show('bad','Invalid.', '<p>'+esc(data.error||'This ticket could not be confirmed.')+'</p>');return;}
   const t=data.ticket||{};
-  const plus=t.plus_one_name?' + '+esc(t.plus_one_name):'';
+  const who=t.brought_by?'<p>Guest of '+esc(t.brought_by)+'</p>':(t.bringing?'<p>Bringing '+esc(t.bringing)+' (own ticket)</p>':'');
   if(data.status==='already_checked_in'){
     if(navigator.vibrate)navigator.vibrate([80,60,80]);
-    show('warn','Already inside.','<p><b>'+esc(t.guest_name)+plus+'</b></p>'+(t.checked_in_at?'<p>First checked in at '+esc(hhmm(t.checked_in_at))+'.</p>':'')+'<p>'+esc(t.seal_code||'')+'</p>');
+    show('warn','Already inside.','<p><b>'+esc(t.guest_name)+'</b></p>'+who+(t.checked_in_at?'<p>First checked in at '+esc(hhmm(t.checked_in_at))+'.</p>':'')+'<p>'+esc(t.seal_code||'')+'</p>');
   }else{
-    show('ok','Confirmed.','<p><b>'+esc(t.guest_name)+plus+'</b></p><p>'+esc(t.seal_code||'')+'</p>');
+    show('ok','Confirmed.','<p><b>'+esc(t.guest_name)+'</b></p>'+who+'<p>'+esc(t.seal_code||'')+'</p>');
   }
   loadList();
 }
@@ -87,7 +87,7 @@ async function loadList(){
   try{res=await fetch('/api/door',{headers:{'Accept':'application/json'}});data=await res.json().catch(()=>({}));}
   catch(e){list.innerHTML='<p class="small">No connection. Try again.</p>';return;}
   if(!res.ok){list.innerHTML='<p class="small">Could not load the list. Try again.</p>';return;}
-  list.innerHTML=(data.scans||[]).map(s=>'<div class="row"><b>'+esc(s.guest_name)+(s.plus_one_name?' + '+esc(s.plus_one_name):'')+'</b><span>'+esc(s.seal_code||'')+'<br>'+esc(hhmm(s.checked_in_at))+'</span></div>').join('')||'<p class="small">No scanned tickets yet.</p>';
+  list.innerHTML=(data.scans||[]).map(s=>'<div class="row"><b>'+esc(s.guest_name)+(s.brought_by?'<small>Guest of '+esc(s.brought_by)+'</small>':'')+'</b><span>'+esc(s.seal_code||'')+'<br>'+esc(hhmm(s.checked_in_at))+'</span></div>').join('')||'<p class="small">No scanned tickets yet.</p>';
 }
 document.getElementById('start').onclick=()=>startCamera().catch(e=>show('bad','Camera blocked.','<p>Allow camera access or paste the QR value manually.</p>'));
 document.getElementById('stop').onclick=stopCamera;
