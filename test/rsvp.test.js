@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   EVENT_KEY,
+  isDuplicatePlusOneEmail,
   buildCheckInUrl,
   buildRsvpRow,
   buildTicketUrl,
@@ -222,4 +223,11 @@ test("rejects scanned values that are not ticket tokens", () => {
   assert.equal(tokenFromValue("https://whispers-invite.pages.dev/api/checkin?token=abc"), "");
   assert.equal(tokenFromValue("https://example.com/"), "");
   assert.equal(tokenFromValue("*"), "");
+});
+
+test("only a plus-one email unique violation counts as a duplicate email", () => {
+  assert.equal(isDuplicatePlusOneEmail({ code: "23505", message: "duplicate key value violates unique constraint \"rsvps_event_plus_one_email_unique\"" }), true);
+  assert.equal(isDuplicatePlusOneEmail({ code: "23503", message: "insert or update on table \"rsvps\" violates foreign key constraint \"rsvps_guest_id_fkey\"" }), false);
+  assert.equal(isDuplicatePlusOneEmail({ code: "23505", message: "duplicate key value violates unique constraint \"rsvps_ticket_token_unique\"" }), false);
+  assert.equal(isDuplicatePlusOneEmail(null), false);
 });

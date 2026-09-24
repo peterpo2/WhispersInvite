@@ -112,6 +112,11 @@ export function tokenFromValue(value) {
   return TOKEN_RE.test(token) ? token : "";
 }
 
+export function isDuplicatePlusOneEmail(pgError) {
+  if (!pgError || pgError.code !== "23505") return false;
+  return /plus_one_email/.test(String(pgError.message || ""));
+}
+
 export function siteOriginFromRequestUrl(requestUrl) {
   return new URL(requestUrl).origin;
 }

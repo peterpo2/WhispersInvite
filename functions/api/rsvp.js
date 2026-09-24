@@ -1,5 +1,5 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { buildCheckInUrl, buildRsvpRow, buildTicketUrl, validateRsvpPayload } from "../_shared/rsvp.js";
+import { buildCheckInUrl, buildRsvpRow, buildTicketUrl, isDuplicatePlusOneEmail, validateRsvpPayload } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const DUPLICATE_EMAIL = "This email is already on the guest list.";
@@ -41,7 +41,11 @@ export async function onRequestPost({ request, env }) {
   });
 
   if (saved.error) return saved.error;
-  if (saved.response.status === 409) return json({ error: DUPLICATE_EMAIL }, 409);
+  if (saved.response.status === 409) {
+    const pgError = await saved.response.json().catch(() => null);
+    if (isDuplicatePlusOneEmail(pgError)) return json({ error: DUPLICATE_EMAIL }, 409);
+    return json({ error: "Could not save RSVP" }, 502);
+  }
   if (!saved.response.ok) return json({ error: "Could not save RSVP" }, 502);
 
   return json({

@@ -13,6 +13,11 @@
 --   select ticket_token, count(*) from public.rsvps
 --   where ticket_token is not null group by 1 having count(*) > 1;
 
+-- Free-form RSVPs use the ticket token as guest_id, so the legacy guest_list
+-- foreign key (dropped in 2026-09-24-door-scanner.sql) must not exist.
+alter table public.rsvps
+  drop constraint if exists rsvps_guest_id_fkey;
+
 alter table public.rsvps
   add column if not exists plus_one_name text,
   add column if not exists plus_one_email text,
