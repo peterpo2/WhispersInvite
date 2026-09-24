@@ -10,7 +10,9 @@ function escapeHtml(value) {
 
 export async function onRequestGet({ params, request }) {
   const token = params.token;
-  const apiUrl = `${new URL(request.url).origin}/api/ticket?token=${encodeURIComponent(token)}`;
+  const origin = new URL(request.url).origin;
+  const apiUrl = `${origin}/api/ticket?token=${encodeURIComponent(token)}`;
+  const ticketUrl = `${origin}/ticket/${encodeURIComponent(token)}`;
 
   return new Response(`<!doctype html>
 <html lang="en">
@@ -52,7 +54,7 @@ h1{font-weight:300;font-size:clamp(28px,8vw,36px);line-height:1.1;margin:10px 0 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script>
 (async()=>{
-  const api=${JSON.stringify(apiUrl)};
+  const api=${JSON.stringify(apiUrl)},ticketUrl=${JSON.stringify(ticketUrl)};
   const $=(id)=>document.getElementById(id);
   const escapeHtml=(s)=>String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const failed=()=>{$('guest').textContent='We could not load your seal.';$('state').textContent='Refresh to try again.';};
@@ -67,8 +69,8 @@ h1{font-weight:300;font-size:clamp(28px,8vw,36px);line-height:1.1;margin:10px 0 
   $('bringing').innerHTML=t.plus_one_name?'Bringing <b>'+escapeHtml(t.plus_one_name)+'</b>':'Coming on your own';
   $('state').textContent=t.checked_in_at?'Already checked in':'Ready for the door';
   const qr=$('qr');
-  const fallback=()=>{qr.classList.add('fallback');qr.textContent=location.origin+location.pathname;};
-  if(window.QRCode&&data.checkInUrl){QRCode.toCanvas(data.checkInUrl,{width:148,margin:1,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else qr.appendChild(canvas);});}else{fallback();}
+  const fallback=()=>{qr.classList.add('fallback');qr.textContent=ticketUrl;};
+  if(window.QRCode){QRCode.toCanvas(ticketUrl,{width:148,margin:1,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else qr.appendChild(canvas);});}else{fallback();}
 })();
 </script>
 </body>
