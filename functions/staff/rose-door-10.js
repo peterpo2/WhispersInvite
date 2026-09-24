@@ -26,7 +26,7 @@ main{position:relative;max-width:1100px;margin:0 auto}
 @media(min-width:640px){.camera{aspect-ratio:4/3;max-height:60svh}}
 @media(min-width:1024px){.camera{aspect-ratio:16/9;max-height:58svh}}
 @media (prefers-reduced-motion:reduce){.scanline{animation:none;top:50%}}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:8px}.actions button{padding:0 8px;letter-spacing:.16em}button[disabled]{opacity:.4;cursor:default}
 button,input{min-height:54px;border:1px solid rgba(217,174,120,.58);border-radius:3px;background:rgba(8,6,5,.4);color:var(--bone);padding:0 14px;font:400 13px var(--sans);letter-spacing:.26em;text-transform:uppercase;cursor:pointer}
 button.primary{color:#1C130A;border-color:#E6C48C;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%)}
 button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
@@ -43,7 +43,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 <div class="top"><div class="brand"><img src="/assets/whispers-mark.png" alt=""/><div><div class="k">WHISPERS</div><h1>Door</h1></div></div><button id="refresh">Refresh</button></div>
 <section class="panel camera"><video id="video" playsinline muted></video><div class="scanline"></div></section>
 <section class="panel">
-<div class="actions"><button class="primary" id="start">Open camera</button><button id="stop">Stop</button></div>
+<div class="actions"><button class="primary" id="start">Open camera</button><button disabled id="switch">Switch</button><button id="stop">Stop</button></div>
 <div class="manual"><input id="manual" aria-label="QR value or token" placeholder="Paste QR value or token" autocomplete="off" autocapitalize="off" spellcheck="false"/><button id="manualBtn">Check</button></div>
 <p class="small">Camera scanning runs locally in this browser. A valid WHISPERS QR marks the ticket as checked in.</p>
 </section>
@@ -54,7 +54,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
 const video=document.getElementById('video'),canvas=document.getElementById('canvas'),result=document.getElementById('result'),list=document.getElementById('list');
-let stream=null,timer=null;const seen=new Map(),REPEAT_MS=4000;
+let stream=null,loop=null,pass=0;const seen=new Map(),REPEAT_MS=4000;
 function show(kind,title,body){result.className='panel result '+kind;result.innerHTML='<h2>'+title+'</h2>'+body;}
 function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 function hhmm(iso){return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
@@ -76,12 +76,89 @@ async function scanValue(value,manual){
   }
   loadList();
 }
-async function startCamera(){
-  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
-  video.srcObject=stream;await video.play();
-  timer=setInterval(()=>{if(!video.videoWidth||!window.jsQR)return;canvas.width=video.videoWidth;canvas.height=video.videoHeight;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,0);const img=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(img.data,img.width,img.height);if(code)scanValue(code.data,false);},450);
+// Native detector where the browser has one (Android Chrome); jsQR everywhere else (iPhone).
+let detector=null;
+try{if('BarcodeDetector' in window)detector=new BarcodeDetector({formats:['qr_code']});}catch(_){detector=null;}
+const ctx=canvas.getContext('2d',{willReadFrequently:true});
+async function readFrame(){
+  if(detector){try{const found=await detector.detect(video);if(found.length)return found[0].rawValue;}catch(_){detector=null;}}
+  if(!window.jsQR)return null;
+  const vw=video.videoWidth,vh=video.videoHeight;
+  // Alternate a centre crop (where staff hold the ticket) with the whole frame, both scaled
+  // down so each pass is fast on a phone and the QR fills more of the picture.
+  pass=(pass+1)%3;
+  let sx=0,sy=0,sw=vw,sh=vh;
+  if(pass!==2){const side=Math.min(vw,vh)*(pass===0?0.6:0.85);sx=(vw-side)/2;sy=(vh-side)/2;sw=sh=side;}
+  const scale=Math.min(1,640/Math.max(sw,sh));
+  canvas.width=Math.round(sw*scale);canvas.height=Math.round(sh*scale);
+  ctx.drawImage(video,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+  const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+  const code=jsQR(img.data,img.width,img.height,{inversionAttempts:'attemptBoth'});
+  return code&&code.data;
 }
-function stopCamera(){if(timer)clearInterval(timer);timer=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}video.srcObject=null;}
+function scheduleScan(){loop=setTimeout(scanTick,90);}
+async function scanTick(){
+  if(!stream)return;
+  if(video.readyState>=2&&video.videoWidth){
+    try{const value=await readFrame();if(value)scanValue(value,false);}catch(_){}
+  }
+  if(stream)scheduleScan();
+}
+// Focus. iPhone Pro main cameras cannot focus closer than ~20 cm, so prefer the multi-lens
+// "Back Triple/Dual (Wide) Camera", which switches to macro by itself. Labels may be localised.
+const MULTI_LENS=/triple|dual|тройна|двойна/i,FRONT=/front|user|предна|селфи|facetime/i;
+let cameras=[],cameraIndex=-1;
+async function backCameras(){
+  try{const all=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput');const back=all.filter(d=>!FRONT.test(d.label));return back.length?back:all;}catch(_){return [];}
+}
+async function tuneTrack(track){
+  let caps={};try{caps=track.getCapabilities?track.getCapabilities():{};}catch(_){}
+  const advanced=[];
+  if(caps.focusMode&&caps.focusMode.includes('continuous'))advanced.push({focusMode:'continuous'});
+  if(caps.zoom&&caps.zoom.max>=1.5)advanced.push({zoom:Math.min(1.6,caps.zoom.max)});
+  for(const c of advanced){try{await track.applyConstraints({advanced:[c]});}catch(_){}}
+}
+async function openStream(deviceId){
+  const video={width:{ideal:1920},height:{ideal:1080}};
+  if(deviceId)video.deviceId={exact:deviceId};else video.facingMode={ideal:'environment'};
+  return navigator.mediaDevices.getUserMedia({audio:false,video});
+}
+async function startCamera(deviceId){
+  if(stream)return;
+  stream=await openStream(deviceId);
+  if(!deviceId){
+    // Labels are only readable after permission, so pick the best back camera now.
+    cameras=await backCameras();
+    const current=stream.getVideoTracks()[0].getSettings().deviceId;
+    const multi=cameras.findIndex(d=>MULTI_LENS.test(d.label));
+    cameraIndex=cameras.findIndex(d=>d.deviceId===current);
+    if(multi>=0&&cameras[multi].deviceId!==current){
+      stream.getTracks().forEach(t=>t.stop());
+      try{stream=await openStream(cameras[multi].deviceId);cameraIndex=multi;}catch(_){stream=await openStream();}
+    }
+  }
+  await tuneTrack(stream.getVideoTracks()[0]);
+  video.setAttribute('playsinline','');video.muted=true;
+  video.srcObject=stream;await video.play();
+  document.getElementById('switch').disabled=cameras.length<2;
+  show('', 'Scanning…', '<p>Hold the QR inside the frame, 20–40 cm away. Tap the picture to refocus.</p>');
+  scheduleScan();
+}
+async function switchCamera(){
+  if(cameras.length<2)return;
+  cameraIndex=(cameraIndex+1)%cameras.length;
+  const id=cameras[cameraIndex].deviceId;
+  stopCamera();
+  startCamera(id).catch(()=>{stopCamera();show('bad','Camera blocked.','<p>Allow camera access or paste the QR value manually.</p>');});
+}
+// Tap to refocus where the browser allows it.
+video.addEventListener('click',async(e)=>{
+  if(!stream)return;const track=stream.getVideoTracks()[0];let caps={};try{caps=track.getCapabilities?track.getCapabilities():{};}catch(_){}
+  const r=video.getBoundingClientRect(),point={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};
+  try{if(caps.focusMode&&caps.focusMode.includes('single-shot'))await track.applyConstraints({advanced:[{pointsOfInterest:[point],focusMode:'single-shot'}]});}catch(_){}
+  try{if(caps.focusMode&&caps.focusMode.includes('continuous'))await track.applyConstraints({advanced:[{focusMode:'continuous'}]});}catch(_){}
+});
+function stopCamera(){if(loop)clearTimeout(loop);loop=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}video.srcObject=null;}
 async function loadList(){
   let res,data;
   try{res=await fetch('/api/door',{headers:{'Accept':'application/json'}});data=await res.json().catch(()=>({}));}
@@ -89,7 +166,8 @@ async function loadList(){
   if(!res.ok){list.innerHTML='<p class="small">Could not load the list. Try again.</p>';return;}
   list.innerHTML=(data.scans||[]).map(s=>'<div class="row"><b>'+esc(s.guest_name)+(s.brought_by?'<small>Guest of '+esc(s.brought_by)+'</small>':'')+'</b><span>'+esc(s.seal_code||'')+'<br>'+esc(hhmm(s.checked_in_at))+'</span></div>').join('')||'<p class="small">No scanned tickets yet.</p>';
 }
-document.getElementById('start').onclick=()=>startCamera().catch(e=>show('bad','Camera blocked.','<p>Allow camera access or paste the QR value manually.</p>'));
+document.getElementById('switch').onclick=switchCamera;
+document.getElementById('start').onclick=()=>startCamera().catch(e=>{stopCamera();show('bad','Camera blocked.','<p>Allow camera access or paste the QR value manually.</p>');});
 document.getElementById('stop').onclick=stopCamera;
 document.getElementById('manualBtn').onclick=()=>scanValue(document.getElementById('manual').value.trim(),true);
 document.getElementById('refresh').onclick=loadList;

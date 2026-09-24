@@ -16,6 +16,8 @@ All SQL you may need: [`sql/useful-queries.sql`](sql/useful-queries.sql)
 
 ## Door night
 - Headcount: section 1. Inside / still to arrive: section 7. Undo a wrong scan: section 8.
+- Scanner: hold the QR 20–40 cm away; tap the picture to refocus; **Switch** cycles the back cameras
+  if the picture stays blurry.
 
 ## Still open (development)
 - [ ] Intro video from the client (the film screen shows text scenes until then).
