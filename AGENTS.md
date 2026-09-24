@@ -99,7 +99,7 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
 ### Routes (Pages Functions, file-based routing)
 | Method | Path | File | Behaviour |
 |---|---|---|---|
-| POST | `/api/rsvp` | `functions/api/rsvp.js` | Validate → reject a plus-one email already used by an attending guest of this event (`409`) → plain insert into `rsvps` (`Prefer: return=minimal`; an insert `409` maps to the duplicate-email error only when `isDuplicatePlusOneEmail(pgError)` is true; when `isDuplicateSealCode(pgError)` is true it rebuilds the row with a fresh seal code and token and retries, up to 3 retries; any other `409`, or running out of retries, returns `502`) → returns only `{ ok, ticketToken, sealCode, ticketUrl, checkInUrl }` (`sealCode` is null for a decline; the frontend never uses `checkInUrl`) |
+| POST | `/api/rsvp` | `functions/api/rsvp.js` | Validate → reject a plus-one email already used by another attending guest of this event (`409`) → if the body has an invitation `guestId` that already has a row, PATCH that row with `buildRsvpUpdate` (guarded by `checked_in_at=is.null`; same ticket token and seal code; a checked-in guest gets `409` "already been used at the door") → otherwise plain insert into `rsvps` (`Prefer: return=minimal`; an insert `409` maps to the duplicate-email error only when `isDuplicatePlusOneEmail(pgError)` is true; when `isDuplicateSealCode(pgError)` is true it rebuilds the row with a fresh seal code and token and retries, up to 3 retries; any other `409`, or running out of retries, returns `502`) → returns only `{ ok, ticketToken, sealCode, ticketUrl, checkInUrl }` (`sealCode` is null for a decline; the frontend never uses `checkInUrl`) |
 | GET | `/api/ticket?token=` | `functions/api/ticket.js` | Ticket JSON for an attending RSVP, plus `ticketUrl` and `checkInUrl` |
 | GET | `/api/checkin?token=` | `functions/api/checkin.js` | Read-only. `302` to `checkInRedirectPath(token)`: `/ticket/<token>`, or `/` for a missing/malformed token |
 | GET | `/api/door` | `functions/api/door.js` | The 80 most recent check-ins |
@@ -136,16 +136,22 @@ first, so the result is "already checked in".
     - `guestName` and `status` must be strings. `guestName` needs at least 2 words and at most
       120 chars.
     - `status` must be `attending` or `declined`.
-    - For `attending`, an optional `plusOne` must be an object with a string 2-word name
+    - There is no word-count rule on names (at most 120 chars). An optional `guestId` must be a
+      string of at most 120 chars.
+    - For `attending`, an optional `plusOne` must be an object with a string name
       (at most 120 chars) and a valid string email (at most 254 chars). For `declined`, the
       plus-one is ignored.
   - `buildRsvpRow(body, makeId, now, makeSeal)` produces the DB row. The server owns identity:
-    the client's `ticketToken`, `guestId`, `event`, `submittedAt` and `sealCode` are ignored.
-    - `ticket_token` = `guest_id` = `makeId()`.
+    the client's `ticketToken`, `event`, `submittedAt` and `sealCode` are ignored.
+    - `ticket_token` = `makeId()`. `guest_id` is the invitation `guestId` (from `/hi/<token>`)
+      when given, otherwise the ticket token.
     - `event_key` is always `EVENT_KEY` (`"whispers-2026-10-10"`).
     - `submitted_at` is `now().toISOString()` (inject `now` in tests).
     - `seal_code` is `makeSeal()` for attending rows and null for declined rows.
     - The email is normalised. Declined rows have null plus-one fields.
+  - `buildRsvpUpdate(row, existing)`: the PATCH for a repeat RSVP from the same invitation. It
+    carries name, status, plus-one and `submitted_at`, keeps `existing.seal_code` (a guest who
+    first declined gets the new one), and never touches `ticket_token`, `guest_id` or `event_key`.
   - `makeSealCode(randomInt)`: `WSP·10·XXXX` (the brief's format), four characters drawn from
     `SEAL_ALPHABET` (`ACDEFGHJKMNPQRTUVWXYZ234679`: no 0/O, 1/I/L, 5/S, 8/B).
     `randomInt(max)` returns an integer in `[0, max)`; the default uses
@@ -182,7 +188,7 @@ first, so the result is "already checked in".
     (key repeat ignored).
   - `#skipseal` / `#skipfilm` live outside the `.screen` sections so their `z-index` can sit
     above the `body::after` vignette. `show()` toggles their `display`.
-- `submitRSVP()` POSTs `{ guestName, status, plusOne }` to `SUBMIT_URL = '/api/rsvp'`. The
+- `submitRSVP()` POSTs `{ guestName, guestId, status, plusOne }` to `SUBMIT_URL = '/api/rsvp'`. The
   client does not make seal codes.
   - There is **no localStorage fallback**. A non-2xx response returns
     `{ ok:false, error: data.error }`, and a network error returns a "could not reach us"

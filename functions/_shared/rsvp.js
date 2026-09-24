@@ -88,6 +88,17 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
   };
 }
 
+export function buildRsvpUpdate(row, existing) {
+  return {
+    guest_name: row.guest_name,
+    status: row.status,
+    plus_one_name: row.plus_one_name,
+    plus_one_email: row.plus_one_email,
+    seal_code: existing.seal_code || row.seal_code,
+    submitted_at: row.submitted_at,
+  };
+}
+
 export function makeTicketToken(randomId = () => crypto.randomUUID()) {
   return String(randomId()).replace(/[^a-zA-Z0-9]/g, "").slice(0, 40);
 }
