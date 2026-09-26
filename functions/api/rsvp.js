@@ -1,5 +1,5 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { addedGuestLimitReached, applyInviteToRsvpRow, buildCompanionRow, buildRsvpRow, isDuplicateSealCode, isRsvpClosed, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
+import { addedGuestLimitReached, applyInviteToRsvpRow, buildCompanionRow, buildRsvpRow, buildTicketUrl, isDuplicateSealCode, isRsvpClosed, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const ALREADY_INSIDE = "This invitation has already been used at the door.";
@@ -65,7 +65,7 @@ export async function onRequestPost({ request, env }) {
         const insertedCompanion = await insertCompanion(env, inserted.id, row);
         if (insertedCompanion.error) return insertedCompanion.error;
       }
-      return confirmationResponse(row.status, row.guest_name, row.plus_one_name, row.wants_table_reservation);
+      return confirmationResponse(request.url, row);
     }
 
     if (saved.response.status !== 409) return json({ error: "Could not save RSVP" }, 502);
@@ -160,7 +160,7 @@ async function updateExistingRsvp(env, requestUrl, row, existing) {
     }
   }
 
-  return confirmationResponse(row.status, row.guest_name, row.plus_one_name, row.wants_table_reservation);
+  return confirmationResponse(requestUrl, { ...row, ticket_token: rows[0].ticket_token || existing.ticket_token });
 }
 
 async function findDuplicateCompanion(env, rsvpId, row) {
@@ -209,14 +209,19 @@ async function insertCompanion(env, rsvpId, row) {
   return { ok: true };
 }
 
-function confirmationResponse(status, guestName, plusOneName, wantsTableReservation) {
+function confirmationResponse(requestUrl, row) {
+  const attending = row.status === "attending";
   return json({
     ok: true,
-    status,
-    guestName,
-    plusOneName: status === "attending" ? plusOneName || null : null,
-    addedGuestNames: status === "attending" && plusOneName ? [plusOneName] : [],
-    wantsTableReservation: status === "attending" ? wantsTableReservation === true : false,
+    status: row.status,
+    guestName: row.guest_name,
+    plusOneName: attending ? row.plus_one_name || null : null,
+    addedGuestNames: attending && row.plus_one_name ? [row.plus_one_name] : [],
+    wantsTableReservation: attending ? row.wants_table_reservation === true : false,
+    ticketToken: attending ? row.ticket_token : null,
+    ticketUrl: attending && row.ticket_token ? buildTicketUrl(requestUrl, row.ticket_token) : null,
+    plusOneTicketToken: attending ? row.plus_one_ticket_token || null : null,
+    plusOneTicketUrl: attending && row.plus_one_ticket_token ? buildTicketUrl(requestUrl, row.plus_one_ticket_token) : null,
     ticketReleaseAt: TICKET_RELEASE_AT,
   });
 }

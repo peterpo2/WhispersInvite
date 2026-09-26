@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 const html = readFileSync("index.html", "utf8");
 const ticketPage = readFileSync("functions/ticket/[token].js", "utf8");
 const staffPage = readFileSync("functions/staff/rose-door-10.js", "utf8");
+const rsvpApi = readFileSync("functions/api/rsvp.js", "utf8");
 
 test("pre-release confirmation does not expose the private ticket action", () => {
   assert.match(html, /\[hidden\]\{display:none!important\}/);
@@ -50,4 +51,10 @@ test("ticket and staff pages share the WHISPERS rose atmosphere", () => {
     assert.match(source, /fractalNoise/);
     assert.match(source, /radial-gradient\(ellipse at 50% 45%/);
   }
+});
+
+test("successful RSVP moves the browser to the private ticket link", () => {
+  assert.match(rsvpApi, /ticketUrl: attending && row\.ticket_token \? buildTicketUrl\(requestUrl, row\.ticket_token\) : null/);
+  assert.match(html, /state\.ticketUrl=result\.data\?\.ticketUrl\|\|null/);
+  assert.match(html, /history\.replaceState\(null,'',state\.ticketUrl\)/);
 });
