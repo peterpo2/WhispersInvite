@@ -21,6 +21,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
 html,body{margin:0;padding:0;height:100%;background:var(--bg)}
 body{color:var(--bone);font-family:var(--sans);font-weight:300;font-size:17px;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%}
 img{max-width:100%}
@@ -518,6 +519,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 
   $('#cancelAttendance').addEventListener('click',async()=>{
     if(busy)return;
+    if(!window.confirm('Are you sure you want to cancel your attendance?'))return;
     $('#saveState').textContent='';
     setBusy(true,$('#saveState'));
     const result=await submitRSVP({status:'declined'});
