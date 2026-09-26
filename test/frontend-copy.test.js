@@ -19,3 +19,10 @@ test("pre-release confirmation message is not styled as a white QR card", () => 
 test("cancel attendance asks for confirmation before submitting", () => {
   assert.match(html, /confirm\('Are you sure you want to cancel your attendance\?'\)/);
 });
+
+test("personal invite contact step does not keep the shared name prompt", () => {
+  assert.match(html, /id="identifyTitle"/);
+  assert.match(html, /id="identifySub"/);
+  assert.match(html, /Confirm your details\./);
+  assert.match(html, /Your name is already on the list\. Please leave your email and phone so we can reach you\./);
+});

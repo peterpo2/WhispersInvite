@@ -296,8 +296,8 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <section class="screen" id="s-identify">
 <div class="inner">
 <div class="brand st"><img alt="Whispers" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>
-<h2 class="lede st">Write your name.</h2>
-<p class="sub st">Use your real first and last name. It will become your private ticket.</p>
+<h2 class="lede st" id="identifyTitle">Write your name.</h2>
+<p class="sub st" id="identifySub">Use your real first and last name. It will become your private ticket.</p>
 <div class="field st"><label for="guestName">Full name</label><input autocomplete="name" enterkeyhint="go" id="guestName" maxlength="120" placeholder="First and last name" type="text"/></div>
 <div class="field st"><label for="guestEmail">Email</label><input autocomplete="email" enterkeyhint="next" id="guestEmail" inputmode="email" maxlength="254" placeholder="name@example.com" type="email"/></div>
 <div class="field st"><label for="guestPhone">Phone</label><input autocomplete="tel" enterkeyhint="go" id="guestPhone" inputmode="tel" maxlength="40" placeholder="+359 ..." type="tel"/></div>
@@ -405,6 +405,8 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
         if (nameInput) nameInput.value = data.name;
         if (emailInput && data.email) emailInput.value = data.email;
         if (phoneInput && data.phone) phoneInput.value = data.phone;
+        if ($('#identifyTitle')) $('#identifyTitle').textContent = 'Confirm your details.';
+        if ($('#identifySub')) $('#identifySub').textContent = 'Your name is already on the list. Please leave your email and phone so we can reach you.';
         // Show name on seal screen
         const el = document.querySelector('.issued.generic-issued');
         if (el) {
