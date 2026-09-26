@@ -1,8 +1,8 @@
 # WHISPERS Invite
 
-Private, mobile-first digital invitation for WHISPERS at Hotel Juno, Sofia, on Saturday
-10 October 2026. The experience is deliberately small: seal, short film, letter, RSVP,
-private ticket, staff scanner.
+Private, mobile-first digital invitation for WHISPERS in Sofia on Saturday 10 October 2026,
+doors 22:00. The experience is deliberately small: seal, short film, event details, guest
+registration, deferred private ticket, staff scanner.
 
 The site is static HTML on Cloudflare Pages, with Pages Functions for the API and Supabase
 Postgres through the REST API. There is no framework, no bundler and no build step.
@@ -34,17 +34,20 @@ The middleware allowlist blocks repository files, docs, SQL files, tests and unk
 2. The page plays seal -> film -> letter.
 3. A plain link asks for the guest's full name. A personal link uses `guest_list`.
 4. The guest accepts or declines.
-5. If accepting, they may add one plus-one with name and email.
-6. The server creates private ticket tokens and seal codes.
-7. The done screen shows ticket cards and saves them as phone images.
+5. If accepting, they may add one plus-one with full name and email.
+6. They may request a table reservation for themselves or their two-person group.
+7. The server creates private ticket tokens and seal codes, but does not reveal them before
+   `2026-10-09T18:00:00+03:00`.
+8. The done screen shows a registration confirmation, not a QR ticket.
 
 The guest and the plus-one each get their own ticket token, seal code, QR code and check-in
 state. QR codes encode `/ticket/<token>`, not `/api/checkin`. A normal phone camera opens the
-ticket page; only the staff scanner checks people in.
+ticket page; only the staff scanner checks people in. Before ticket release, ticket pages show a
+locked state without QR, seal code or location.
 
-Repeat RSVPs from the same personal identity keep the guest ticket. If the guest
-confirms again without entering a plus-one, an existing plus-one is kept. If they enter a
-different plus-one, the old plus-one ticket stops working and a new one is issued.
+Repeat RSVPs from the same personal identity or the same email+phone keep the guest ticket. If
+the guest confirms again without entering a plus-one, the existing plus-one is kept. For the first
+event, a primary RSVP can have maximum one added guest.
 
 ## Door Flow
 
@@ -63,7 +66,7 @@ The scanner keeps guest and plus-one check-ins separate and shows the latest arr
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/api/guest-check?token=` | Looks up personal invitation links. |
-| `POST` | `/api/rsvp` | Validates RSVP, writes or updates the row, returns ticket URLs and seal codes. |
+| `POST` | `/api/rsvp` | Validates RSVP, writes or updates the row, returns a confirmation summary. |
 | `GET` | `/api/ticket?token=` | Returns the public ticket payload for a guest or plus-one token. |
 | `GET` | `/api/checkin?token=` | Legacy read-only link. Redirects to `/ticket/<token>`. |
 | `GET` | `/api/door` | Returns recent checked-in guests and plus-ones. |
@@ -128,7 +131,6 @@ docs/project-spec.md             Current product and technical spec
 
 ## What Is Still Open
 
-See [`TASKS.md`](TASKS.md). The short version: test the whole flow on a real iPhone before
-sending invitations, replace test guests with the real guest list, add the final intro video,
-decide whether to enforce the 150-person cap in code, and decide whether to enforce the RSVP
-deadline in code.
+See [`TASKS.md`](TASKS.md). The short version: test the whole flow on real iPhone Safari and
+modern Android Chrome, replace test guests with the real guest list, add the final intro video,
+wire email delivery, add the final intro video, replace test guests, and finalize the table model.

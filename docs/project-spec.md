@@ -6,11 +6,10 @@
 - Staff scanner: `https://whispers-invite.pages.dev/staff/rose-door-10`
 - Ticket page: `/ticket/<token>`
 - Stack: Cloudflare Pages, Pages Functions, Supabase Postgres via PostgREST
-- Event: WHISPERS, Hotel Juno, Sofia, Saturday 10 October 2026, doors 22:00
+- Event: WHISPERS, Sofia, Saturday 10 October 2026, doors 22:00
 
 This repository is the fully custom route from the original client brief. The Luma handoff,
-confirmation emails, admin dashboard and address blast from the original brief are not part of
-the current implementation.
+custom-domain email delivery and final address blast are not complete yet.
 
 ## Product Flow
 
@@ -31,27 +30,29 @@ is present.
 3. Letter: event details and restrained invitation copy.
 4. Identify: shown for shared links; personal links skip this once the guest is found.
 5. RSVP: accept or decline.
-6. Plus-one: optional one-person guest, with name and email.
-7. Done or decline: ticket cards for attending guests, quiet declined state otherwise.
+6. Plus-one/reservation: optional one-person guest with full name and email, plus a
+   table reservation request checkbox.
+7. Done or decline: registration confirmation for attending guests, quiet declined state
+   otherwise. The attending confirmation does not reveal QR, seal code, ticket URL or venue before
+   ticket release.
 
 ## RSVP Rules
 
 - The server owns `event_key`, ticket tokens, seal codes and timestamps.
 - Status is `attending` or `declined`.
-- A guest may bring one plus-one.
-- Plus-one email is normalized to lowercase.
+- A guest may bring one plus-one. More than one added guest is rejected for the first event.
+- Plus-one email is required. Plus-one phone is not collected in the current public flow.
 - The same plus-one email cannot be used by another attending RSVP for this event.
 - Declined rows do not keep plus-one data.
 - Repeat RSVPs from the same `guest_id` keep the guest ticket token.
 - If a repeat RSVP omits plus-one data, the existing plus-one is kept.
-- If a repeat RSVP uses the same plus-one name and email, the plus-one keeps their ticket.
-- If a repeat RSVP uses a different plus-one, a new plus-one ticket is issued and the old one
-  stops working.
+- If a repeat RSVP uses the same plus-one, the plus-one keeps their ticket.
+- If a repeat RSVP tries to add a different plus-one after one is already registered, the request
+  is rejected.
 - A checked-in guest cannot change their RSVP.
 - A checked-in plus-one cannot be replaced.
-
-Current known gap: the frontend requires a full guest name with 2+ words, but the shared server
-validation currently accepts a one-word `guestName`. This is tracked in `TASKS.md`.
+- RSVP closes at `2026-10-07T18:00:00+03:00`. After that, no new registrations, no added guest
+  changes, no guest-list data changes and no cancellation/decline changes are allowed.
 
 ## Tickets and QR Codes
 
@@ -67,6 +68,14 @@ shows the ticket. Only `/staff/rose-door-10` checks people in by POSTing to `/ap
 
 `/api/checkin?token=` exists only as a legacy redirect to `/ticket/<token>`.
 
+Tickets and location unlock at `2026-10-09T18:00:00+03:00`. Before that time, ticket pages show a
+locked state without QR, seal code or venue.
+
+Table numbers are staff-only. `wants_table_reservation` means the guest asked for a table;
+`reservation_confirmed` is the separate staff/admin confirmation. If `reservation_confirmed` is
+true, the guest ticket can show generic copy such as `Your table is confirmed.`, but it must not
+show table number or floor plan.
+
 Seal codes are generated server-side in this format:
 
 The format is `WSP`, middle dot, `10`, middle dot, then four generated characters. The alphabet
@@ -77,7 +86,7 @@ avoids ambiguous characters: no `0/O`, `1/I/L`, `5/S`, or `8/B`.
 | Method | Path | Behaviour |
 |---|---|---|
 | `GET` | `/api/guest-check?token=` | Finds a personal guest token. |
-| `POST` | `/api/rsvp` | Validates RSVP, inserts or updates `rsvps`, returns ticket data. |
+| `POST` | `/api/rsvp` | Validates RSVP, inserts or updates `rsvps`, returns a confirmation summary. |
 | `GET` | `/api/ticket?token=` | Finds either `ticket_token` or `plus_one_ticket_token`. |
 | `GET` | `/api/checkin?token=` | Redirects to `/ticket/<token>`; does not mutate data. |
 | `GET` | `/api/door` | Returns recent guest and plus-one check-ins as separate entries. |
@@ -113,6 +122,9 @@ All JSON responses are `Cache-Control: no-store`.
 | `plus_one_ticket_token` | text | Plus-one ticket token. |
 | `plus_one_seal_code` | text | Plus-one seal code. |
 | `plus_one_checked_in_at` | timestamptz | Plus-one check-in time. |
+| `wants_table_reservation` | boolean | Reservation requested by the RSVP group. |
+| `reservation_confirmed` | boolean | Staff-confirmed table reservation; separate from table assignment. |
+| `ticket_email_sent_at` | timestamptz | Future idempotency field for ticket email delivery. |
 | `submitted_at` | timestamptz | Last RSVP submit time. |
 
 Important uniqueness:
@@ -127,6 +139,16 @@ Important uniqueness:
 ### `event_details`
 
 Used to reveal the venue on tickets after `reveal_at`.
+
+### `rsvp_companions`
+
+Stores the current added guest ticket data. For the first event, application logic enforces at
+most one companion row per RSVP.
+
+### `staff_tables` and `staff_table_assignments`
+
+Stores internal table definitions and RSVP group table assignment. Assignments are visible to
+staff/admin. Guest tickets must not reveal the table label.
 
 ## Routes and Asset Access
 
@@ -148,8 +170,8 @@ unlisted API paths.
 
 - Supabase service role key stays server-side only.
 - Ticket tokens are bearer secrets.
-- The staff route is private by obscure URL only; Cloudflare Access is recommended before wider
-  staff sharing.
+- The staff route is private by obscure URL only for now. Staff username/password + email code
+  authentication is planned but intentionally not enabled until domain/email are ready.
 - User data rendered into HTML is escaped.
 - The CSP allows scripts only from this site and jsDelivr, fonts from Google Fonts, API calls to
   self, no frames and no plugins.
@@ -159,8 +181,8 @@ unlisted API paths.
 ## Current Open Work
 
 - Final intro video from the client.
-- Real iPhone end-to-end test before sending invitations.
+- Real iPhone/Safari and Android/Samsung Chrome end-to-end test before sending invitations.
 - Replace test guests with the real list.
 - Decide and implement 150-person cap enforcement, or document that it stays manual.
-- Decide and implement RSVP deadline enforcement, or document that it stays manual.
-- Align server-side full-name validation with the frontend and docs.
+- Wire registration confirmation and ticket-release emails after domain/email provider are ready.
+- Add the SuperHosting SMTP-backed email sender once the final mailbox credentials are ready.

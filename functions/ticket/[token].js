@@ -62,7 +62,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <div class="rule"></div>
 <div class="code" id="code">WSP · 10</div>
 <div class="qr" id="qr"></div>
-<p class="meta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia Center · the address reaches you at <b>18:00 on the 9th</b></span><span id="bringing"></span></p>
+<p class="meta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia. Address released on <b>09.10 at 18:00</b>.</span><span id="bringing"></span></p>
 <p class="small">Show this seal at the door. The QR confirms your place in the WHISPERS list.</p>
 <p class="state" id="state"></p>
 <button class="save" hidden id="save" type="button">Private ticket</button>
@@ -98,13 +98,14 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   document.querySelector('.role').textContent=role;
   $('code').textContent=t.seal_code||'WSP · 10';
   $('bringing').innerHTML=t.bringing?'Bringing <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'':'Coming on your own');
-  const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia Center · the address reaches you at 18:00 on the 9th';
+  const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia · private location in central Sofia. Address released on 09.10 at 18:00.';
   if(v)$('venue').innerHTML=v.mapUrl?'<a href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+escapeHtml(venueText)+'</a>':escapeHtml(venueText);
-  if(t.table_label)$('bringing').innerHTML += '<br/>Table <b>'+escapeHtml(t.table_label)+'</b>';
+  if(t.table_reserved)$('bringing').innerHTML += '<br/><b>Your table is confirmed.</b>';
   $('state').textContent=t.checked_in_at?'Already checked in':'Ready for the door';
   if(window.WhispersTickets){
     const lines=['Saturday 10 October · Doors 22:00',venueText];
     if(t.bringing)lines.push('Bringing '+t.bringing);
+    if(t.table_reserved)lines.push('Your table is confirmed.');
     const spec=[{name:t.guest_name,role,sealCode:t.seal_code,url:ticketUrl,lines,note:'Show this at the door.'}];
     const prep=()=>window.WhispersTickets.prepare(spec).catch(()=>null);
     let ready=prep();

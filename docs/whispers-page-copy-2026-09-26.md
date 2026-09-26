@@ -56,8 +56,8 @@
 - Saturday 10 October
 - Doors at 22:00
 - Where
-- Sofia Center
-- The address follows
+- Sofia · private location in central Sofia
+- Address released on 09.10 at 18:00.
 - Who
 - You, and one person of your choosing
 - Inside
@@ -65,7 +65,7 @@
 
 **Note**
 
-- This invitation is not transferable. What happens beneath the rose stays beneath the rose.
+- This invitation only grants access to the event. What happens beneath the rose stays beneath the rose.
 
 **Buttons**
 
@@ -127,7 +127,7 @@
 **Main text**
 
 - One person. Choose well.
-- Their name and address go on the door list with yours. Names cannot be changed after the seventh.
+- Their name and email go on the door list with yours. Guest-list details cannot be changed after the RSVP deadline.
 
 **Plus-one option**
 
@@ -138,10 +138,8 @@
 
 - Full name
 - First and last name
-- Email (optional)
+- Email
 - name@example.com
-- Phone
-- +359 ...
 
 **Privacy note**
 
@@ -149,8 +147,8 @@
 
 **Table reservation option**
 
-- Бихте ли искали да ви запазим маса за събитието?
-- Ще се свържем с вас, за да дадем повече данни за резервацията.
+- Would you like us to reserve a table for you?
+- Our team will contact you with the reservation details.
 
 **Buttons**
 
@@ -162,7 +160,7 @@
 
 - Please give their full name.
 - Please give a valid email.
-- Please give their phone.
+- Please give their email.
 - We could not save your RSVP. Please try again.
 - The invitation could not reach us. Please try again.
 
@@ -182,7 +180,7 @@
 - 09.10 · 18:00
 - Ticket release
 - Saturday 10 October · Doors 22:00
-- Sofia Center · the address reaches you at 18:00 on the 9th
+- Sofia · private location in central Sofia. Address released on 09.10 at 18:00.
 - Coming on your own
 
 **Solo registration confirmation**
@@ -202,6 +200,7 @@
 **Buttons**
 
 - Private ticket
+- Cancel attendance
 - Start over
 
 **Save ticket messages**
@@ -209,6 +208,12 @@
 - Your ticket could not be prepared. Please try again.
 - Your ticket is saved to this device.
 - Both tickets are saved to this device.
+
+**Sponsor footer**
+
+- Powered by
+- Sponsor 1 logo
+- Sponsor 2 logo
 
 ### 8. Declined RSVP Screen
 
@@ -226,6 +231,12 @@
 
 - Start over
 
+**Sponsor footer**
+
+- Powered by
+- Sponsor 1 logo
+- Sponsor 2 logo
+
 ## Ticket Link Page
 
 ### 1. Default Ticket Layout
@@ -242,7 +253,7 @@
 
 - Private guest
 - Saturday 10 October · Doors 22:00
-- Sofia Center · the address reaches you at 18:00 on the 9th
+- Sofia · private location in central Sofia. Address released on 09.10 at 18:00.
 - Show this seal at the door. The QR confirms your place in the WHISPERS list.
 
 **Buttons**
@@ -279,7 +290,7 @@
 
 **Dynamic table text**
 
-- Table [table label]
+- Your table is confirmed.
 
 **Door status**
 
@@ -472,7 +483,8 @@ Security note: admin security is planned but not active yet. The current staff a
 
 ## Notes For Copy Review
 
-- Public-facing copy is currently mostly in English, with the table reservation question/helper in Bulgarian.
+- Public-facing copy is currently intended to be English-only.
 - Location remains intentionally vague until 09.10 at 18:00.
 - The visible confirmation after registration intentionally does not show QR code or special seal code before ticket release.
+- Table numbers are staff-only; guest tickets should show only generic table confirmation copy.
 - The staff/admin copy is functional and internal. It can stay more utilitarian than the guest-facing invitation copy.

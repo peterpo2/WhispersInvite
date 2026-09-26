@@ -18,11 +18,11 @@ on the actual ticket with QR code, seal code and location.
 ## Goals
 
 - Collect name, email and phone for every primary guest.
-- Collect name and phone for every additional registered person, with optional email.
+- Collect full name and email for the single additional registered person.
 - Add a table reservation checkbox on the plus-one step.
 - Store the reservation request on the RSVP row.
 - Keep tickets and location unavailable until 2026-10-09 18:00 Europe/Sofia.
-- Keep a separate ticket token/link for every person: primary guest and each added guest.
+- Keep a separate ticket token/link for every person: primary guest and the single allowed added guest.
 - Show no QR code, no seal code and no venue on the immediate post-registration screen.
 - Make the 09.10 ticket email flow possible once a domain and sender are available.
 - Treat iPhone/Safari as the primary experience target; every public flow must be polished there.
@@ -55,15 +55,15 @@ codes at RSVP time, but the public UI should not reveal them until the unlock ti
    - phone
 5. The guest answers whether they will attend.
 6. If attending, the existing plus-one step becomes an "add guest" step, with these changes:
-   - Optional added-person fields are name, optional email and phone.
+   - If adding a person, collect full name and email. Email is required when the person is added.
    - A checkbox asks whether the guest wants a reserved table:
-     `Бихте ли искали да ви запазим маса за събитието?`
+     `Would you like us to reserve a table for you?`
    - If selected, helper copy appears below:
-     `Ще се свържем с вас, за да дадем повече данни за резервацията.`
+     `Our team will contact you with the reservation details.`
    - The reservation checkbox applies to the RSVP group:
      - solo registration means a table request for 1
      - guest plus one added person means a table request for 2
-     - guest plus multiple added people means a table request for the group size
+     - more than one added person is not allowed for the first event
 7. On confirm, the server saves the RSVP and still creates ticket tokens internally.
 8. The done screen shows a confirmation card without QR and without seal code.
 
@@ -90,12 +90,15 @@ Repeat behaviour:
 2. They open the same link again.
 3. They enter the same email and phone.
 4. The system recognizes the existing RSVP.
-5. The flow allows them to add another person.
+5. The flow allows them to add one person only if no +1 is already registered.
 6. The added person receives their own ticket token and future ticket link.
 
 If the guest already added one person and opens the link again with the same primary email and
-phone, they can add another person. This means the final data model must support multiple added
-people per primary RSVP, not only one `plus_one_*` column set.
+phone, they must not be able to add another person. The first event limit is exactly:
+
+```text
+1 main guest + maximum 1 additional guest
+```
 
 Duplicate companion handling:
 
@@ -134,9 +137,9 @@ For a solo guest:
 > Your registration is confirmed. On 09.10 at 18:00, you will receive an email with the confirmed
 > location and your private ticket.
 
-For a guest with one or more added guests:
+For a guest with an added guest:
 
-> Your registration is confirmed. On 09.10 at 18:00, you and your registered guest(s) will each
+> Your registration is confirmed. On 09.10 at 18:00, you and your registered guest will each
 > receive an email with the confirmed location and your private ticket.
 
 The exact typography can follow the current `.small`, `.meta`, `.pass`, `.rl` and `.nm` styles.
@@ -188,7 +191,7 @@ invitation atmosphere without asking for registration information:
    - seal code
    - QR code encoding the ticket URL
    - venue/location
-   - table assignment when the RSVP group has been assigned to a table
+   - generic table confirmation copy when the RSVP group has a confirmed reservation
    - check-in state when relevant
    - download/save ticket action
 
@@ -204,22 +207,21 @@ QR behaviour:
   name.
 - **Same primary guest, solo first, adds a guest later:** keep the primary RSVP/ticket and add one
   companion row.
-- **Same primary guest, already has a companion, adds another later:** keep existing companion rows
-  and insert another companion row.
+- **Same primary guest, already has a companion, tries to add another later:** reject the new
+  companion and keep the existing registered guest.
 - **Duplicate companion with email:** if the companion email already exists under the same RSVP,
   do not create a duplicate ticket.
 - **Duplicate companion without email:** if normalized name and phone match an existing companion
   under the same RSVP, do not create a duplicate ticket.
-- **Companion has no email:** store the primary guest email as the companion's effective email
-  target and mark that it came from fallback; send that companion's ticket to the primary guest
-  email.
+- **Companion has no email:** invalid in the current public flow. Ask for their email.
 - **Ticket opened before 09.10 18:00:** show locked state only, with no QR, no seal code and no
   venue.
 - **Ticket opened after 09.10 18:00:** show cinematic journey and then ticket.
 - **Normal QR scan:** opens the ticket URL in a browser.
 - **Staff QR scan:** checks the ticket in through the staff scanner.
-- **Assigned table:** released ticket shows the assigned table label.
-- **Unassigned table:** released ticket omits table copy.
+- **Confirmed table reservation:** released ticket shows only `Your table is confirmed.` or
+  `Table reserved`, not the table number.
+- **Unconfirmed/unassigned table:** released ticket omits table copy.
 - **Mistaken staff scan:** staff can undo check-in from Members, allowing the QR to be scanned
   again.
 
@@ -234,7 +236,7 @@ wants_table_reservation boolean not null default false,
 ticket_email_sent_at timestamptz,
 ```
 
-Add a companion table for every additional person registered under a primary RSVP:
+Add a companion table for the additional person registered under a primary RSVP:
 
 ```sql
 create table if not exists rsvp_companions (
@@ -253,12 +255,14 @@ create table if not exists rsvp_companions (
 );
 ```
 
+For this event, application logic must enforce at most one row in `rsvp_companions` per RSVP.
+
 Rationale:
 
 - `guest_email` is needed because the primary guest currently has no RSVP email field.
 - `guest_phone` is required by the new registration flow.
-- Companion `email` stores the effective ticket delivery email. If the guest leaves it blank,
-  save the primary RSVP `guest_email` there and set `email_is_fallback = true`.
+- Companion `email` is required in the current public flow. `phone` remains in the DB for legacy
+  compatibility and can be an empty string for new companion rows.
 - `wants_table_reservation` belongs to the RSVP group, not an individual ticket.
 - email sent timestamps allow idempotent future email sending.
 
@@ -279,16 +283,14 @@ New implementation should write added people to `rsvp_companions`.
   "wantsTableReservation": true,
   "plusOne": {
     "name": "Simona Ivanova",
-    "email": "simona@example.com",
-    "phone": "+359 88 765 4321"
+    "email": "simona@example.com"
   }
 }
 ```
 
 For `declined`, plus-one and table reservation values are ignored and stored as null/false.
-For an attending added person, `email` may be omitted or blank. In that case the added person
-still gets their own ticket token, but the future ticket email is addressed to the primary guest
-email.
+For an attending added person, `email` is required. Phone is not collected in the current public
+flow.
 
 Validation rules:
 
@@ -296,8 +298,8 @@ Validation rules:
 - guest email: required for attending, valid email, max 254 chars
 - guest phone: required for attending, string, max 40 chars after trimming
 - added person name: required when an added person is submitted, 2+ words, max 120 chars
-- added person email: optional; when present, valid email, max 254 chars
-- added person phone: required when an added person is submitted, string, max 40 chars after trimming
+- added person email: required when an added person is submitted, valid email, max 254 chars
+- added person phone: optional legacy field, max 40 chars after trimming when present
 - wantsTableReservation: optional boolean; non-boolean values are invalid
 
 Duplicate added-person email protection remains only when an added-person email is present.
@@ -331,9 +333,7 @@ The future sender should:
 
 1. Query attending RSVPs whose ticket email has not been sent.
 2. Send the primary guest their personal `/ticket/<ticket_token>` link.
-3. Send every companion their own `/ticket/<companion_ticket_token>` link.
-   Companion `email` is the effective delivery target. When `email_is_fallback` is true, it will
-   be the same address as the primary guest email.
+3. Send the companion their own `/ticket/<companion_ticket_token>` link to their email address.
 4. Mark `ticket_email_sent_at` for the primary RSVP and each companion's
    `ticket_email_sent_at` separately.
 5. Never expose service-role keys to the browser.

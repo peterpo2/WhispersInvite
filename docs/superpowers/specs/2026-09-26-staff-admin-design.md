@@ -32,6 +32,8 @@ not depend on it directly until real credentials and DNS are available.
 - Allow sorting and search in Members.
 - Allow staff to toggle check-in state for each ticket holder.
 - Allow staff to arrange reservation-request groups into tables.
+- Guest-facing tickets must never reveal the table number/floor plan; they can only show generic
+  confirmation copy when the reservation is confirmed.
 - Start with example tables: 10 tables total, 5 tables with 6 seats and 5 tables with 4 seats.
 - Treat the scanner and admin UI as iPhone/Safari-first, especially camera scanning on event night.
 
@@ -132,7 +134,7 @@ Members is a staff table over the RSVP data.
 Members should show one row per person, not one row per RSVP:
 
 - primary guest row
-- one row for each added guest/companion
+- one row for the added guest/companion
 
 Each row should include enough context to understand the RSVP group.
 
@@ -147,6 +149,7 @@ Recommended columns:
 - Phone
 - RSVP status
 - Table reservation requested
+- Table reservation confirmed
 - Group size
 - Table assignment
 - Ticket email sent
@@ -218,7 +221,7 @@ The unit of assignment is the RSVP group, not each individual ticket:
 
 - solo guest with reservation: group size 1
 - guest plus one companion with reservation: group size 2
-- guest plus multiple companions with reservation: group size is `1 + companion_count`
+- more than one companion is not allowed for the first event
 
 Only groups with `wants_table_reservation = true` need to appear in the unassigned reservation
 queue by default. Staff may still need a way to search all groups and assign someone manually.
@@ -248,8 +251,11 @@ Staff should be able to:
 - remove a group from a table back to unassigned
 - see over-capacity warnings
 
-When a group is assigned to a table, every released ticket in that RSVP group should show the same
-table label. If the group is unassigned, tickets should not show table copy.
+When a group is assigned to a table, staff sees the exact table internally. Table assignment is not
+the same as reservation confirmation. Every released ticket in that RSVP group should show only
+generic confirmation copy such as `Your table is confirmed.` or `Table reserved` only when the
+separate `reservation_confirmed` checkbox is enabled. If the group is unconfirmed, tickets should
+not show table copy.
 
 Drag-and-drop is nice but not required. A simpler first version can use buttons or selects:
 
@@ -265,16 +271,19 @@ The RSVP table already needs these fields from the deferred ticket spec:
 
 ```sql
 wants_table_reservation boolean not null default false
+reservation_confirmed boolean not null default false
 guest_email text
 guest_phone text
 plus_one_email text
 plus_one_phone text
 ```
 
-Once the deferred ticket flow moves added guests into `rsvp_companions`, Tables and Members should
-read companions from that table instead of only the legacy `plus_one_*` columns. Companion
+Once the deferred ticket flow moves the added guest into `rsvp_companions`, Tables and Members should
+read the companion from that table instead of only the legacy `plus_one_*` columns. Companion
 `email` is the effective ticket email target; `email_is_fallback` tells staff whether it was copied
 from the primary guest email because the companion did not provide their own.
+
+For the first event, application logic enforces at most one companion row per RSVP.
 
 Add table assignment storage:
 
@@ -354,7 +363,8 @@ Returns:
 - assigned groups
 - unassigned reservation-request groups
 - capacity usage
-- enough table assignment data for `/api/ticket` to show the table label on released tickets
+- enough table assignment data for `/api/ticket` to show generic confirmed table copy on released
+  tickets, without exposing table numbers
 
 ### `POST /api/staff/table-assignment`
 

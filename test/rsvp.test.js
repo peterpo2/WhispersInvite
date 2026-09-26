@@ -2,8 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   EVENT_KEY,
+  MAX_ADDED_GUESTS,
+  RSVP_DEADLINE_AT,
   SEAL_ALPHABET,
   TICKET_RELEASE_AT,
+  addedGuestLimitReached,
   isDuplicatePlusOneEmail,
   isDuplicateSealCode,
   buildCheckInUrl,
@@ -11,10 +14,12 @@ import {
   checkInRedirectPath,
   buildRsvpRow,
   buildRsvpUpdate,
+  isRsvpClosed,
   isTicketReleased,
   normalizePhone,
   doorScans,
   publicVenue,
+  sameAddedGuest,
   ticketForToken,
   buildTicketUrl,
   makeSealCode,
@@ -38,11 +43,11 @@ test("attending RSVP requires full name, email and phone", () => {
   assert.equal(validateRsvpPayload({ guestName: "Peter Popov", status: "attending", guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567" }).ok, true);
 });
 
-test("added guest email is optional but phone is required", () => {
+test("added guest requires full name and email but phone is optional", () => {
   const base = { guestName: "Peter Popov", guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567", status: "attending" };
-  assert.equal(validateRsvpPayload({ ...base, plusOne: { name: "Simona Ivanova", phone: "+359 88 765 4321" } }).ok, true);
+  assert.equal(validateRsvpPayload({ ...base, plusOne: { name: "Simona Ivanova", phone: "+359 88 765 4321" } }).error, "Please give their email.");
+  assert.equal(validateRsvpPayload({ ...base, plusOne: { name: "Simona Ivanova", email: "simona@example.com" } }).ok, true);
   assert.equal(validateRsvpPayload({ ...base, plusOne: { name: "Simona Ivanova", email: "bad", phone: "+359 88 765 4321" } }).error, "Please give a valid email.");
-  assert.equal(validateRsvpPayload({ ...base, plusOne: { name: "Simona Ivanova", email: "simona@example.com" } }).error, "Please give their phone.");
 });
 
 test("builds contact and reservation fields for the primary RSVP", () => {
@@ -53,7 +58,7 @@ test("builds contact and reservation fields for the primary RSVP", () => {
       guestPhone: " +359   88 123 4567 ",
       status: "attending",
       wantsTableReservation: true,
-      plusOne: { name: "Simona Ivanova", phone: "+359 88 765 4321" },
+      plusOne: { name: "Simona Ivanova", email: "simona@example.com", phone: "+359 88 765 4321" },
     },
     ids(TOKEN, PLUS_TOKEN),
     FIXED_NOW,
@@ -61,20 +66,20 @@ test("builds contact and reservation fields for the primary RSVP", () => {
   );
   assert.equal(row.guest_email, "peter@example.com");
   assert.equal(row.guest_phone, "+359 88 123 4567");
-  assert.equal(row.plus_one_email, "peter@example.com");
-  assert.equal(row.plus_one_email_is_fallback, true);
+  assert.equal(row.plus_one_email, "simona@example.com");
+  assert.equal(row.plus_one_email_is_fallback, false);
   assert.equal(row.plus_one_phone, "+359 88 765 4321");
   assert.equal(row.wants_table_reservation, true);
 });
 
-test("builds companion row with fallback email marker", () => {
+test("builds companion row with optional phone", () => {
   const row = buildRsvpRow(
     {
       guestName: "Peter Popov",
       guestEmail: "peter@example.com",
       guestPhone: "+359 88 123 4567",
       status: "attending",
-      plusOne: { name: "Simona Ivanova", phone: "+359 88 765 4321" },
+      plusOne: { name: "Simona Ivanova", email: "simona@example.com" },
     },
     ids(TOKEN, PLUS_TOKEN),
     FIXED_NOW,
@@ -83,9 +88,9 @@ test("builds companion row with fallback email marker", () => {
   assert.deepEqual(buildCompanionRow(row, 42), {
     rsvp_id: 42,
     guest_name: "Simona Ivanova",
-    email: "peter@example.com",
-    email_is_fallback: true,
-    phone: "+359 88 765 4321",
+    email: "simona@example.com",
+    email_is_fallback: false,
+    phone: "",
     ticket_token: PLUS_TOKEN,
     seal_code: "WSP·10·PLUS",
   });
@@ -95,6 +100,19 @@ test("ticket release gate opens exactly at 09.10 18:00 Sofia time", () => {
   assert.equal(TICKET_RELEASE_AT, "2026-10-09T18:00:00+03:00");
   assert.equal(isTicketReleased(new Date("2026-10-09T14:59:59.000Z")), false);
   assert.equal(isTicketReleased(new Date("2026-10-09T15:00:00.000Z")), true);
+});
+
+test("RSVP closes at 07.10 18:00 Sofia time", () => {
+  assert.equal(RSVP_DEADLINE_AT, "2026-10-07T18:00:00+03:00");
+  assert.equal(isRsvpClosed(new Date("2026-10-07T14:59:59.000Z")), false);
+  assert.equal(isRsvpClosed(new Date("2026-10-07T15:00:00.000Z")), true);
+});
+
+test("only one added guest is allowed per primary RSVP", () => {
+  assert.equal(MAX_ADDED_GUESTS, 1);
+  assert.equal(addedGuestLimitReached({ plus_one_name: null }, 0), false);
+  assert.equal(addedGuestLimitReached({ plus_one_name: "Legacy Guest" }, 0), true);
+  assert.equal(addedGuestLimitReached({ plus_one_name: null }, 1), true);
 });
 
 test("RSVP requires a selected guest and valid status", () => {
@@ -508,6 +526,17 @@ test("the same plus-one typed with different spacing or case keeps their ticket"
   assert.equal(buildRsvpUpdate(row, EXISTING_WITH_PLUS).plus_one_ticket_token, PLUS_TOKEN);
 });
 
+test("legacy added guest matching detects the same +1 before enforcing the limit", () => {
+  const row = buildRsvpRow(
+    { guestId: "g1", guestName: "Peter Popov", ...CONTACT, status: "attending", plusOne: { name: "  simona   IVANOVA ", email: "Simona@Example.com", phone: "+359 88 765 4321" } },
+    ids(TOKEN, "newplus00000000000000000000000000"),
+    FIXED_NOW,
+    seals("WSP·10·NEWG", "WSP·10·NEWP")
+  );
+  assert.equal(sameAddedGuest(EXISTING_WITH_PLUS, row), true);
+  assert.equal(sameAddedGuest({ ...EXISTING_WITH_PLUS, plus_one_name: "Maria Nikolova" }, row), false);
+});
+
 test("declining clears the plus-one and their ticket", () => {
   const row = buildRsvpRow({ guestId: "g1", guestName: "Peter Popov", status: "declined" }, () => TOKEN, FIXED_NOW, FIXED_SEAL);
   const patch = buildRsvpUpdate(row, EXISTING_WITH_PLUS);
@@ -544,6 +573,7 @@ test("the guest's token opens the guest's ticket", () => {
     bringing: "Simona Ivanova",
     brought_by: null,
     table_label: null,
+    table_reserved: false,
     locked: false,
   });
 });
@@ -557,8 +587,18 @@ test("the plus-one's token opens their own ticket", () => {
     bringing: null,
     brought_by: "Michelle Georgieva",
     table_label: null,
+    table_reserved: false,
     locked: false,
   });
+});
+
+test("assigned tables are only guest-visible after reservation confirmation", () => {
+  const assigned = { ...ROW, table_label: "Table 1", reservation_confirmed: false };
+  const confirmed = { ...ROW, table_label: "Table 1", reservation_confirmed: true };
+  assert.equal(ticketForToken(assigned, TOKEN).table_label, null);
+  assert.equal(ticketForToken(assigned, TOKEN).table_reserved, false);
+  assert.equal(ticketForToken(confirmed, TOKEN).table_label, null);
+  assert.equal(ticketForToken(confirmed, TOKEN).table_reserved, true);
 });
 
 test("unknown tokens and declined replies have no ticket", () => {

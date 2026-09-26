@@ -1,8 +1,9 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { buildCompanionRow, buildRsvpRow, isDuplicateSealCode, normalizeEmail, nameKey, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
+import { addedGuestLimitReached, buildCompanionRow, buildRsvpRow, isDuplicateSealCode, isRsvpClosed, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const ALREADY_INSIDE = "This invitation has already been used at the door.";
+const PLUS_ONE_LIMIT = "This invitation already has a registered guest.";
 const MAX_SEAL_CODE_RETRIES = 3;
 
 const LOOKUP_COLUMNS = [
@@ -36,6 +37,7 @@ export async function onRequestPost({ request, env }) {
 
   const valid = validateRsvpPayload(body);
   if (valid.error) return json({ error: valid.error }, 400);
+  if (isRsvpClosed()) return json({ error: "RSVP is closed." }, 409);
 
   let row = buildRsvpRow(body);
   const existing = await findExistingRsvp(env, row);
@@ -132,7 +134,11 @@ async function updateExistingRsvp(env, requestUrl, row, existing) {
   if (row.plus_one_name) {
     const duplicate = await findDuplicateCompanion(env, existing.id, row);
     if (duplicate.error) return duplicate.error;
+    if (!duplicate.found && sameAddedGuest(existing, row)) duplicate.found = true;
     if (!duplicate.found) {
+      const companionCount = await countCompanions(env, existing.id);
+      if (companionCount.error) return companionCount.error;
+      if (addedGuestLimitReached(existing, companionCount.count)) return json({ error: PLUS_ONE_LIMIT }, 409);
       const inserted = await insertCompanion(env, existing.id, row);
       if (inserted.error) return inserted.error;
     }
@@ -159,6 +165,17 @@ async function findDuplicateCompanion(env, rsvpId, row) {
   if (!byName.response.ok) return { error: json({ error: "Could not save RSVP" }, 502) };
   const samePhoneRows = await byName.response.json();
   return { found: samePhoneRows.some((item) => nameKey(item.guest_name) === nameKey(row.plus_one_name)) };
+}
+
+async function countCompanions(env, rsvpId) {
+  const result = await supabaseFetch(
+    env,
+    `/rest/v1/rsvp_companions?select=id&rsvp_id=eq.${encodeURIComponent(rsvpId)}`
+  );
+  if (result.error) return { error: result.error };
+  if (!result.response.ok) return { error: json({ error: "Could not save RSVP" }, 502) };
+  const rows = await result.response.json();
+  return { count: Array.isArray(rows) ? rows.length : 0 };
 }
 
 async function insertCompanion(env, rsvpId, row) {

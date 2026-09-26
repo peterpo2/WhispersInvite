@@ -1,10 +1,15 @@
 # Deferred Ticket Release Implementation Plan
 
+> Superseded note, 2026-09-27: organizer answers changed the repeat-registration model to
+> maximum `main guest + 1 added guest`. Do not implement the multiple-added-guests parts of this
+> plan. Use `docs/superpowers/plans/2026-09-27-organizer-updates-plan.md` as the current plan for
+> organizer-answer updates.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Collect guest contact details and table reservation intent now, then release ticket QR codes, seal codes and venue only on 2026-10-09 at 18:00 Europe/Sofia. The public experience is iPhone/Safari-first.
 
-**Architecture:** Keep RSVP creation in the existing `/api/rsvp` path, but stop returning ticket secrets to the immediate browser confirmation. Add pure helper logic in `functions/_shared/rsvp.js` for validation, row creation and release gating, then reuse it from API and ticket pages. Because repeat submissions can add more than one extra person, primary registrations stay in `rsvps` and added guests live in a new `rsvp_companions` table. Preserve the current Cloudflare Pages + Supabase REST architecture.
+**Architecture:** Keep RSVP creation in the existing `/api/rsvp` path, but stop returning ticket secrets to the immediate browser confirmation. Add pure helper logic in `functions/_shared/rsvp.js` for validation, row creation and release gating, then reuse it from API and ticket pages. Primary registrations stay in `rsvps` and the single allowed added guest lives in `rsvp_companions`. Preserve the current Cloudflare Pages + Supabase REST architecture.
 
 **Tech Stack:** Static HTML, Cloudflare Pages Functions, Supabase PostgREST, Node `node:test`, vanilla JavaScript, existing QR and ticket-card assets.
 
@@ -26,14 +31,13 @@
 
 The implementation must support repeat registration by the same primary guest. If the guest opens
 the original invitation link again and enters the same normalized email and phone, the server must
-recognize the existing RSVP even if the name is typed differently. The guest can then add another
-person. This can happen more than once.
+recognize the existing RSVP even if the name is typed differently. The guest can then add one
+person only if no +1 is already registered.
 
-This requirement means `plus_one_*` columns are no longer enough for new added guests. Use this
-model:
+Use this model:
 
 - `rsvps`: one primary registration/person
-- `rsvp_companions`: zero or more added people under that primary RSVP
+- `rsvp_companions`: zero or one added person under that primary RSVP
 
 The old `plus_one_*` columns may remain for compatibility during migration, but new extra people
 should be written to `rsvp_companions`.
@@ -774,8 +778,8 @@ In `#s-plus`, after `#p1mail`, add:
 Add a reservation checkbox near the plus-one checkbox:
 
 ```html
-<label class="check st"><input id="reserveTable" type="checkbox"/> Бихте ли искали да ви запазим маса за събитието?</label>
-<p id="reserveTableHelp" class="small" hidden>Ще се свържем с вас, за да дадем повече данни за резервацията.</p>
+<label class="check st"><input id="reserveTable" type="checkbox"/> Would you like us to reserve a table for you?</label>
+<p id="reserveTableHelp" class="small" hidden>Our team will contact you with the reservation details.</p>
 ```
 
 Toggle `#reserveTableHelp.hidden` based on the checkbox state.
@@ -1154,7 +1158,7 @@ Spec coverage:
 - Table reservation is covered in Tasks 1, 2 and 5.
 - Immediate confirmation without QR/code is covered in Tasks 4 and 5.
 - Ticket locking until 2026-10-09 18:00+03:00 is covered in Tasks 3 and 6.
-- Repeat registration and multiple added guests are covered in the edge-case revision and Task 4.
+- Repeat registration and the single +1 limit are covered in the edge-case revision and Task 4.
 - Separate primary and companion ticket links are covered in Tasks 1, 3, 4, 6 and 7.
 - Future email flow readiness is covered by Tasks 1 and 7.
 

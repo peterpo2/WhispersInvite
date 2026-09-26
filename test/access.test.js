@@ -15,6 +15,7 @@ test("allows the invitation, API routes, ticket pages and the staff scanner", ()
     "/api/staff/checkin-state",
     "/api/staff/tables",
     "/api/staff/table-assignment",
+    "/api/staff/reservation-state",
     "/ticket/123e4567e89b12d3a456426614174000",
     "/staff/rose-door-10",
     "/assets/whispers-mark.png",

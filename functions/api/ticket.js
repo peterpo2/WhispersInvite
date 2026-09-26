@@ -2,8 +2,8 @@ import { json, methodNotAllowed } from "../_shared/responses.js";
 import { EVENT_KEY, TICKET_RELEASE_AT, buildCheckInUrl, buildTicketUrl, companionTicketForToken, isTicketReleased, publicVenue, ticketForToken, tokenFromValue } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
-const PRIMARY_COLUMNS = "id,guest_name,seal_code,ticket_token,checked_in_at,status,plus_one_name,plus_one_seal_code,plus_one_ticket_token,plus_one_checked_in_at";
-const COMPANION_COLUMNS = "id,rsvp_id,guest_name,seal_code,ticket_token,checked_in_at,rsvps!inner(id,guest_name,status,event_key,wants_table_reservation)";
+const PRIMARY_COLUMNS = "id,guest_name,seal_code,ticket_token,checked_in_at,status,plus_one_name,plus_one_seal_code,plus_one_ticket_token,plus_one_checked_in_at,reservation_confirmed";
+const COMPANION_COLUMNS = "id,rsvp_id,guest_name,seal_code,ticket_token,checked_in_at,rsvps!inner(id,guest_name,status,event_key,wants_table_reservation,reservation_confirmed)";
 
 export async function onRequestGet({ request, env }) {
   const raw = new URL(request.url).searchParams.get("token");
@@ -15,13 +15,11 @@ export async function onRequestGet({ request, env }) {
   const primary = await findPrimaryTicket(env, token, released);
   if (primary.error) return primary.error;
   let ticket = primary.ticket;
-  let rsvpId = primary.rsvpId;
 
   if (!ticket) {
     const companion = await findCompanionTicket(env, token, released);
     if (companion.error) return companion.error;
     ticket = companion.ticket;
-    rsvpId = companion.rsvpId;
   }
 
   if (!ticket) return json({ error: "Ticket not found" }, 404);
@@ -36,11 +34,6 @@ export async function onRequestGet({ request, env }) {
       const [row] = await details.response.json().catch(() => []);
       venue = publicVenue(row);
     }
-  }
-
-  if (released && rsvpId) {
-    const table = await tableLabel(env, rsvpId);
-    if (table) ticket.table_label = table;
   }
 
   return json({
@@ -63,7 +56,7 @@ async function findPrimaryTicket(env, token, released) {
   if (!lookup.response.ok) return { error: json({ error: "Could not load ticket" }, 502) };
   const [row] = await lookup.response.json();
   const ticket = ticketForToken(row, token, { released });
-  return { ticket, rsvpId: row?.id || null };
+  return { ticket };
 }
 
 async function findCompanionTicket(env, token, released) {
@@ -76,18 +69,7 @@ async function findCompanionTicket(env, token, released) {
   const [row] = await lookup.response.json();
   const primary = Array.isArray(row?.rsvps) ? row.rsvps[0] : row?.rsvps;
   const ticket = companionTicketForToken(row, primary, token, { released });
-  return { ticket, rsvpId: row?.rsvp_id || null };
-}
-
-async function tableLabel(env, rsvpId) {
-  const result = await supabaseFetch(
-    env,
-    `/rest/v1/staff_table_assignments?select=staff_tables(label)&event_key=eq.${encodeURIComponent(EVENT_KEY)}&rsvp_id=eq.${encodeURIComponent(rsvpId)}&limit=1`
-  );
-  if (result.error || !result.response.ok) return null;
-  const [row] = await result.response.json().catch(() => []);
-  const table = Array.isArray(row?.staff_tables) ? row.staff_tables[0] : row?.staff_tables;
-  return table?.label || null;
+  return { ticket };
 }
 
 export async function onRequest() {

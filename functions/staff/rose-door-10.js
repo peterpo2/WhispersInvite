@@ -38,6 +38,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 .small{color:var(--muted);font-size:14px;line-height:1.55;margin:12px 0 0}
 .tabs{display:flex;gap:8px;overflow:auto;margin:0 0 14px;padding-bottom:2px}.tab{width:auto;min-width:0;min-height:44px;padding:0 12px;white-space:nowrap}.tab.active{color:#1C130A;border-color:#E6C48C;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%)}
 .view{display:none}.view.active{display:block}.toolbar{display:flex;gap:8px;align-items:center;margin:0 0 12px}.toolbar input{width:100%;text-transform:none;letter-spacing:0;font:400 16px var(--sans);cursor:text}.toolbar button{flex:0 0 142px;white-space:nowrap;letter-spacing:.16em}.grid{overflow:auto;border:1px solid var(--line);border-radius:3px;background:rgba(8,6,5,.2)}table{width:100%;border-collapse:collapse;min-width:1160px}th,td{text-align:left;border:1px solid rgba(217,174,120,.18);padding:11px 9px;font-size:13px;vertical-align:middle}th{position:sticky;top:0;background:#0D0A08;color:var(--gold);font-weight:400;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;z-index:1}td{color:#E7DED4;background:rgba(8,6,5,.18)}tbody tr:hover td{background:rgba(217,174,120,.06)}td input[type=checkbox]{min-height:0;width:20px;height:20px}.pill{display:inline-block;border:1px solid rgba(217,174,120,.35);padding:4px 7px;border-radius:999px;color:var(--gold-hi);font-size:12px;white-space:nowrap}.tables-layout{display:grid;gap:14px}.table-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.table-chip{min-height:72px;text-align:left;letter-spacing:.08em;text-transform:none;padding:10px 12px}.table-chip b{display:block;font:300 23px var(--serif);color:#F6EFE4}.table-chip small{display:block;margin-top:4px;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}.table-chip.active{color:#1C130A;border-color:#E6C48C;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%)}.table-chip.active b,.table-chip.active small{color:#1C130A}.table-detail{border:1px solid var(--line);border-radius:3px;background:rgba(8,6,5,.28);padding:14px}.table-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(217,174,120,.16);padding-bottom:12px;margin-bottom:10px}.table-detail h2{font:300 34px/1.05 var(--serif);margin:0}.capacity{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);white-space:nowrap}.table-groups{display:grid;gap:8px}.group{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid rgba(217,174,120,.16);border-radius:3px;padding:10px;background:rgba(0,0,0,.16)}.group-main{font-family:var(--serif);font-size:22px;color:#F6EFE4;overflow-wrap:anywhere}.people{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.person{border:1px solid rgba(217,174,120,.28);border-radius:999px;padding:3px 7px;color:var(--muted);font-size:12px}.group-actions{display:flex;gap:8px;align-items:center}.group-actions button{min-height:42px;padding:0 10px;letter-spacing:.12em}.group select{min-height:42px;background:#090706;color:var(--bone);border:1px solid rgba(217,174,120,.5);border-radius:3px}.table-add{margin-top:16px;border-top:1px solid rgba(217,174,120,.16);padding-top:14px}.table-add h3{margin:0 0 10px;font:300 24px var(--serif)}.available-list{display:grid;gap:8px}.available-list .group{grid-template-columns:1fr auto}.empty-state{border:1px dashed rgba(217,174,120,.28);border-radius:3px;padding:14px;color:var(--muted);font-style:italic}@media(min-width:760px){.tables-layout{grid-template-columns:300px 1fr;align-items:start}.table-list{grid-template-columns:1fr}.table-detail{position:sticky;top:12px}}@media(max-width:759px){.table-detail{order:-1}}@media(max-width:460px){.table-list{grid-template-columns:1fr}.table-detail-head{display:block}.capacity{display:block;margin-top:8px}.group,.available-list .group{grid-template-columns:1fr}.group-actions{justify-content:flex-start;flex-wrap:wrap}.toolbar{display:grid}.toolbar button{width:100%;flex:auto}}
+.group-actions{flex-wrap:wrap}.mini-check{min-height:42px;display:flex;align-items:center;gap:7px;border:1px solid rgba(217,174,120,.35);border-radius:3px;padding:0 10px;color:var(--bone);font-size:12px;letter-spacing:.1em;text-transform:uppercase}.mini-check input{min-height:0;width:18px;height:18px;padding:0}
 </style>
 </head>
 <body>
@@ -55,7 +56,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 <section class="panel"><div class="k">Scanned tonight</div><div class="list" id="list"></div></section>
 </div>
 <div class="view" id="view-members">
-<section class="panel"><div class="toolbar"><input id="memberSearch" placeholder="Search members" autocomplete="off"/><button id="exportMembers">Export CSV</button></div><div class="grid"><table id="membersTable"><thead><tr><th data-sort="name">Name</th><th data-sort="type">Type</th><th data-sort="guestOf">Guest of</th><th data-sort="email">Email</th><th data-sort="phone">Phone</th><th data-sort="wantsTableReservation">Request</th><th data-sort="table">Table</th><th data-sort="checkedIn">In</th><th data-sort="checkedInAt">Scanned</th><th data-sort="submittedAt">Registered</th></tr></thead><tbody></tbody></table></div></section>
+<section class="panel"><div class="toolbar"><input id="memberSearch" placeholder="Search members" autocomplete="off"/><button id="exportMembers">Export CSV</button></div><div class="grid"><table id="membersTable"><thead><tr><th data-sort="name">Name</th><th data-sort="type">Type</th><th data-sort="guestOf">Guest of</th><th data-sort="email">Email</th><th data-sort="phone">Phone</th><th data-sort="wantsTableReservation">Request</th><th data-sort="reservationConfirmed">Confirmed</th><th data-sort="table">Table</th><th data-sort="checkedIn">In</th><th data-sort="checkedInAt">Scanned</th><th data-sort="submittedAt">Registered</th></tr></thead><tbody></tbody></table></div></section>
 </div>
 <div class="view" id="view-tables">
 <section class="panel"><p class="small">All attending groups can be assigned to tables. Reservation requests are marked. Default model: five 6-seat tables and five 4-seat tables until the venue gives final data.</p><div class="tables-layout" id="tablesView"></div></section>
@@ -200,27 +201,29 @@ function showView(name){
 function refreshCurrent(){if(currentView==='members')loadMembers();else if(currentView==='tables')loadTables();else loadList();}
 function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 function exportCsv(){
-  const rows=[['Name','Type','Guest of','Email','Phone','Reservation','Table','Checked in','Scanned at','Registered at']].concat(filteredMembers().map(m=>[m.name,m.type,m.guestOf,m.email,m.phone,m.wantsTableReservation?'yes':'no',m.table,m.checkedIn?'yes':'no',m.checkedInAt,m.submittedAt]));
+  const rows=[['Name','Type','Guest of','Email','Phone','Reservation requested','Reservation confirmed','Table','Checked in','Scanned at','Registered at']].concat(filteredMembers().map(m=>[m.name,m.type,m.guestOf,m.email,m.phone,m.wantsTableReservation?'yes':'no',m.reservationConfirmed?'yes':'no',m.table,m.checkedIn?'yes':'no',m.checkedInAt,m.submittedAt]));
   const blob=new Blob([rows.map(r=>r.map(csvCell).join(',')).join('\\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='whispers-members.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 function filteredMembers(){const q=document.getElementById('memberSearch').value.trim().toLowerCase();let rows=members.filter(m=>!q||[m.name,m.type,m.guestOf,m.email,m.phone,m.table].some(v=>String(v||'').toLowerCase().includes(q)));rows.sort((a,b)=>String(a[sortKey]??'').localeCompare(String(b[sortKey]??''))*sortDir);return rows;}
 async function loadMembers(){
-  const body=document.querySelector('#membersTable tbody');body.innerHTML='<tr><td colspan="10">Loading...</td></tr>';
-  let res,data;try{res=await fetch('/api/staff/members');data=await res.json();}catch(e){body.innerHTML='<tr><td colspan="10">No connection.</td></tr>';return;}
-  if(!res.ok){body.innerHTML='<tr><td colspan="10">'+esc(data.error||'Could not load members')+'</td></tr>';return;}
+  const body=document.querySelector('#membersTable tbody');body.innerHTML='<tr><td colspan="11">Loading...</td></tr>';
+  let res,data;try{res=await fetch('/api/staff/members');data=await res.json();}catch(e){body.innerHTML='<tr><td colspan="11">No connection.</td></tr>';return;}
+  if(!res.ok){body.innerHTML='<tr><td colspan="11">'+esc(data.error||'Could not load members')+'</td></tr>';return;}
   members=data.members||[];renderMembers();
 }
 function renderMembers(){
   const body=document.querySelector('#membersTable tbody'),rows=filteredMembers();
-  body.innerHTML=rows.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.type)+'</td><td>'+esc(m.guestOf||'')+'</td><td>'+esc(m.email)+(m.emailIsFallback?' <span class="pill">fallback</span>':'')+'</td><td>'+esc(m.phone)+'</td><td>'+(m.wantsTableReservation?'yes':'')+'</td><td>'+esc(m.table||'')+'</td><td><input type="checkbox" '+(m.checkedIn?'checked':'')+' data-id="'+esc(m.id)+'"/></td><td>'+esc(m.checkedInAt?new Date(m.checkedInAt).toLocaleString():'')+'</td><td>'+esc(m.submittedAt?new Date(m.submittedAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="10">No members.</td></tr>';
-  body.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.onchange=()=>toggleMember(cb.dataset.id,cb.checked));
+  body.innerHTML=rows.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.type)+'</td><td>'+esc(m.guestOf||'')+'</td><td>'+esc(m.email)+(m.emailIsFallback?' <span class="pill">fallback</span>':'')+'</td><td>'+esc(m.phone)+'</td><td>'+(m.wantsTableReservation?'yes':'')+'</td><td><input type="checkbox" '+(m.reservationConfirmed?'checked':'')+' data-reservation-id="'+esc(m.rsvpId)+'"/></td><td>'+esc(m.table||'')+'</td><td><input type="checkbox" '+(m.checkedIn?'checked':'')+' data-checkin-id="'+esc(m.id)+'"/></td><td>'+esc(m.checkedInAt?new Date(m.checkedInAt).toLocaleString():'')+'</td><td>'+esc(m.submittedAt?new Date(m.submittedAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="11">No members.</td></tr>';
+  body.querySelectorAll('[data-checkin-id]').forEach(cb=>cb.onchange=()=>toggleMember(cb.dataset.checkinId,cb.checked));
+  body.querySelectorAll('[data-reservation-id]').forEach(cb=>cb.onchange=()=>toggleReservation(cb.dataset.reservationId,cb.checked));
 }
 async function toggleMember(id,checkedIn){
   const m=members.find(x=>x.id===id);if(!m)return;
   await fetch('/api/staff/checkin-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:m.rsvpId,companionId:m.companionId,holder:m.holder,checkedIn})});
   await loadMembers();await loadList();
 }
+async function toggleReservation(rsvpId,reservationConfirmed){await fetch('/api/staff/reservation-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),reservationConfirmed})});await loadTables();await loadMembers();}
 document.getElementById('memberSearch').oninput=renderMembers;
 document.getElementById('exportMembers').onclick=exportCsv;
 document.querySelectorAll('#membersTable th').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=1;}renderMembers();});
@@ -240,12 +243,14 @@ function renderTables(){
   box.querySelectorAll('.table-chip').forEach(b=>b.onclick=()=>{selectedTableId=b.dataset.tableId||null;renderTables();});
   box.querySelectorAll('[data-assign]').forEach(b=>b.onclick=()=>assignTable(b.dataset.rsvpId,b.dataset.assign||null));
   box.querySelectorAll('select').forEach(s=>s.onchange=()=>assignTable(s.dataset.rsvpId,s.value||null));
+  box.querySelectorAll('[data-reservation-id]').forEach(cb=>cb.onchange=()=>toggleReservation(cb.dataset.reservationId,cb.checked));
 }
 function groupCard(g,currentId,tables,asAdd){
   const people=(g.people&&g.people.length?g.people:[g.name]).map(p=>'<span class="person">'+esc(p)+'</span>').join('');
   const request=g.wantsTableReservation?' <span class="pill">requested table</span>':'';
+  const confirmed=g.reservationConfirmed?' <span class="pill">confirmed</span>':'';
   const action=asAdd?'<button class="primary" data-rsvp-id="'+esc(g.rsvpId)+'" data-assign="'+esc(currentId)+'">Add</button>':(currentId?'<button data-rsvp-id="'+esc(g.rsvpId)+'" data-assign="">Remove</button>':'');
-  return '<div class="group"><div><div class="group-main">'+esc(g.name)+' <span class="pill">'+g.size+'</span>'+request+'</div><div class="people">'+people+'</div></div><div class="group-actions">'+action+(asAdd?'':tableSelect(g,tables))+'</div></div>';
+  return '<div class="group"><div><div class="group-main">'+esc(g.name)+' <span class="pill">'+g.size+'</span>'+request+confirmed+'</div><div class="people">'+people+'</div></div><div class="group-actions"><label class="mini-check"><input type="checkbox" '+(g.reservationConfirmed?'checked':'')+' data-reservation-id="'+esc(g.rsvpId)+'"/>Confirmed</label>'+action+(asAdd?'':tableSelect(g,tables))+'</div></div>';
 }
 function tableSelect(g,tables){return '<select aria-label="Move group" data-rsvp-id="'+esc(g.rsvpId)+'"><option value="">Unassigned</option>'+tables.map(t=>'<option value="'+esc(t.id)+'" '+(g.tableId===t.id?'selected':'')+'>'+esc(t.label)+'</option>').join('')+'</select>';}
 async function assignTable(rsvpId,tableId){await fetch('/api/staff/table-assignment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),tableId})});await loadTables();await loadMembers();}

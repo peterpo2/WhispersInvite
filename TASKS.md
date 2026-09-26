@@ -5,8 +5,10 @@ Door scanner: https://whispers-invite.pages.dev/staff/rose-door-10 (share only w
 All SQL you may need: [`sql/useful-queries.sql`](sql/useful-queries.sql)
 
 ## Before sending invitations
-- [ ] Test on your own iPhone: open a `/hi/<id>` link, RSVP with a plus-one, tap **Private ticket**
-      (Save Image), then scan both QRs on the door scanner.
+- [ ] Test on a real iPhone/Safari: open a `/hi/<id>` link, register with contact details,
+      add +1, request a table, confirm that no QR/code/location is revealed before release.
+- [ ] Test on a modern Android/Samsung Chrome device for the same registration and locked-ticket
+      flow.
 - [ ] Delete the test RSVPs (`sql/useful-queries.sql`, section 11).
 - [ ] Replace the test guests with the real list and copy each guest's link (sections 10 and 2).
 
@@ -22,8 +24,12 @@ All SQL you may need: [`sql/useful-queries.sql`](sql/useful-queries.sql)
 ## Still open (development)
 - [ ] Intro video from the client (the film screen shows text scenes until then).
 - [ ] Cap at 150 people.
-- [ ] RSVP deadline (names fixed after the 7th).
-- [ ] Server-side full-name validation should match the frontend and docs (2+ words for guest names).
+- [x] Enforce RSVP deadline: 07.10.2026 at 18:00 Europe/Sofia.
+- [x] Confirm no cancellation/decline changes after deadline/release.
+- [ ] Wire email delivery for registration confirmation and 09.10 ticket release.
+- [ ] Add staff auth after domain/email are ready: username/password + email confirmation code.
+- [x] Add a separate staff/admin reservation-confirmed toggle; table assignment alone is internal.
+- [ ] Replace temporary 10-table model with final venue table scheme.
 
 ## Done
 - [x] Repeat RSVP keeps an earlier +1 unless a different +1 is entered.

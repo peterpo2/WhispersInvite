@@ -202,6 +202,11 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 .bringing{display:block;margin-top:10px;padding-top:10px;border-top:1px solid rgba(217,174,120,.14)}
 #saveTickets{margin-top:24px}
 .save-state{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--mute);margin:10px 0 0;min-height:1em}
+.sponsors{margin:24px auto 0;padding-top:18px;border-top:1px solid rgba(217,174,120,.16);max-width:320px}
+.sponsors p{margin:0 0 12px;font:300 11px/1.2 var(--sans);letter-spacing:.28em;text-transform:uppercase;color:var(--mute)}
+.sponsor-logos{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}
+.sponsor-logos img{max-width:112px;max-height:42px;object-fit:contain;opacity:.82;filter:saturate(.9) brightness(.95)}
+.sponsor-logos img:only-child{max-width:140px}
 .tickets-carousel{width:100%}
 .ticket-slide{display:none}
 .ticket-slide.active{display:block;animation:lineIn .5s var(--ease) both}
@@ -277,11 +282,11 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <div class="brand st"><img alt="Whispers" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>
 <dl class="details st">
 <div class="row"><dt>When</dt><dd>Saturday 10 October<br/>Doors at 22:00</dd></div>
-<div class="row"><dt>Where</dt><dd>Sofia Center<em>The address follows</em></dd></div>
+<div class="row"><dt>Where</dt><dd>Sofia · private location in central Sofia<em>Address released on 09.10 at 18:00.</em></dd></div>
 <div class="row"><dt>Who</dt><dd>You, and one person of your choosing</dd></div>
 <div class="row"><dt>Inside</dt><dd>Phones stay in pockets on the floor</dd></div>
 </dl>
-<p class="note st">This invitation is not transferable. What happens beneath the rose stays beneath the rose.</p>
+<p class="note st">This invitation only grants access to the event. What happens beneath the rose stays beneath the rose.</p>
 <button class="btn primary caps st" id="toRsvp">Respond</button>
 </div>
 </section>
@@ -320,7 +325,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <div class="inner">
 <div class="brand st"><img alt="Whispers" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>
 <h2 class="lede st">One person. Choose well.</h2>
-<p class="sub st">Their name and address go on the door list with yours. Names cannot be changed after the seventh.</p>
+<p class="sub st">Their name and email go on the door list with yours. Guest-list details cannot be changed after the RSVP deadline.</p>
 <label class="plus-toggle st" for="bringPlusOne">
 <input id="bringPlusOne" type="checkbox"/>
 <span aria-hidden="true" class="toggle-box"></span>
@@ -328,14 +333,13 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 </label>
 <div class="plus-fields" hidden="" id="plusFields">
 <div class="field"><label for="p1name">Full name</label><input autocomplete="off" enterkeyhint="next" id="p1name" maxlength="120" placeholder="First and last name" type="text"/></div>
-<div class="field"><label for="p1mail">Email <span style="color:var(--mute);text-transform:none;letter-spacing:0">(optional)</span></label><input autocomplete="email" enterkeyhint="next" id="p1mail" inputmode="email" maxlength="254" placeholder="name@example.com" type="email"/></div>
-<div class="field"><label for="p1phone">Phone</label><input autocomplete="tel" enterkeyhint="done" id="p1phone" inputmode="tel" maxlength="40" placeholder="+359 ..." type="tel"/></div>
+<div class="field"><label for="p1mail">Email</label><input autocomplete="email" enterkeyhint="done" id="p1mail" inputmode="email" maxlength="254" placeholder="name@example.com" type="email"/></div>
 <p class="privacy"><svg aria-hidden="true" height="14" viewBox="0 0 12 14" width="12"><rect fill="none" height="7" stroke="#D9AE78" width="10" x="1" y="6"></rect><path d="M3 6V4a3 3 0 0 1 6 0v2" fill="none" stroke="#D9AE78"></path></svg><span>We use their details only for this invitation, event communication and door-list access.</span></p>
 </div>
 <label class="plus-toggle st" for="reserveTable">
 <input id="reserveTable" type="checkbox"/>
 <span aria-hidden="true" class="toggle-box"></span>
-<span><b>Бихте ли искали да ви запазим маса за събитието?</b><small id="reserveTableHelp" hidden>Ще се свържем с вас, за да дадем повече данни за резервацията.</small></span>
+<span><b>Would you like us to reserve a table for you?</b><small id="reserveTableHelp" hidden>Our team will contact you with the reservation details.</small></span>
 </label>
 <p class="err" id="perr" role="alert"></p>
 <p aria-live="polite" class="submit-state" id="pstate"></p>
@@ -355,11 +359,13 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <p class="code" id="passcode">09.10 · 18:00</p>
 <p class="codelabel">Ticket release</p>
 <div aria-label="QR code" class="qr" id="qr"></div>
-<p class="passfoot">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span class="venue-line">Sofia Center · the address reaches you at <b>18:00 on the 9th</b></span><span class="bringing" id="bringingLine">Coming on your own</span></p>
+<p class="passfoot">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span class="venue-line">Sofia · private location in central Sofia. Address released on <b>09.10 at 18:00</b>.</span><span class="bringing" id="bringingLine">Coming on your own</span></p>
 </div>
 <p class="sub st" id="doneCopy">Your registration is confirmed. On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.</p>
 <button class="btn primary caps st" hidden id="saveTickets">Private ticket</button>
 <p aria-live="polite" class="save-state st" id="saveState"></p>
+<div class="sponsors st" id="sponsorsDone"><p>Powered by</p><div class="sponsor-logos"><img alt="Sponsor 1" src="/assets/sponsor-1.png"/><img alt="Sponsor 2" src="/assets/sponsor-2.png"/></div></div>
+<button class="btn caps st" id="cancelAttendance" style="margin-top:14px">Cancel attendance</button>
 <button class="btn caps st" id="reset" style="margin-top:14px">Start over</button>
 </div>
 </section>
@@ -371,6 +377,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <h2 class="lede st">Understood.</h2>
 <p class="sub st">Your place on the list stays where it is.<br/>You'll hear from us before the next one.</p>
 <div class="rule st"></div>
+<div class="sponsors st"><p>Powered by</p><div class="sponsor-logos"><img alt="Sponsor 1" src="/assets/sponsor-1.png"/><img alt="Sponsor 2" src="/assets/sponsor-2.png"/></div></div>
 <button class="btn caps st" id="reset2">Start over</button>
 </div>
 </section>
@@ -449,13 +456,13 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 
   // RSVP
   $('#yes').addEventListener('click',()=>{state.attending=true;show('#s-plus')});
-  const busyBtns=['#yes','#no','#confirm','#backRsvp'];let busy=false;function setBusy(on,el){busy=on;busyBtns.forEach(b=>$(b).disabled=on);el.textContent=on?'Sealing…':''}
+  const busyBtns=['#yes','#no','#confirm','#backRsvp','#cancelAttendance'];let busy=false;function setBusy(on,el){busy=on;busyBtns.forEach(b=>{const x=$(b);if(x)x.disabled=on});el.textContent=on?'Sealing…':''}
   $('#no').addEventListener('click',async()=>{if(busy)return;state.attending=false;$('#rerr').textContent='';setBusy(true,$('#rstate'));const result=await submitRSVP({status:'declined'});if(!result.ok){setBusy(false,$('#rstate'));$('#rerr').textContent=result.error;return;}$('#rstate').textContent='';if($('#s-rsvp').classList.contains('on'))show('#s-decline')});
   $('#backRsvp').addEventListener('click',()=>show('#s-rsvp'));
 
   const plusToggle=$('#bringPlusOne');
   $('#p1name').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#p1mail').focus()}});
-  $('#p1mail').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#p1phone').focus()}});
+  $('#p1mail').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#confirm').click()}});
   plusToggle.addEventListener('change',()=>{$('#plusFields').hidden=!plusToggle.checked;$('#confirm').textContent=plusToggle.checked?'Confirm both places':'Confirm my place';$('#perr').textContent=''});
   $('#reserveTable').addEventListener('change',()=>{$('#reserveTableHelp').hidden=!$('#reserveTable').checked;});
 
@@ -481,14 +488,17 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
     }catch(e){return {ok:false,error:'The invitation could not reach us. Please try again.'}}finally{clearTimeout(to)}
   }
 
+  function cleanSponsors(box){if(box&&!box.querySelector('img'))box.closest('.sponsors').hidden=true}
+  document.querySelectorAll('.sponsor-logos img').forEach(img=>{img.addEventListener('error',()=>{const box=img.parentNode;img.remove();cleanSponsors(box);});});
+
   $('#confirm').addEventListener('click',async()=>{
     if(busy)return;let plusOne=null;
     if(plusToggle.checked){
-      const n=$('#p1name').value.trim(),m=$('#p1mail').value.trim(),ph=$('#p1phone').value.trim().replace(/\s+/g,' ');
+      const n=$('#p1name').value.trim(),m=$('#p1mail').value.trim();
       if(n.split(/\s+/).length<2){$('#perr').textContent='Please give their full name.';return;}
-      if(m&&!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(m)){$('#perr').textContent='Please give a valid email.';return;}
-      if(!ph){$('#perr').textContent='Please give their phone.';return;}
-      plusOne={name:n,email:m,phone:ph};
+      if(!m){$('#perr').textContent='Please give their email.';return;}
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(m)){$('#perr').textContent='Please give a valid email.';return;}
+      plusOne={name:n,email:m};
     }
     $('#perr').textContent='';setBusy(true,$('#pstate'));
     const wantsTableReservation=$('#reserveTable').checked;
@@ -505,10 +515,20 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
     show('#s-done');
   });
 
+  $('#cancelAttendance').addEventListener('click',async()=>{
+    if(busy)return;
+    $('#saveState').textContent='';
+    setBusy(true,$('#saveState'));
+    const result=await submitRSVP({status:'declined'});
+    setBusy(false,$('#saveState'));
+    if(!result.ok){$('#saveState').textContent=result.error||'We could not update your RSVP. Please try again.';return;}
+    show('#s-decline');
+  });
+
   // ── Location: shown once it is announced (event_details) ──
-  const VENUE_WAIT='Sofia Center · the address reaches you at <b>18:00 on the 9th</b>';
+  const VENUE_WAIT='Sofia · private location in central Sofia. Address released on <b>09.10 at 18:00</b>.';
   function venueHtml(){const v=state.venue;if(!v)return VENUE_WAIT;const t=escapeHtml([v.name,v.address].filter(Boolean).join(' · '));return v.mapUrl?'<a class="venue-map" href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+t+'</a>':t}
-  function venueText(){const v=state.venue;return v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia Center · the address reaches you at 18:00 on the 9th'}
+  function venueText(){const v=state.venue;return v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia · private location in central Sofia. Address released on 09.10 at 18:00.'}
   async function loadVenue(token){
     if(!token)return;
     try{const r=await fetch('/api/ticket?token='+encodeURIComponent(token),{headers:{'Accept':'application/json'}});const d=await r.json();state.venue=d&&d.venue||null;}catch(_){state.venue=null}

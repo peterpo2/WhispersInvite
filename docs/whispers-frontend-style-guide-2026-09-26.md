@@ -14,6 +14,7 @@ WHISPERS не е marketing site. Не е event landing page. Не е ticket mark
 - dark
 - intimate
 - cinematic
+- premium and real, without an obvious AI-generated feel
 - mobile-first
 - iPhone/Safari-first
 - минимален като текст и визуален шум
@@ -104,6 +105,8 @@ Spacing:
 iPhone requirements:
 
 - Primary QA target is iPhone Safari.
+- Modern Android/Samsung Chrome must also work correctly; it is not allowed to break layout,
+  forms, animations or tickets there.
 - Must work at 320px width.
 - Must respect notch/safe areas.
 - Must behave well when the keyboard opens.
@@ -132,9 +135,9 @@ Forms:
 Toggles/checkboxes:
 
 - Use visual checkbox/toggle affordances, not plain text links.
-- Reservation checkbox copy currently stays Bulgarian:
-  - `Бихте ли искали да ви запазим маса за събитието?`
-  - `Ще се свържем с вас, за да дадем повече данни за резервацията.`
+- Reservation checkbox copy:
+  - `Would you like us to reserve a table for you?`
+  - `Our team will contact you with the reservation details.`
 
 ## 7. Motion And Atmosphere
 
@@ -202,6 +205,8 @@ For registration/ticket states:
 - Before 09.10 at 18:00, do not reveal QR, seal code or location.
 - Confirmation should say the guest will receive the location and private ticket by email.
 - After unlock, ticket copy can show QR, seal code, location and table assignment.
+- Table assignment details are staff-only. Guest tickets may show generic table confirmation copy,
+  but never the table number or floor plan.
 
 ## 10. Ticket Page Rules
 
@@ -222,7 +227,8 @@ After unlock:
 - Show seal code.
 - Show QR that opens the ticket URL.
 - Show location.
-- Show table assignment if assigned.
+- Show generic table confirmation if the reservation is confirmed.
+- Do not show table number or floor plan on guest tickets.
 - Show checked-in status if already scanned.
 
 QR rules:
@@ -278,6 +284,8 @@ When adding frontend code:
 - Do not link staff/admin from public pages.
 - Keep `connect-src` and CSP in mind before adding external assets/scripts.
 - Add any new public route to the middleware allowlist and tests.
+- Sponsor logos may appear only as a quiet footer/end-state element, under `Powered by`, never as
+  a hero or dominant brand area.
 
 When changing copy:
 
@@ -299,11 +307,12 @@ Minimum checks:
 - Public flow still feels cinematic and restrained.
 - Ticket page locked state hides QR/code/location before 09.10 18:00.
 - Staff Scanner, Members and Tables still fit and remain usable.
+- Android/Samsung Chrome sanity check passes for the main registration and ticket flow.
 - `npm test` passes if shared helpers or routes changed.
 
 ## 15. Current Design Debt / Watch List
 
 - README and `docs/project-spec.md` still contain some older flow language and should be updated after the final organizer decisions.
-- Public copy is mostly English, while the reservation checkbox is Bulgarian. This is intentional for now, but should be reviewed as a language consistency decision.
+- Public guest-facing copy should now be English-only unless the organizer explicitly changes it.
 - The current app is a single large `index.html`. If more screens are added, consider a small local component/style organization step, but do not introduce a full framework without need.
 - Admin security is designed/planned but not active yet.

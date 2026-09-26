@@ -10,6 +10,7 @@ const RSVP_COLUMNS = [
   "status",
   "submitted_at",
   "wants_table_reservation",
+  "reservation_confirmed",
   "ticket_email_sent_at",
   "checked_in_at",
   "plus_one_name",
@@ -30,7 +31,7 @@ export async function onRequestGet({ env }) {
 
   const companions = await supabaseFetch(
     env,
-    "/rest/v1/rsvp_companions?select=id,rsvp_id,guest_name,email,email_is_fallback,phone,ticket_email_sent_at,checked_in_at,rsvps!inner(guest_name,event_key,status,submitted_at,wants_table_reservation)&order=created_at.desc&limit=1000"
+    "/rest/v1/rsvp_companions?select=id,rsvp_id,guest_name,email,email_is_fallback,phone,ticket_email_sent_at,checked_in_at,rsvps!inner(guest_name,event_key,status,submitted_at,wants_table_reservation,reservation_confirmed)&order=created_at.desc&limit=1000"
   );
   if (companions.error) return companions.error;
   if (!companions.response.ok) return json({ error: "Could not load members" }, 502);
@@ -55,6 +56,7 @@ export async function onRequestGet({ env }) {
       phone: row.guest_phone || "",
       status: row.status,
       wantsTableReservation: row.wants_table_reservation === true,
+      reservationConfirmed: row.reservation_confirmed === true,
       table,
       ticketEmailSentAt: row.ticket_email_sent_at || null,
       checkedIn: Boolean(row.checked_in_at),
@@ -74,6 +76,7 @@ export async function onRequestGet({ env }) {
         phone: row.plus_one_phone || "",
         status: row.status,
         wantsTableReservation: row.wants_table_reservation === true,
+        reservationConfirmed: row.reservation_confirmed === true,
         table,
         ticketEmailSentAt: null,
         checkedIn: Boolean(row.plus_one_checked_in_at),
@@ -98,6 +101,7 @@ export async function onRequestGet({ env }) {
       phone: row.phone || "",
       status: parent?.status || "",
       wantsTableReservation: parent?.wants_table_reservation === true,
+      reservationConfirmed: parent?.reservation_confirmed === true,
       table: "",
       ticketEmailSentAt: row.ticket_email_sent_at || null,
       checkedIn: Boolean(row.checked_in_at),

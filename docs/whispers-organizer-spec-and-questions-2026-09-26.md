@@ -37,15 +37,14 @@ Flow:
 4. Потвърждава дали ще присъства.
 5. Може да добави друг човек към себе си:
    - име
-   - телефон
-   - email, по желание (ако не го попълни, ще се прати потвърждение на първия имейл който е записан и за двете покани (тоест 2 имейла) и също така в базата данни ще се запише за втория човек същия имейл)
+   - email
 6. На същата стъпка може да отбележи, че иска запазена маса.
-   - Checkbox текст: "Бихте ли искали да ви запазим маса за събитието?"
-   - Ако натисне "да", отдолу се показва текст, че ще се свържем с него, за да дадем повече данни за резервацията.
+   - Checkbox текст: "Would you like us to reserve a table for you?"
+   - Ако натисне "да", отдолу се показва текст: "Our team will contact you with the reservation details."
 7. След потвърждение не вижда QR код и не вижда специален код.
 8. Вижда confirmation card с текст, че на 09.10 в 18:00 ще получи email с потвърдената локация и частния си билет.
 
-Ако добавеният човек няма email, неговият билет ще бъде изпратен на email-а на основния гост.
+Email-ът на добавения човек вече е задължителен. Телефон за +1 не се събира в публичния flow.
 
 ## 3. Повторно отваряне на първоначалния линк
 
@@ -60,7 +59,7 @@ Flow:
 - с различен правопис
 - с различни интервали
 
-След разпознаване гостът може да добави още един човек към своята регистрация.
+След разпознаване гостът може да добави +1 само ако още няма добавен човек към своята регистрация.
 
 Пример:
 
@@ -68,12 +67,12 @@ Flow:
 - после отваря линка пак, въвежда същия email + телефон
 - системата го разпознава
 - Peter добавя Alexander
-- после може да отвори пак и да добави още един човек, ако организаторът разреши повече от един добавен човек към основен гост
+- ако после отвори пак линка, системата трябва да го разпознае, но не трябва да му позволи да добави втори/трети човек
 
 Технически това означава, че пазим:
 
 - един основен RSVP запис
-- отделни companion записи за всеки добавен човек
+- максимум един companion запис към основния RSVP
 - отделен ticket link за всеки човек
 
 ## 4. Билетите и unlock логика
@@ -114,21 +113,21 @@ QR кодът винаги отваря ticket web page. Ако го скани�
 
 На registration стъпката има checkbox:
 
-"Бихте ли искали да ви запазим маса за събитието?"
+"Would you like us to reserve a table for you?"
 
 Ако човекът избере "да", под checkbox-а се показва текст:
 
-"Ще се свържем с вас, за да дадем повече данни за резервацията."
+"Our team will contact you with the reservation details."
 
 Ако човекът е сам, reservation request е за 1 човек.
 
-Ако човекът добави още хора, reservation request е за цялата група.
+Ако човекът добави +1, reservation request е за двамата.
 
 Пример:
 
 - Peter сам -> маса за 1
 - Peter + Simona -> маса за 2
-- Peter + Simona + Maria -> маса за 3, ако организаторът разреши повече от един добавен човек през повторно отваряне на линка
+- Повече от `main guest + 1` не е позволено за първото събитие.
 
 В admin Tables страницата ще могат да се разпределят групите по маси.
 
@@ -140,7 +139,9 @@ QR кодът винаги отваря ticket web page. Ако го скани�
 
 Това е временен примерен модел, докато получим реалната схема на заведението.
 
-Ако групата е разпределена на маса, в released ticket-а трябва да пише на коя маса е.
+Ако reservation request бъде потвърден от admin след контакт с клиента, released ticket-ът трябва
+да показва само "Your table is confirmed." или "Table reserved". Не трябва да показва номер на
+маса или floor plan.
 
 ## 7. Staff admin
 
@@ -309,4 +310,86 @@ admin (`0/1` или boolean). По подразбиране планираме �
 - финални текстове
 - дали ще има видео
 - contact email и телефон за гости
+
+## 12. Отговори от организатора - 27.09.2026
+
+### Потвърдени решения
+
+- Домейн: `whisperssociety.com`.
+- Вероятен доставчик за домейн/хостинг/email: SuperHosting.bg.
+- Invitation сайтът остава на Cloudflare Pages; hosting пакетът е нужен основно за домейн/email/DNS, не за самия frontend deploy.
+- Предложени email-и:
+  - `noreply@whisperssociety.com` - автоматични email-и.
+  - `guestlist@whisperssociety.com` - contact email за гости.
+  - `staff@whisperssociety.com` - admin/login функционалност, ако решим да отделим staff sender.
+- Видео след seal screen: да. Финален файл се очаква понеделник/вторник.
+- Guest-facing copy: изцяло на английски.
+- Основен flow:
+  `Seal -> cinematic intro -> event details -> guest information -> RSVP -> +1 information/confirmation -> table reservation -> details breakdown / confirmation`.
+- Да не добавяме ненужни допълнителни steps.
+- Визия: запазваме текущата тъмна cinematic концепция, но махаме AI усещането и я правим по-премиум, реална и restrained.
+- Може да се използват identity елементи като rose / sacred geometry от логото като много subtle background/texture/watermark.
+- Да не отиваме към Halloween/occult визия.
+- Primary QA: iPhone + Safari.
+- Задължително да работи коректно и на модерни Android/Samsung + Chrome.
+- Максимум добавени гости: само `+1`.
+- Един original invitation link позволява `1 main guest + максимум 1 additional guest`.
+- След като +1 вече е добавен, повторното отваряне на линка не трябва да позволява добавяне на още хора.
+- RSVP deadline: `07.10.2026 18:00 Europe/Sofia`.
+- Потвърдено: след този deadline няма нови регистрации, няма добавяне/смяна на +1,
+  няма редакция на guest-list данни и няма cancellation/decline промени.
+- След deadline:
+  - няма нови регистрации;
+  - не може да се добавя +1;
+  - не могат да се сменят имена/данни по guest list-а.
+- Ticket + location release: `09.10.2026 18:00 Europe/Sofia`.
+- Event: `10.10.2026 22:00`.
+- Referral flow остава премахнат за първото събитие.
+- Admin access: организаторката + още 3 души.
+- Admin roles: за първа версия всички admins виждат Scanner / Members / Tables.
+- Contact за гости:
+  - `guestlist@whisperssociety.com`
+  - `+359 888 012 380`
+
+### Потвърден copy
+
+- Table reservation checkbox:
+  `Would you like us to reserve a table for you?`
+- Table reservation helper:
+  `Our team will contact you with the reservation details.`
+- Event access disclaimer:
+  `This invitation only grants access to the event.`
+- Location before reveal:
+  `Sofia · private location in central Sofia`
+  `Address released on 09.10 at 18:00.`
+
+### Table reservation status
+
+Table checkbox означава само `reservation requested`, не автоматично confirmed.
+
+След контакт с клиента admin трябва да може да потвърди reservation като `reservation confirmed`.
+В guest ticket-а, ако reservation е confirmed, се показва само:
+
+- `Table reserved`
+- или `Your table is confirmed.`
+
+Guest ticket-ът не трябва да показва номер на маса или floor plan. Ако reservation не е
+потвърдена или няма table reservation, ticket-ът не показва table copy.
+
+Потвърдено: table assignment не означава автоматично `reservation confirmed`.
+В admin има отделен manual checkbox `reservation_confirmed`. Само когато той е включен,
+released ticket-ът показва generic confirmed copy, без table number.
+
+### Маси
+
+Финалната схема още не е готова. Вероятно ще бъде проста номерация, например `Table 01-40`, но
+брой и капацитет се потвърждават по-късно.
+
+Системата трябва да позволява лесно въвеждане/редакция на масите, когато имаме финалната схема,
+а сегашните 10 примерни маси остават временен модел.
+
+### Оставащи въпроси към организатора
+
+1. До коя дата ще получим финалното видео и финалния font/brand assets?
+2. Финалните 4 admin email адреса е добре да са налични най-късно до 07.10 сутринта, за да тестваме login + email confirmation code спокойно.
 

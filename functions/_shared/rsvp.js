@@ -7,6 +7,8 @@ const REDIRECT_TOKEN_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
 export const EVENT_KEY = "whispers-2026-10-10";
 export const TICKET_RELEASE_AT = "2026-10-09T18:00:00+03:00";
+export const RSVP_DEADLINE_AT = "2026-10-07T18:00:00+03:00";
+export const MAX_ADDED_GUESTS = 1;
 // The brief's unambiguous alphabet: no 0/O, 1/I/L, 5/S, 8/B.
 export const SEAL_ALPHABET = "ACDEFGHJKMNPQRTUVWXYZ234679";
 const SEAL_PREFIX = "WSP·10·";
@@ -40,6 +42,10 @@ function validPhone(value) {
 
 export function isTicketReleased(now = new Date()) {
   return now >= new Date(TICKET_RELEASE_AT);
+}
+
+export function isRsvpClosed(now = new Date()) {
+  return now >= new Date(RSVP_DEADLINE_AT);
 }
 
 export function validateRsvpPayload(body) {
@@ -102,11 +108,14 @@ export function validateRsvpPayload(body) {
       return { error: "Please give their full name." };
     }
 
-    if (plusOne.email != null && normalizeEmail(plusOne.email) && !validEmail(plusOne.email)) {
+    if (!normalizeEmail(plusOne.email)) {
+      return { error: "Please give their email." };
+    }
+    if (!validEmail(plusOne.email)) {
       return { error: "Please give a valid email." };
     }
-    if (!validPhone(plusOne.phone)) {
-      return { error: "Please give their phone." };
+    if (plusOne.phone != null && normalizePhone(plusOne.phone) && !validPhone(plusOne.phone)) {
+      return { error: "Please give a valid phone." };
     }
   }
 
@@ -155,6 +164,17 @@ export function buildCompanionRow(row, rsvpId) {
   };
 }
 
+export function sameAddedGuest(existing, row) {
+  if (!existing?.plus_one_name || !row?.plus_one_name) return false;
+  const sameEmail = normalizeEmail(existing.plus_one_email) && normalizeEmail(existing.plus_one_email) === normalizeEmail(row.plus_one_email);
+  const sameFallback = !normalizeEmail(existing.plus_one_email) && !normalizeEmail(row.plus_one_email);
+  return (sameEmail || sameFallback) && nameKey(existing.plus_one_name) === nameKey(row.plus_one_name);
+}
+
+export function addedGuestLimitReached(existing, companionCount = 0) {
+  return Boolean(existing?.plus_one_name) || Number(companionCount) >= MAX_ADDED_GUESTS;
+}
+
 export function buildRsvpUpdate(row, existing) {
   const keepPlusOne = row.status === "attending" && !row.plus_one_name && Boolean(existing.plus_one_ticket_token);
   const samePlusOne = Boolean(
@@ -185,7 +205,7 @@ export function buildRsvpUpdate(row, existing) {
 export function ticketForToken(row, token, options = {}) {
   if (!row || row.status !== "attending" || !token) return null;
   const released = options.released ?? true;
-  const tableLabel = row.table_label || null;
+  const tableReserved = released && row.reservation_confirmed === true;
   if (row.ticket_token === token) {
     return {
       holder: "guest",
@@ -194,7 +214,8 @@ export function ticketForToken(row, token, options = {}) {
       checked_in_at: row.checked_in_at || null,
       bringing: row.plus_one_name || null,
       brought_by: null,
-      table_label: released ? tableLabel : null,
+      table_label: null,
+      table_reserved: tableReserved,
       locked: !released,
     };
   }
@@ -206,7 +227,8 @@ export function ticketForToken(row, token, options = {}) {
       checked_in_at: row.plus_one_checked_in_at || null,
       bringing: null,
       brought_by: row.guest_name,
-      table_label: released ? tableLabel : null,
+      table_label: null,
+      table_reserved: tableReserved,
       locked: !released,
     };
   }
@@ -216,6 +238,7 @@ export function ticketForToken(row, token, options = {}) {
 export function companionTicketForToken(row, primary, token, options = {}) {
   if (!row || !primary || primary.status !== "attending" || row.ticket_token !== token) return null;
   const released = options.released ?? true;
+  const tableReserved = released && primary.reservation_confirmed === true;
   return {
     holder: "companion",
     guest_name: row.guest_name,
@@ -223,7 +246,8 @@ export function companionTicketForToken(row, primary, token, options = {}) {
     checked_in_at: row.checked_in_at || null,
     bringing: null,
     brought_by: primary.guest_name,
-    table_label: released ? primary.table_label || null : null,
+    table_label: null,
+    table_reserved: tableReserved,
     locked: !released,
   };
 }
