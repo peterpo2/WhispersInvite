@@ -118,6 +118,9 @@ New admin-created invites use random alphanumeric `id` values for confirmation l
 `ticket_token` values for future ticket links. A ticket token in `guest_list` does not check a
 guest in and does not show a QR until a matching attending RSVP exists.
 
+The Invite admin view lists every invited primary guest. Members lists only RSVP rows. Invite
+statuses are shown as `Not responded`, `Attending` or `Declined`.
+
 ### `rsvps`
 
 | Column | Type | Notes |

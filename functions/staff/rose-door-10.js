@@ -276,10 +276,11 @@ async function loadInvites(){
   if(!res.ok){body.innerHTML='<tr><td colspan="7">'+esc(data.error||'Could not load invites')+'</td></tr>';return;}
   invites=data.invites||[];renderInvites();
 }
-function filteredInvites(){const q=document.getElementById('inviteSearch').value.trim().toLowerCase();return invites.filter(i=>!q||[i.name,i.email,i.phone,i.status,i.confirmationLink,i.ticketLink].some(v=>String(v||'').toLowerCase().includes(q)));}
+function inviteStatusLabel(status){return status==='attending'?'Attending':status==='declined'?'Declined':'Not responded';}
+function filteredInvites(){const q=document.getElementById('inviteSearch').value.trim().toLowerCase();return invites.filter(i=>!q||[i.name,i.email,i.phone,i.status,inviteStatusLabel(i.status),i.confirmationLink,i.ticketLink].some(v=>String(v||'').toLowerCase().includes(q)));}
 function renderInvites(){
   const body=document.querySelector('#invitesTable tbody'),rows=filteredInvites();
-  body.innerHTML=rows.map(i=>'<tr><td>'+esc(i.name)+'</td><td>'+esc(i.email)+'</td><td>'+esc(i.phone)+'</td><td>'+esc(i.status)+(i.submittedAt?'<br><span class="pill">'+esc(new Date(i.submittedAt).toLocaleString())+'</span>':'')+'</td><td><div class="link-cell">'+esc(i.confirmationLink)+'</div><button class="copy-btn" data-copy="'+esc(i.confirmationLink)+'">Copy</button></td><td><div class="link-cell">'+esc(i.ticketLink)+'</div><button class="copy-btn" data-copy="'+esc(i.ticketLink)+'" '+(i.ticketLink?'':'disabled')+'>Copy</button></td><td>'+esc(i.createdAt?new Date(i.createdAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="7">No invites.</td></tr>';
+  body.innerHTML=rows.map(i=>'<tr><td>'+esc(i.name)+'</td><td>'+esc(i.email)+'</td><td>'+esc(i.phone)+'</td><td>'+esc(inviteStatusLabel(i.status))+(i.submittedAt?'<br><span class="pill">'+esc(new Date(i.submittedAt).toLocaleString())+'</span>':'')+'</td><td><div class="link-cell">'+esc(i.confirmationLink)+'</div><button class="copy-btn" data-copy="'+esc(i.confirmationLink)+'">Copy</button></td><td><div class="link-cell">'+esc(i.ticketLink)+'</div><button class="copy-btn" data-copy="'+esc(i.ticketLink)+'" '+(i.ticketLink?'':'disabled')+'>Copy</button></td><td>'+esc(i.createdAt?new Date(i.createdAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="7">No invites.</td></tr>';
   body.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy,b));
 }
 async function copyText(value,button){if(!value)return;try{await navigator.clipboard.writeText(value);button.textContent='Copied';setTimeout(()=>button.textContent='Copy',1200);}catch(_){window.prompt('Copy link',value);}}

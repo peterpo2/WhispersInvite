@@ -60,6 +60,9 @@ email and phone. The system generates:
 The ticket link is generated in advance, but it stays pending until the primary guest confirms
 attendance. Plus-one ticket links are generated later during RSVP.
 
+Invite shows all invited primary guests, including people who have not answered yet. Members shows
+only people with an RSVP response. Invite statuses are `Not responded`, `Attending` and `Declined`.
+
 ## Door Flow
 
 Open `/staff/rose-door-10`, tap **Open camera**, and scan the QR from the ticket page or saved

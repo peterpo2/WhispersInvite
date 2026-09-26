@@ -75,7 +75,7 @@ function publicInvite(requestUrl, row, rsvp) {
     ticketToken,
     confirmationLink: `${origin}/hi/${encodeURIComponent(row.id)}`,
     ticketLink: ticketToken ? buildTicketUrl(requestUrl, ticketToken) : "",
-    status: rsvp?.status || "not_sent",
+    status: rsvp?.status || "not_responded",
     rsvpName: rsvp?.guest_name || "",
     rsvpEmail: rsvp?.guest_email || "",
     rsvpPhone: rsvp?.guest_phone || "",
