@@ -6,6 +6,7 @@ node_modules/
 .env.*
 dist/
 coverage/
+output/
 .DS_Store
 Thumbs.db
 New Text Document (2).txt

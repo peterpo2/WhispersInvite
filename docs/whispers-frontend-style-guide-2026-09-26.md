@@ -176,6 +176,9 @@ Rules:
 - Use real/generated bitmap assets when the page needs visual presence.
 - Do not create decorative SVG illustrations for the invitation feel.
 - Logo/mark assets should stay consistent across public, ticket and staff pages.
+- Public invite, confirmation/ticket and staff shells should share the WHISPERS rose, grain and
+  vignette atmosphere. Staff/admin may use a quieter version so scanner and table data stay
+  readable.
 - Public pages should not use stock-like dark blurred imagery that hides the subject.
 - Any new heavy media must be optimized for mobile and tested on iPhone.
 - Video should be portrait-first, preferably 9:16, and must not trap the user if it fails.
@@ -249,6 +252,10 @@ Admin style:
 - Sans-first for tables and controls.
 - Serif only for headers, names and result emphasis.
 - Tables can horizontally scroll on mobile.
+- On phone widths, staff navigation uses a compact 2-column tab grid. Do not force Scanner,
+  Members, Tables and Invite into one horizontal row.
+- Scanner controls must remain usable above the iPhone Safari bottom toolbar: keep the camera
+  height bounded and stack manual token input/check controls on small screens.
 - Scanner result states must be visually distinct:
   - confirmed
   - already inside

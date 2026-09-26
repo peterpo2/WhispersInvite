@@ -29,10 +29,11 @@ export async function onRequestGet({ params, request }) {
 <style>
 :root{--bg:#070605;--gold:#D9AE78;--gold-hi:#EBCB95;--bone:#EDE6DA;--mute:#BDB2A5;--paper:#F1E9DC;--line:rgba(217,174,120,.26);--serif:'Cormorant Garamond',Cambria,Georgia,serif;--sans:'Jost','Helvetica Neue',Arial,sans-serif;color-scheme:dark}
 *{box-sizing:border-box}html{background:var(--bg)}
-body{margin:0;min-height:100vh;min-height:100dvh;display:flex;background:var(--bg);color:var(--bone);font-family:var(--serif);font-weight:300;padding:calc(24px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom))}
-body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 40% at 50% 36%,rgba(120,78,36,.26),transparent 72%),radial-gradient(120% 60% at 50% 112%,rgba(90,11,19,.4),transparent 64%),linear-gradient(180deg,#0A0807,#070605 55%,#060404)}
-body:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.6) 100%)}
-.ticket{width:100%;max-width:480px;margin:auto;text-align:center}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;background:radial-gradient(60% 40% at 50% 36%,rgba(120,78,36,.24),transparent 72%),radial-gradient(120% 60% at 50% 112%,rgba(90,11,19,.42),transparent 64%),linear-gradient(180deg,#0A0807,#070605 55%,#060404);color:var(--bone);font-family:var(--serif);font-weight:300;padding:calc(24px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom))}
+body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:url("/assets/whispers-rose.png") 50% 42%/min(150vw,920px) auto no-repeat;opacity:.13;filter:blur(1px) saturate(1.08)}
+body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.64) 100%)}
+.grain{position:fixed;inset:-50%;z-index:0;pointer-events:none;opacity:.045;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");animation:grain 1.1s steps(3) infinite}@keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}100%{transform:translate(0,0)}}@media (prefers-reduced-motion:reduce){.grain{animation:none}}
+.ticket{position:relative;z-index:1;width:100%;max-width:480px;margin:auto;text-align:center}
 .mark{display:block;width:60px;height:60px;margin:0 auto;filter:drop-shadow(0 0 22px rgba(163,22,33,.3))}
 .rose{font-weight:300;font-size:22px;letter-spacing:.44em;margin:12px 0 0 .44em;color:var(--gold)}
 .rose:after{content:"";display:block;width:48px;height:1px;margin:16px auto 0;background:rgba(217,174,120,.65)}
@@ -56,6 +57,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 </style>
 </head>
 <body>
+<div class="grain" aria-hidden="true"></div>
 <main class="ticket">
 <img class="mark" src="/assets/whispers-mark.png" alt=""/>
 <div class="rose">WHISPERS</div>
@@ -77,10 +79,11 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   const api=${JSON.stringify(apiUrl)},ticketUrl=${JSON.stringify(ticketUrl)};
   const $=(id)=>document.getElementById(id);
   const escapeHtml=(s)=>String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const failed=()=>{$('guest').textContent='We could not load your seal.';$('state').textContent='Refresh to try again.';};
+  const darkQr=(message)=>{$('qr').classList.add('fallback');$('qr').textContent=message;};
+  const failed=()=>{$('guest').textContent='We could not load your seal.';darkQr('Your ticket could not be loaded. Please refresh to try again.');$('state').textContent='Refresh to try again.';};
   let res,data;
   try{res=await fetch(api,{headers:{'Accept':'application/json'}});}catch(e){failed();return;}
-  if(!res.ok){if(res.status>=500){failed();return;}$('guest').textContent='Ticket not found';$('state').textContent='Invalid seal';return;}
+  if(!res.ok){if(res.status>=500){failed();return;}$('guest').textContent='Ticket not found';darkQr('This ticket link is invalid.');$('state').textContent='Invalid seal';return;}
   try{data=await res.json();}catch(e){failed();return;}
   const t=data&&data.ticket;
   if(!t){failed();return;}
