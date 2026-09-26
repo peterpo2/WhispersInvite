@@ -408,7 +408,8 @@ Security note: admin security is planned but not active yet. The current staff a
 - Request
 - Table
 - In
-- Submitted
+- Scanned
+- Registered
 
 **Data labels**
 
@@ -433,7 +434,8 @@ Security note: admin security is planned but not active yet. The current staff a
 - Reservation
 - Table
 - Checked in
-- Submitted
+- Scanned at
+- Registered at
 
 ### 4. Tables Page
 
