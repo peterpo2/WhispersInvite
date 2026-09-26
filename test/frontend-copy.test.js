@@ -37,7 +37,7 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
 
 test("all public HTML shells use the WHISPERS tab icon", () => {
   for (const source of [html, ticketPage, staffPage]) {
-    assert.match(source, /<link href="\/assets\/whispers-mark\.png" rel="icon" type="image\/png"\/>/);
-    assert.match(source, /<link href="\/assets\/whispers-mark\.png" rel="apple-touch-icon"\/>/);
+    assert.match(source, /<link href="\/assets\/whispers-favicon\.png" rel="icon" type="image\/png"\/>/);
+    assert.match(source, /<link href="\/assets\/whispers-favicon\.png" rel="apple-touch-icon"\/>/);
   }
 });

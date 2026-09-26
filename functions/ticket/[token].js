@@ -21,8 +21,8 @@ export async function onRequestGet({ params, request }) {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#070605"/>
 <title>WHISPERS Ticket</title>
-<link href="/assets/whispers-mark.png" rel="icon" type="image/png"/>
-<link href="/assets/whispers-mark.png" rel="apple-touch-icon"/>
+<link href="/assets/whispers-favicon.png" rel="icon" type="image/png"/>
+<link href="/assets/whispers-favicon.png" rel="apple-touch-icon"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&amp;family=Jost:wght@300;400&amp;display=swap" rel="stylesheet"/>
