@@ -70,7 +70,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 <form class="invite-form" id="inviteForm"><input id="inviteName" maxlength="120" placeholder="Full name" autocomplete="name"/><input id="inviteEmail" maxlength="254" placeholder="Email" autocomplete="email" inputmode="email"/><input id="invitePhone" maxlength="40" placeholder="Phone" autocomplete="tel" inputmode="tel"/><button class="primary" type="submit">Create Invite</button></form>
 <p class="invite-state" id="inviteState" aria-live="polite"></p>
 <div class="toolbar"><input id="inviteSearch" placeholder="Search invites" autocomplete="off"/><button id="reloadInvites">Reload</button></div>
-<div class="grid"><table id="invitesTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Confirmation</th><th>Ticket</th><th>Created</th></tr></thead><tbody></tbody></table></div>
+<div class="grid"><table id="invitesTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Send</th><th>Confirmation</th><th>Ticket</th><th>Created</th></tr></thead><tbody></tbody></table></div>
 </section>
 </div>
 </main>
@@ -273,17 +273,26 @@ function groupCard(g,currentId,tables,asAdd){
 function tableSelect(g,tables){return '<select aria-label="Move group" data-rsvp-id="'+esc(g.rsvpId)+'"><option value="">Unassigned</option>'+tables.map(t=>'<option value="'+esc(t.id)+'" '+(g.tableId===t.id?'selected':'')+'>'+esc(t.label)+'</option>').join('')+'</select>';}
 async function assignTable(rsvpId,tableId){await fetch('/api/staff/table-assignment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),tableId})});await loadTables();await loadMembers();}
 async function loadInvites(){
-  const body=document.querySelector('#invitesTable tbody');body.innerHTML='<tr><td colspan="7">Loading...</td></tr>';
-  let res,data;try{res=await fetch('/api/staff/invites',{headers:{'Accept':'application/json'}});data=await res.json();}catch(e){body.innerHTML='<tr><td colspan="7">No connection.</td></tr>';return;}
-  if(!res.ok){body.innerHTML='<tr><td colspan="7">'+esc(data.error||'Could not load invites')+'</td></tr>';return;}
+  const body=document.querySelector('#invitesTable tbody');body.innerHTML='<tr><td colspan="8">Loading...</td></tr>';
+  let res,data;try{res=await fetch('/api/staff/invites',{headers:{'Accept':'application/json'}});data=await res.json();}catch(e){body.innerHTML='<tr><td colspan="8">No connection.</td></tr>';return;}
+  if(!res.ok){body.innerHTML='<tr><td colspan="8">'+esc(data.error||'Could not load invites')+'</td></tr>';return;}
   invites=data.invites||[];renderInvites();
 }
 function inviteStatusLabel(status){return status==='attending'?'Attending':status==='declined'?'Declined':'Not responded';}
-function filteredInvites(){const q=document.getElementById('inviteSearch').value.trim().toLowerCase();return invites.filter(i=>!q||[i.name,i.email,i.phone,i.status,inviteStatusLabel(i.status),i.confirmationLink,i.ticketLink].some(v=>String(v||'').toLowerCase().includes(q)));}
+function filteredInvites(){const q=document.getElementById('inviteSearch').value.trim().toLowerCase();return invites.filter(i=>!q||[i.name,i.email,i.phone,i.status,inviteStatusLabel(i.status),i.confirmationEmailSentAt?'sent':'not sent',i.confirmationLink,i.ticketLink].some(v=>String(v||'').toLowerCase().includes(q)));}
 function renderInvites(){
   const body=document.querySelector('#invitesTable tbody'),rows=filteredInvites();
-  body.innerHTML=rows.map(i=>'<tr><td>'+esc(i.name)+'</td><td>'+esc(i.email)+'</td><td>'+esc(i.phone)+'</td><td>'+esc(inviteStatusLabel(i.status))+(i.submittedAt?'<br><span class="pill">'+esc(new Date(i.submittedAt).toLocaleString())+'</span>':'')+'</td><td><div class="link-cell">'+esc(i.confirmationLink)+'</div><button class="copy-btn" data-copy="'+esc(i.confirmationLink)+'">Copy</button></td><td><div class="link-cell">'+esc(i.ticketLink)+'</div><button class="copy-btn" data-copy="'+esc(i.ticketLink)+'" '+(i.ticketLink?'':'disabled')+'>Copy</button></td><td>'+esc(i.createdAt?new Date(i.createdAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="7">No invites.</td></tr>';
+  body.innerHTML=rows.map(i=>'<tr><td>'+esc(i.name)+'</td><td>'+esc(i.email)+'</td><td>'+esc(i.phone)+'</td><td>'+esc(inviteStatusLabel(i.status))+(i.submittedAt?'<br><span class="pill">'+esc(new Date(i.submittedAt).toLocaleString())+'</span>':'')+'</td><td>'+sendInviteCell(i)+'</td><td><div class="link-cell">'+esc(i.confirmationLink)+'</div><button class="copy-btn" data-copy="'+esc(i.confirmationLink)+'">Copy</button></td><td><div class="link-cell">'+esc(i.ticketLink)+'</div><button class="copy-btn" data-copy="'+esc(i.ticketLink)+'" '+(i.ticketLink?'':'disabled')+'>Copy</button></td><td>'+esc(i.createdAt?new Date(i.createdAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="8">No invites.</td></tr>';
   body.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy,b));
+  body.querySelectorAll('[data-send-invite]').forEach(b=>b.onclick=()=>sendInvite(b.dataset.sendInvite,b));
+}
+function sendInviteCell(i){if(!i.email)return '<span class="small">No email</span>';return '<button class="copy-btn" data-send-invite="'+esc(i.id)+'">'+(i.confirmationEmailSentAt?'Send again':'Send')+'</button>'+(i.confirmationEmailSentAt?'<br><span class="pill">'+esc(new Date(i.confirmationEmailSentAt).toLocaleString())+'</span>':'');}
+async function sendInvite(id,button){
+  button.disabled=true;button.textContent='Sending';
+  let res,data;try{res=await fetch('/api/staff/invite-send',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({id})});data=await res.json();}catch(e){button.disabled=false;button.textContent='Send';alert('No connection.');return;}
+  if(!res.ok){button.disabled=false;button.textContent='Send';alert(data.error||'Could not send invite');return;}
+  const item=invites.find(i=>i.id===id);if(item){item.confirmationEmailSentAt=data.confirmationEmailSentAt;item.confirmationEmailSendCount=data.confirmationEmailSendCount;}
+  renderInvites();
 }
 async function copyText(value,button){if(!value)return;try{await navigator.clipboard.writeText(value);button.textContent='Copied';setTimeout(()=>button.textContent='Copy',1200);}catch(_){window.prompt('Copy link',value);}}
 document.getElementById('inviteSearch').oninput=renderInvites;

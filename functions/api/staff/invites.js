@@ -3,7 +3,7 @@ import { EVENT_KEY, buildInviteRow, buildTicketUrl, validateInvitePayload } from
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 const MAX_RETRIES = 3;
-const INVITE_COLUMNS = "id,name,email,phone,ticket_token,created_at,updated_at";
+const INVITE_COLUMNS = "id,name,email,phone,ticket_token,confirmation_email_sent_at,confirmation_email_send_count,created_at,updated_at";
 const RSVP_COLUMNS = "guest_id,status,submitted_at,guest_name,guest_email,guest_phone,ticket_token";
 
 export async function onRequestGet({ request, env }) {
@@ -73,6 +73,8 @@ function publicInvite(requestUrl, row, rsvp) {
     email: row.email || "",
     phone: row.phone || "",
     ticketToken,
+    confirmationEmailSentAt: row.confirmation_email_sent_at || null,
+    confirmationEmailSendCount: Number(row.confirmation_email_send_count || 0),
     confirmationLink: `${origin}/hi/${encodeURIComponent(row.id)}`,
     ticketLink: ticketToken ? buildTicketUrl(requestUrl, ticketToken) : "",
     status: rsvp?.status || "not_responded",

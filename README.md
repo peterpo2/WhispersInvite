@@ -62,6 +62,8 @@ attendance. Plus-one ticket links are generated later during RSVP.
 
 Invite shows all invited primary guests, including people who have not answered yet. Members shows
 only people with an RSVP response. Invite statuses are `Not responded`, `Attending` and `Declined`.
+If an invite has an email, staff can press **Send** to record that the confirmation link was sent.
+After the first press, the action becomes **Send again** and updates the sent timestamp/count.
 
 ## Door Flow
 
@@ -87,6 +89,7 @@ The scanner keeps guest and plus-one check-ins separate and shows the latest arr
 | `POST` | `/api/door` | Checks in a scanned guest or plus-one ticket atomically. |
 | `GET` | `/api/staff/invites` | Lists primary invites and generated links. |
 | `POST` | `/api/staff/invites` | Creates a primary invite. |
+| `POST` | `/api/staff/invite-send` | Records confirmation invite send/send-again state. |
 
 ## Setup
 

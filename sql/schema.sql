@@ -4,6 +4,8 @@ create table if not exists guest_list (
   email text,
   phone text,
   ticket_token text,
+  confirmation_email_sent_at timestamptz,
+  confirmation_email_send_count integer not null default 0,
   created_at timestamptz default now(),
   updated_at timestamptz not null default now()
 );

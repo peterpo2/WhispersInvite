@@ -97,6 +97,7 @@ avoids ambiguous characters: no `0/O`, `1/I/L`, `5/S`, or `8/B`.
 | `POST` | `/api/door` | Atomically checks in the scanned guest or plus-one ticket. |
 | `GET` | `/api/staff/invites` | Lists primary invite registry rows with confirmation and ticket links. |
 | `POST` | `/api/staff/invites` | Creates a primary invite with random confirmation and ticket tokens. |
+| `POST` | `/api/staff/invite-send` | Records that a confirmation invite was sent or sent again. |
 
 All JSON responses are `Cache-Control: no-store`.
 
@@ -111,6 +112,8 @@ All JSON responses are `Cache-Control: no-store`.
 | `email` | text | Optional owner/import data. |
 | `phone` | text | Optional owner/import phone data. |
 | `ticket_token` | text | Pre-generated primary ticket token for admin-created invites. |
+| `confirmation_email_sent_at` | timestamptz | Last time staff pressed Send/Send again for the confirmation invite. |
+| `confirmation_email_send_count` | integer | Number of recorded confirmation invite sends. |
 | `created_at` | timestamptz | Created timestamp. |
 | `updated_at` | timestamptz | Updated timestamp. |
 
@@ -120,6 +123,9 @@ guest in and does not show a QR until a matching attending RSVP exists.
 
 The Invite admin view lists every invited primary guest. Members lists only RSVP rows. Invite
 statuses are shown as `Not responded`, `Attending` or `Declined`.
+If an invite has an email, the Invite view shows `Send` until the first send is recorded, then
+`Send again`. The current implementation records send state for the future email flow; SMTP
+delivery will be wired after the final mailbox/provider details are available.
 
 ### `rsvps`
 
