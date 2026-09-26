@@ -405,8 +405,8 @@ Security note: admin security is planned but not active yet. The current staff a
 - Guest of
 - Email
 - Phone
+- Request
 - Table
-- Assigned
 - In
 - Submitted
 
