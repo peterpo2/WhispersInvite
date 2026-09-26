@@ -1,5 +1,4 @@
 import { json } from "../_shared/responses.js";
-import { referralBase } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 async function findGuest(env, id) {
@@ -19,14 +18,6 @@ export async function onRequestGet({ request, env }) {
   const personal = await findGuest(env, token);
   if (personal.error) return personal.error;
   if (personal.row) return json({ found: true, name: personal.row.name, id: personal.row.id });
-
-  // "<id>referral": someone invited by that guest. No name is shown; they type their own.
-  const base = referralBase(token);
-  if (base) {
-    const inviter = await findGuest(env, base);
-    if (inviter.error) return inviter.error;
-    if (inviter.row) return json({ found: true, referral: true });
-  }
 
   return json({ found: false }, 404);
 }

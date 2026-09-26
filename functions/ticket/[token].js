@@ -82,6 +82,17 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   try{data=await res.json();}catch(e){failed();return;}
   const t=data&&data.ticket;
   if(!t){failed();return;}
+  if(data.locked||t.locked){
+    $('guest').textContent=t.guest_name||'Your ticket';
+    document.querySelector('.role').textContent='Registered guest';
+    $('code').textContent='09.10 · 18:00';
+    $('qr').classList.add('fallback');
+    $('qr').textContent='Your ticket will be released on 09.10 at 18:00.';
+    $('venue').innerHTML='Location remains sealed until 09.10 at 18:00.';
+    $('bringing').innerHTML=t.bringing?'Registered with <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'Guest of '+escapeHtml(t.brought_by):'');
+    $('state').textContent='Locked until release';
+    return;
+  }
   const role=t.brought_by?'Guest of '+t.brought_by:'Founding guest';
   $('guest').textContent=t.guest_name;
   document.querySelector('.role').textContent=role;
@@ -89,6 +100,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   $('bringing').innerHTML=t.bringing?'Bringing <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'':'Coming on your own');
   const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia Center · the address reaches you at 18:00 on the 9th';
   if(v)$('venue').innerHTML=v.mapUrl?'<a href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+escapeHtml(venueText)+'</a>':escapeHtml(venueText);
+  if(t.table_label)$('bringing').innerHTML += '<br/>Table <b>'+escapeHtml(t.table_label)+'</b>';
   $('state').textContent=t.checked_in_at?'Already checked in':'Ready for the door';
   if(window.WhispersTickets){
     const lines=['Saturday 10 October · Doors 22:00',venueText];

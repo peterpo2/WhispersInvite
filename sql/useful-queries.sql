@@ -8,6 +8,7 @@
 --    2. sql/2026-09-24-door-scanner.sql
 --    3. sql/2026-09-24-seal-code-unique.sql
 --    4. sql/2026-09-25-plus-one-tickets-and-venue.sql
+--    5. sql/2026-09-26-contact-reservation-and-ticket-release.sql
 --  They are idempotent: running one again does no harm.
 -- ══════════════════════════════════════════════════════════════════════
 
@@ -15,9 +16,11 @@
 -- ── 1. HEADCOUNT (READ) ──────────────────────────────────────────────
 select
   count(*) filter (where status = 'attending')                               as guests_attending,
-  count(*) filter (where status = 'attending' and plus_one_name is not null) as plus_ones,
+  (select count(*) from public.rsvp_companions c join public.rsvps r on r.id = c.rsvp_id
+    where r.event_key = 'whispers-2026-10-10' and r.status = 'attending')     as added_guests,
   count(*) filter (where status = 'attending')
-    + count(*) filter (where status = 'attending' and plus_one_name is not null) as total_people,
+    + (select count(*) from public.rsvp_companions c join public.rsvps r on r.id = c.rsvp_id
+       where r.event_key = 'whispers-2026-10-10' and r.status = 'attending')  as total_people,
   count(*) filter (where status = 'declined')                                as declined
 from public.rsvps
 where event_key = 'whispers-2026-10-10';
@@ -31,35 +34,11 @@ select
   r.plus_one_name,
   r.seal_code,
   r.submitted_at,
-  'https://whispers-invite.pages.dev/hi/' || g.id         as invitation_link,
-  'https://whispers-invite.pages.dev/hi/' || g.id || 'referral' as referral_link
+  'https://whispers-invite.pages.dev/hi/' || g.id         as invitation_link
 from public.guest_list g
 left join public.rsvps r
   on r.guest_id = g.id and r.event_key = 'whispers-2026-10-10'
 order by g.name;
-
-
--- ── 2b. WHO CAME THROUGH A REFERRAL LINK (READ) ──────────────────────
--- guest_id looks like '<inviter id>/referral/<typed name>'.
-select
-  split_part(r.guest_id, '/referral/', 1) as invited_by_id,
-  g.name                                   as invited_by,
-  r.guest_name,
-  r.status,
-  r.plus_one_name,
-  r.submitted_at
-from public.rsvps r
-left join public.guest_list g on g.id = split_part(r.guest_id, '/referral/', 1)
-where r.event_key = 'whispers-2026-10-10' and r.guest_id like '%/referral/%'
-order by invited_by, r.submitted_at;
-
--- How many each guest brought in through their referral link:
-select split_part(guest_id, '/referral/', 1) as invited_by_id,
-       count(*) filter (where status = 'attending') as attending,
-       count(*) filter (where status = 'attending' and plus_one_name is not null) as with_plus_one
-from public.rsvps
-where event_key = 'whispers-2026-10-10' and guest_id like '%/referral/%'
-group by 1 order by 2 desc;
 
 
 -- ── 3. EVERYONE ATTENDING, ONE ROW PER PERSON (READ) ─────────────────
@@ -70,14 +49,20 @@ union all
 select plus_one_name, 'plus-one', guest_name, plus_one_seal_code, plus_one_checked_in_at, submitted_at
 from public.rsvps
 where event_key = 'whispers-2026-10-10' and status = 'attending' and plus_one_name is not null
+union all
+select c.guest_name, 'added guest', r.guest_name, c.seal_code, c.checked_in_at, c.created_at
+from public.rsvp_companions c
+join public.rsvps r on r.id = c.rsvp_id
+where r.event_key = 'whispers-2026-10-10' and r.status = 'attending'
 order by submitted_at, type;
 
 
 -- ── 4. PLUS-ONE EMAILS (READ; personal data, do not share) ───────────
-select guest_name, plus_one_name, plus_one_email
-from public.rsvps
-where event_key = 'whispers-2026-10-10' and status = 'attending' and plus_one_name is not null
-order by guest_name;
+select r.guest_name, c.guest_name as added_guest_name, c.email, c.email_is_fallback, c.phone
+from public.rsvp_companions c
+join public.rsvps r on r.id = c.rsvp_id
+where r.event_key = 'whispers-2026-10-10' and r.status = 'attending'
+order by r.guest_name, c.guest_name;
 
 
 -- ── 5. TICKET LINKS (READ) ───────────────────────────────────────────
@@ -86,15 +71,23 @@ order by guest_name;
 select
   guest_name,
   'https://whispers-invite.pages.dev/ticket/' || ticket_token                   as guest_ticket,
-  plus_one_name,
-  case when plus_one_ticket_token is not null
-       then 'https://whispers-invite.pages.dev/ticket/' || plus_one_ticket_token end as plus_one_ticket
+  null as added_guest_name,
+  null as added_guest_ticket
 from public.rsvps
 where event_key = 'whispers-2026-10-10' and status = 'attending'
+union all
+select
+  r.guest_name,
+  null,
+  c.guest_name,
+  'https://whispers-invite.pages.dev/ticket/' || c.ticket_token
+from public.rsvp_companions c
+join public.rsvps r on r.id = c.rsvp_id
+where r.event_key = 'whispers-2026-10-10' and r.status = 'attending'
 order by guest_name;
 
 
--- ── 6. REPLIES FROM THE PLAIN LINK (no personal or referral link) (READ)
+-- ── 6. REPLIES FROM THE PLAIN LINK (no personal link) (READ)
 select guest_name, status, plus_one_name, submitted_at
 from public.rsvps
 where event_key = 'whispers-2026-10-10' and guest_id = ticket_token
@@ -108,6 +101,11 @@ from public.rsvps where event_key = 'whispers-2026-10-10' and checked_in_at is n
 union all
 select plus_one_name, guest_name, plus_one_checked_in_at
 from public.rsvps where event_key = 'whispers-2026-10-10' and plus_one_checked_in_at is not null
+union all
+select c.guest_name, r.guest_name, c.checked_in_at
+from public.rsvp_companions c
+join public.rsvps r on r.id = c.rsvp_id
+where r.event_key = 'whispers-2026-10-10' and c.checked_in_at is not null
 order by checked_in_at desc;
 
 -- Still to arrive
@@ -117,6 +115,11 @@ union all
 select plus_one_name, guest_name, plus_one_seal_code
 from public.rsvps where event_key = 'whispers-2026-10-10' and status = 'attending'
   and plus_one_name is not null and plus_one_checked_in_at is null
+union all
+select c.guest_name, r.guest_name, c.seal_code
+from public.rsvp_companions c
+join public.rsvps r on r.id = c.rsvp_id
+where r.event_key = 'whispers-2026-10-10' and r.status = 'attending' and c.checked_in_at is null
 order by name;
 
 

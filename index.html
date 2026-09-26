@@ -195,6 +195,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 .codelabel{font-size:12px;letter-spacing:.3em;color:var(--mute);text-transform:uppercase;margin:0}
 .qr{width:min(58vw,210px);height:min(58vw,210px);margin:20px auto 22px;background:#F1E9DC;padding:9px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
+.qr.release-note{width:auto;height:auto;min-height:150px;padding:22px;font:300 18px/1.5 var(--serif);color:#24180D;text-transform:none;letter-spacing:0}
 .passfoot{font-family:var(--serif);font-size:21px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}
 .passfoot b{font-weight:400;color:#F6EFE4}
 .venue-map{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
@@ -292,6 +293,8 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <h2 class="lede st">Write your name.</h2>
 <p class="sub st">Use your real first and last name. It will become your private ticket.</p>
 <div class="field st"><label for="guestName">Full name</label><input autocomplete="name" enterkeyhint="go" id="guestName" maxlength="120" placeholder="First and last name" type="text"/></div>
+<div class="field st"><label for="guestEmail">Email</label><input autocomplete="email" enterkeyhint="next" id="guestEmail" inputmode="email" maxlength="254" placeholder="name@example.com" type="email"/></div>
+<div class="field st"><label for="guestPhone">Phone</label><input autocomplete="tel" enterkeyhint="go" id="guestPhone" inputmode="tel" maxlength="40" placeholder="+359 ..." type="tel"/></div>
 <p class="err" id="guestErr" role="alert"></p>
 <button class="btn primary caps st" disabled="" id="continueGuest">Continue</button>
 <button class="btn caps st" id="backLetter">Back</button>
@@ -325,9 +328,15 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 </label>
 <div class="plus-fields" hidden="" id="plusFields">
 <div class="field"><label for="p1name">Full name</label><input autocomplete="off" enterkeyhint="next" id="p1name" maxlength="120" placeholder="First and last name" type="text"/></div>
-<div class="field"><label for="p1mail">Email</label><input autocomplete="email" enterkeyhint="done" id="p1mail" inputmode="email" maxlength="254" placeholder="name@example.com" type="email"/></div>
+<div class="field"><label for="p1mail">Email <span style="color:var(--mute);text-transform:none;letter-spacing:0">(optional)</span></label><input autocomplete="email" enterkeyhint="next" id="p1mail" inputmode="email" maxlength="254" placeholder="name@example.com" type="email"/></div>
+<div class="field"><label for="p1phone">Phone</label><input autocomplete="tel" enterkeyhint="done" id="p1phone" inputmode="tel" maxlength="40" placeholder="+359 ..." type="tel"/></div>
 <p class="privacy"><svg aria-hidden="true" height="14" viewBox="0 0 12 14" width="12"><rect fill="none" height="7" stroke="#D9AE78" width="10" x="1" y="6"></rect><path d="M3 6V4a3 3 0 0 1 6 0v2" fill="none" stroke="#D9AE78"></path></svg><span>We use their details only for this invitation, event communication and door-list access.</span></p>
 </div>
+<label class="plus-toggle st" for="reserveTable">
+<input id="reserveTable" type="checkbox"/>
+<span aria-hidden="true" class="toggle-box"></span>
+<span><b>Бихте ли искали да ви запазим маса за събитието?</b><small id="reserveTableHelp" hidden>Ще се свържем с вас, за да дадем повече данни за резервацията.</small></span>
+</label>
 <p class="err" id="perr" role="alert"></p>
 <p aria-live="polite" class="submit-state" id="pstate"></p>
 <button class="btn primary caps st" id="confirm">Confirm my place</button>
@@ -343,13 +352,13 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <p class="nm" id="passname">—</p>
 <p class="rl" id="passrole">Founding guest</p>
 <div class="rule"></div>
-<p class="code" id="passcode">—</p>
-<p class="codelabel">Your seal</p>
+<p class="code" id="passcode">09.10 · 18:00</p>
+<p class="codelabel">Ticket release</p>
 <div aria-label="QR code" class="qr" id="qr"></div>
 <p class="passfoot">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span class="venue-line">Sofia Center · the address reaches you at <b>18:00 on the 9th</b></span><span class="bringing" id="bringingLine">Coming on your own</span></p>
 </div>
-<p class="sub st">Your RSVP has been received. Your seal is ready for the door.</p>
-<button class="btn primary caps st" id="saveTickets">Private ticket</button>
+<p class="sub st" id="doneCopy">Your registration is confirmed. On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.</p>
+<button class="btn primary caps st" hidden id="saveTickets">Private ticket</button>
 <p aria-live="polite" class="save-state st" id="saveState"></p>
 <button class="btn caps st" id="reset" style="margin-top:14px">Start over</button>
 </div>
@@ -372,7 +381,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 (function(){
   const $ = (s) => document.querySelector(s);
   const SUBMIT_URL = '/api/rsvp';
-  const state = { guestName:null, guestId:null, referral:null, attending:null, plusOne:null, sealCode:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null };
+  const state = { guestName:null, guestEmail:null, guestPhone:null, guestId:null, attending:null, plusOne:null, wantsTableReservation:false, sealCode:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null };
 
   // ── Token personalisation ──────────────────────────
   const urlToken = new URLSearchParams(window.location.search).get('token') || null;
@@ -381,10 +390,9 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data || !data.found || state.guestName) return;
-        // Referral link: no name on the seal; the guest writes their own after the details.
-        if (data.referral) { state.referral = urlToken; return; }
         state.guestName = data.name;
         state.guestId   = data.id || urlToken;
+        if (nameInput) nameInput.value = data.name;
         // Show name on seal screen
         const el = document.querySelector('.issued.generic-issued');
         if (el) {
@@ -428,12 +436,13 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   $('#skipfilm').addEventListener('click',()=>{clearTimers();show('#s-letter')});
 
   // RESPOND: personal links already know the name; the shared link asks for it
-  $('#toRsvp').addEventListener('click',()=>show(state.guestName?'#s-rsvp':'#s-identify'));
+  $('#toRsvp').addEventListener('click',()=>show(state.guestEmail&&state.guestPhone?'#s-rsvp':'#s-identify'));
 
   // Name (shared link only)
-  const nameInput=$('#guestName'),nameOk=v=>v.split(/\s+/).filter(Boolean).length>=2&&v.length<=120;
-  nameInput.addEventListener('input',()=>{$('#continueGuest').disabled=!nameOk(nameInput.value.trim());$('#guestErr').textContent=''});
-  function continueGuest(){const v=nameInput.value.trim().replace(/\s+/g,' ');if(!nameOk(v)){$('#guestErr').textContent='Please give your full name.';return;}state.guestName=v;show('#s-rsvp')}
+  const nameInput=$('#guestName'),emailInput=$('#guestEmail'),phoneInput=$('#guestPhone'),nameOk=v=>v.split(/\s+/).filter(Boolean).length>=2&&v.length<=120,emailOk=v=>/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v.trim());
+  function identifyOk(){return nameOk(nameInput.value.trim())&&emailOk(emailInput.value)&&phoneInput.value.trim();}
+  [nameInput,emailInput,phoneInput].forEach(el=>el.addEventListener('input',()=>{$('#continueGuest').disabled=!identifyOk();$('#guestErr').textContent=''}));
+  function continueGuest(){const v=nameInput.value.trim().replace(/\s+/g,' '),m=emailInput.value.trim(),p=phoneInput.value.trim().replace(/\s+/g,' ');if(!nameOk(v)){$('#guestErr').textContent='Please give your full name.';return;}if(!emailOk(m)){$('#guestErr').textContent='Please give a valid email.';return;}if(!p){$('#guestErr').textContent='Please give your phone.';return;}state.guestName=v;state.guestEmail=m;state.guestPhone=p;show('#s-rsvp')}
   $('#continueGuest').addEventListener('click',continueGuest);
   nameInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();continueGuest()}});
   $('#backLetter').addEventListener('click',()=>show('#s-letter'));
@@ -446,7 +455,9 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 
   const plusToggle=$('#bringPlusOne');
   $('#p1name').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#p1mail').focus()}});
+  $('#p1mail').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#p1phone').focus()}});
   plusToggle.addEventListener('change',()=>{$('#plusFields').hidden=!plusToggle.checked;$('#confirm').textContent=plusToggle.checked?'Confirm both places':'Confirm my place';$('#perr').textContent=''});
+  $('#reserveTable').addEventListener('change',()=>{$('#reserveTableHelp').hidden=!$('#reserveTable').checked;});
 
   const QR_OPTS={width:384,margin:2,color:{dark:'#0B0908',light:'#F1E9DC'}};
   function makeQR(value){
@@ -460,7 +471,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 
   async function submitRSVP(extra){
     if(!state.guestName) return {ok:false,error:'Please give your full name.'};
-    const payload={guestName:state.guestName,guestId:state.referral?undefined:state.guestId||undefined,referral:state.referral||undefined,status:extra.status,plusOne:extra.plusOne||null};
+    const payload={guestName:state.guestName,guestEmail:state.guestEmail,guestPhone:state.guestPhone,guestId:state.guestId||undefined,status:extra.status,wantsTableReservation:extra.wantsTableReservation===true,plusOne:extra.plusOne||null};
     const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),12000);
     try{
       const res=await fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),signal:ctl.signal});
@@ -473,27 +484,25 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   $('#confirm').addEventListener('click',async()=>{
     if(busy)return;let plusOne=null;
     if(plusToggle.checked){
-      const n=$('#p1name').value.trim(),m=$('#p1mail').value.trim();
+      const n=$('#p1name').value.trim(),m=$('#p1mail').value.trim(),ph=$('#p1phone').value.trim().replace(/\s+/g,' ');
       if(n.split(/\s+/).length<2){$('#perr').textContent='Please give their full name.';return;}
-      if(!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(m)){$('#perr').textContent='Please give a valid email.';return;}
-      plusOne={name:n,email:m};
+      if(m&&!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(m)){$('#perr').textContent='Please give a valid email.';return;}
+      if(!ph){$('#perr').textContent='Please give their phone.';return;}
+      plusOne={name:n,email:m,phone:ph};
     }
     $('#perr').textContent='';setBusy(true,$('#pstate'));
-    const result=await submitRSVP({status:'attending',plusOne});
+    const wantsTableReservation=$('#reserveTable').checked;
+    const result=await submitRSVP({status:'attending',plusOne,wantsTableReservation});
     if(!result.ok){setBusy(false,$('#pstate'));$('#perr').textContent=result.error||'We could not save your RSVP. Please try again.';return;}
-    const tkn=result.data?.ticketToken||null;
-    state.ticketUrl=result.data?.ticketUrl||(tkn?window.location.origin+'/ticket/'+encodeURIComponent(tkn):null);
-    if(!state.ticketUrl){setBusy(false,$('#pstate'));$('#perr').textContent='We could not save your RSVP. Please try again.';return;}
     $('#pstate').textContent='';
-    state.plusTicketUrl=result.data?.plusOneTicketUrl||null;state.plusSealCode=result.data?.plusOneSealCode||null;
-    const plusName=state.plusTicketUrl?(result.data?.plusOneName||plusOne?.name||null):null;
-    state.plusOne=plusName?{name:plusName}:null;state.sealCode=result.data?.sealCode||'WSP · 10';
-    $('#passname').textContent=state.guestName;$('#passcode').textContent=state.sealCode;
-    $('#bringingLine').innerHTML=state.plusOne?'Bringing <b>'+escapeHtml(state.plusOne.name)+'</b>':'Coming on your own';
-    makeQR(state.ticketUrl);
+    const plusName=result.data?.plusOneName||plusOne?.name||null;
+    state.plusOne=plusName?{name:plusName}:null;state.wantsTableReservation=result.data?.wantsTableReservation===true;
+    $('#passname').textContent=state.guestName;$('#passcode').textContent='09.10 · 18:00';
+    $('#bringingLine').innerHTML=state.plusOne?'Registered with <b>'+escapeHtml(state.plusOne.name)+'</b>':'Registered for one';
+    if(state.wantsTableReservation)$('#bringingLine').innerHTML+='<br/><b>Table reservation requested.</b>';
+    $('#qr').classList.add('release-note');$('#qr').textContent=state.plusOne?'On 09.10 at 18:00, you and your registered guest will each receive an email with the confirmed location and your private ticket.':'On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.';
+    $('#doneCopy').textContent=state.plusOne?'Your registration is confirmed. On 09.10 at 18:00, you and your registered guest will each receive an email with the confirmed location and your private ticket.':'Your registration is confirmed. On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.';
     show('#s-done');
-    buildTicketCards();
-    loadVenue(result.data?.ticketToken).then(prepareImages);
   });
 
   // ── Location: shown once it is announced (event_details) ──

@@ -23,9 +23,9 @@ All SQL you may need: [`sql/useful-queries.sql`](sql/useful-queries.sql)
 - [ ] Intro video from the client (the film screen shows text scenes until then).
 - [ ] Cap at 150 people.
 - [ ] RSVP deadline (names fixed after the 7th).
+- [ ] Server-side full-name validation should match the frontend and docs (2+ words for guest names).
 
 ## Done
-- [x] Referral links `/hi/<id>referral`: no name on the seal, the guest writes their own, +1 allowed.
 - [x] Repeat RSVP keeps an earlier +1 unless a different +1 is entered.
 - [x] Invitation flow: seal, film, details, RSVP, plus-one, ticket, decline.
 - [x] Personal links `/hi/<id>` (name on the seal); the plain link asks for a full name.

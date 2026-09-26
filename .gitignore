@@ -9,8 +9,12 @@ coverage/
 .DS_Store
 Thumbs.db
 New Text Document (2).txt
+CLAUDE.md.old
 .superpowers/
+supabase/.temp/
 
 # Local-only material: logo source files (web versions live in assets/) and screenshots
 logo/
 viber_image_*.png
+viber_image_*.jpg
+viber_image_*.jpeg

@@ -99,7 +99,7 @@ shared link both exist now (see End-to-end flow).
 ### Routes (Pages Functions, file-based routing)
 | Method | Path | File | Behaviour |
 |---|---|---|---|
-| POST | `/api/rsvp` | `functions/api/rsvp.js` | Validate → reject a plus-one email already used by another attending guest of this event (`409`) → if the body has an invitation `guestId` that already has a row, PATCH that row with `buildRsvpUpdate` (guarded by `checked_in_at=is.null`; same ticket token and seal code; a checked-in guest gets `409` "already been used at the door") → otherwise plain insert into `rsvps` (`Prefer: return=minimal`; an insert `409` maps to the duplicate-email error only when `isDuplicatePlusOneEmail(pgError)` is true; when `isDuplicateSealCode(pgError)` is true it rebuilds the row with a fresh seal code and token and retries, up to 3 retries; any other `409`, or running out of retries, returns `502`) → returns only `{ ok, ticketToken, sealCode, ticketUrl, checkInUrl }` (`sealCode` is null for a decline; the frontend never uses `checkInUrl`) |
+| POST | `/api/rsvp` | `functions/api/rsvp.js` | Validate → reject a plus-one email already used by another attending guest of this event (`409`) → if the body has an invitation `guestId` that already has a row, PATCH that row with `buildRsvpUpdate` (guarded by `checked_in_at=is.null`; same ticket token and seal code; a checked-in guest gets `409` "already been used at the door") → otherwise plain insert into `rsvps` (`Prefer: return=minimal`; an insert `409` maps to the duplicate-email error only when `isDuplicatePlusOneEmail(pgError)` is true; when `isDuplicateSealCode(pgError)` is true it rebuilds the row with a fresh seal code and token and retries, up to 3 retries; any other `409`, or running out of retries, returns `502`) → returns `{ ok, ticketToken, sealCode, ticketUrl, checkInUrl, plusOneTicketToken, plusOneSealCode, plusOneName, plusOneTicketUrl }` (`sealCode` is null for a decline; the frontend never uses `checkInUrl`) |
 | GET | `/api/ticket?token=` | `functions/api/ticket.js` | Looks the token up in `ticket_token` **or** `plus_one_ticket_token` and returns `ticketForToken(row, token)` (`holder`, `guest_name`, `seal_code`, `checked_in_at`, `bringing`, `brought_by`), `venue` (`publicVenue` of `event_details`: null until set and past `reveal_at`), `ticketUrl`, `checkInUrl` |
 | GET | `/api/checkin?token=` | `functions/api/checkin.js` | Read-only. `302` to `checkInRedirectPath(token)`: `/ticket/<token>`, or `/` for a missing/malformed token |
 | GET | `/api/door` | `functions/api/door.js` | The 80 most recent check-ins, guest and plus-one as separate entries (`doorScans`) |
@@ -160,12 +160,9 @@ first, so the result is "already checked in".
     same ticket; a different plus-one → a new ticket and the old one stops working; declining →
     the plus-one is cleared. `/api/rsvp` refuses (409) to replace a plus-one who is already
     inside, and returns `plusOneName` so the page can show a kept plus-one's ticket.
-  - Referral links `/hi/<id>referral` (or `/?token=<id>referral`): `referralBase(token)` gives
-    the inviter's id. `/api/guest-check` answers `{ found, referral: true }` with no name, the page
-    asks for the guest's name, and the RSVP body carries `referral`. `/api/rsvp` checks the
-    inviter exists in `guest_list` and sets `guest_id = referralGuestId(id, name)`
-    (`<id>/referral/<nameKey(name)>`), ignoring any client `guestId`. Unlimited people per link;
-    the same typed name finds the same ticket.
+  - Referral invitation links are out of scope for now. Keep the active product flow to personal
+    `/hi/<id>` links and the plain shared `/` link unless the organizer explicitly brings
+    referrals back.
   - `buildRsvpUpdate(row, existing)`: the PATCH for a repeat RSVP from the same invitation. It
     carries name, status, plus-one and `submitted_at`, keeps `existing.seal_code` (a guest who
     first declined gets the new one), and never touches `ticket_token`, `guest_id` or `event_key`.
@@ -231,9 +228,9 @@ first, so the result is "already checked in".
     `buildTicketCards()` carousel) encode `state.ticketUrl` only: the server's `ticketUrl`, or
     `/ticket/<ticketToken>` if it is missing. With neither, the guest sees the save error.
     Never encode `checkInUrl` or the seal code.
-  - `#passcode` shows the server's `sealCode`. The plus-one shares the guest's row and token,
-    so their card shows the same seal code and QR (the brief's one-code-per-person model would
-    need its own plus-one row). Before submit the code reads `—`.
+  - `#passcode` shows the server's `sealCode`. A plus-one uses `plusOneTicketUrl` and
+    `plusOneSealCode`, so their saved card has its own QR and code while still sharing the same
+    RSVP row. Before submit the code reads `—`.
   - `s-plus` uses the brief's copy: "One person. Choose well." / "Their name and address go on
     the door list with yours. Names cannot be changed after the seventh."
 

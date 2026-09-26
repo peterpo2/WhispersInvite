@@ -36,11 +36,15 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 .warn{background:rgba(163,22,33,.18);border:1px solid var(--red);border-radius:3px;padding:16px;margin:12px 0}.warn h2{color:#E8808A}.warn p{color:var(--bone)}
 .list{display:grid;margin-top:8px}.row.latest{background:rgba(217,174,120,.1);box-shadow:-10px 0 0 rgba(217,174,120,.1),10px 0 0 rgba(217,174,120,.1);animation:latest 1.2s ease}@keyframes latest{from{background:rgba(217,174,120,.32)}}.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid rgba(217,174,120,.14);padding:12px 0}.row:first-child{border-top:0}.row b{font-family:var(--serif);font-weight:400;font-size:21px;min-width:0;overflow-wrap:anywhere}.row b small{display:block;font:300 13px var(--sans);color:var(--muted);margin-top:2px}.row span{color:var(--muted);font-size:13px;text-align:right;white-space:nowrap}
 .small{color:var(--muted);font-size:14px;line-height:1.55;margin:12px 0 0}
+.tabs{display:flex;gap:8px;overflow:auto;margin:0 0 14px;padding-bottom:2px}.tab{width:auto;min-width:0;min-height:44px;padding:0 12px;white-space:nowrap}.tab.active{color:#1C130A;border-color:#E6C48C;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%)}
+.view{display:none}.view.active{display:block}.toolbar{display:flex;gap:8px;align-items:center;margin:0 0 12px}.toolbar input{width:100%;text-transform:none;letter-spacing:0;font:400 16px var(--sans);cursor:text}.grid{overflow:auto;border-top:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:980px}th,td{text-align:left;border-bottom:1px solid rgba(217,174,120,.14);padding:10px 8px;font-size:13px;vertical-align:middle}th{color:var(--gold);font-weight:400;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}td{color:#E7DED4}td input[type=checkbox]{min-height:0;width:20px;height:20px}.pill{display:inline-block;border:1px solid rgba(217,174,120,.35);padding:4px 7px;border-radius:999px;color:var(--gold-hi);font-size:12px}.tables{display:grid;gap:12px}@media(min-width:760px){.tables{grid-template-columns:repeat(2,minmax(0,1fr))}}.table-card{border:1px solid var(--line);padding:12px;border-radius:3px;background:rgba(8,6,5,.28)}.table-card h3{margin:0 0 8px;font:300 24px var(--serif)}.group{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-top:1px solid rgba(217,174,120,.14);padding:8px 0}.group:first-of-type{border-top:0}.group select{min-height:42px;background:#090706;color:var(--bone);border:1px solid rgba(217,174,120,.5);border-radius:3px}
 </style>
 </head>
 <body>
 <main>
 <div class="top"><div class="brand"><img src="/assets/whispers-mark.png" alt=""/><div><div class="k">WHISPERS</div><h1>Door</h1></div></div><button id="refresh">Refresh</button></div>
+<nav class="tabs" aria-label="Staff sections"><button class="tab active" data-view="scanner">Scanner</button><button class="tab" data-view="members">Members</button><button class="tab" data-view="tables">Tables</button></nav>
+<div class="view active" id="view-scanner">
 <section class="panel camera"><video id="video" playsinline muted></video><div class="scanline"></div></section>
 <section class="panel">
 <div class="actions"><button class="primary" id="start">Open camera</button><button disabled id="switch">Switch</button><button id="stop">Stop</button></div>
@@ -49,6 +53,13 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 </section>
 <section class="panel result" id="result" aria-live="polite"><h2>Ready.</h2><p>Scan a guest ticket.</p></section>
 <section class="panel"><div class="k">Scanned tonight</div><div class="list" id="list"></div></section>
+</div>
+<div class="view" id="view-members">
+<section class="panel"><div class="toolbar"><input id="memberSearch" placeholder="Search members" autocomplete="off"/><button id="exportMembers">Export CSV</button></div><div class="grid"><table id="membersTable"><thead><tr><th data-sort="name">Name</th><th data-sort="type">Type</th><th data-sort="guestOf">Guest of</th><th data-sort="email">Email</th><th data-sort="phone">Phone</th><th data-sort="wantsTableReservation">Table</th><th data-sort="table">Assigned</th><th data-sort="checkedIn">In</th><th data-sort="submittedAt">Submitted</th></tr></thead><tbody></tbody></table></div></section>
+</div>
+<div class="view" id="view-tables">
+<section class="panel"><p class="small">Reservation groups only. Default model: five 6-seat tables and five 4-seat tables until the venue gives final data.</p><div class="tables" id="tablesView"></div></section>
+</div>
 </main>
 <canvas id="canvas" hidden></canvas>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
@@ -176,6 +187,56 @@ document.getElementById('start').onclick=()=>{toTop();startCamera().catch(e=>{st
 document.getElementById('stop').onclick=stopCamera;
 document.getElementById('manualBtn').onclick=()=>scanValue(document.getElementById('manual').value.trim(),true);
 document.getElementById('refresh').onclick=loadList;
+let members=[],sortKey='submittedAt',sortDir=-1,tablesData=null;
+document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>showView(btn.dataset.view));
+function showView(name){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));
+  location.hash=name==='scanner'?'':'#'+name;
+  if(name==='members')loadMembers();
+  if(name==='tables')loadTables();
+}
+function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
+function exportCsv(){
+  const rows=[['Name','Type','Guest of','Email','Phone','Reservation','Table','Checked in','Submitted']].concat(filteredMembers().map(m=>[m.name,m.type,m.guestOf,m.email,m.phone,m.wantsTableReservation?'yes':'no',m.table,m.checkedIn?'yes':'no',m.submittedAt]));
+  const blob=new Blob([rows.map(r=>r.map(csvCell).join(',')).join('\\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='whispers-members.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function filteredMembers(){const q=document.getElementById('memberSearch').value.trim().toLowerCase();let rows=members.filter(m=>!q||[m.name,m.type,m.guestOf,m.email,m.phone,m.table].some(v=>String(v||'').toLowerCase().includes(q)));rows.sort((a,b)=>String(a[sortKey]??'').localeCompare(String(b[sortKey]??''))*sortDir);return rows;}
+async function loadMembers(){
+  const body=document.querySelector('#membersTable tbody');body.innerHTML='<tr><td colspan="9">Loading...</td></tr>';
+  let res,data;try{res=await fetch('/api/staff/members');data=await res.json();}catch(e){body.innerHTML='<tr><td colspan="9">No connection.</td></tr>';return;}
+  if(!res.ok){body.innerHTML='<tr><td colspan="9">'+esc(data.error||'Could not load members')+'</td></tr>';return;}
+  members=data.members||[];renderMembers();
+}
+function renderMembers(){
+  const body=document.querySelector('#membersTable tbody'),rows=filteredMembers();
+  body.innerHTML=rows.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.type)+'</td><td>'+esc(m.guestOf||'')+'</td><td>'+esc(m.email)+(m.emailIsFallback?' <span class="pill">fallback</span>':'')+'</td><td>'+esc(m.phone)+'</td><td>'+(m.wantsTableReservation?'yes':'')+'</td><td>'+esc(m.table||'')+'</td><td><input type="checkbox" '+(m.checkedIn?'checked':'')+' data-id="'+esc(m.id)+'"/></td><td>'+esc(m.submittedAt?new Date(m.submittedAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="9">No members.</td></tr>';
+  body.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.onchange=()=>toggleMember(cb.dataset.id,cb.checked));
+}
+async function toggleMember(id,checkedIn){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  await fetch('/api/staff/checkin-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:m.rsvpId,companionId:m.companionId,holder:m.holder,checkedIn})});
+  await loadMembers();await loadList();
+}
+document.getElementById('memberSearch').oninput=renderMembers;
+document.getElementById('exportMembers').onclick=exportCsv;
+document.querySelectorAll('#membersTable th').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=1;}renderMembers();});
+async function loadTables(){
+  const box=document.getElementById('tablesView');box.innerHTML='<p class="small">Loading...</p>';
+  let res,data;try{res=await fetch('/api/staff/tables');data=await res.json();}catch(e){box.innerHTML='<p class="small">No connection.</p>';return;}
+  if(!res.ok){box.innerHTML='<p class="small">'+esc(data.error||'Could not load tables')+'</p>';return;}
+  tablesData=data;renderTables();
+}
+function renderTables(){
+  const box=document.getElementById('tablesView'),tables=tablesData.tables||[],groups=tablesData.groups||[];
+  const cards=[{id:null,label:'Unassigned',capacity:9999}].concat(tables);
+  box.innerHTML=cards.map(t=>{const assigned=groups.filter(g=>(g.tableId||null)===t.id),used=assigned.reduce((s,g)=>s+g.size,0);return '<div class="table-card"><h3>'+esc(t.label)+'</h3><p class="small">'+(t.id?used+' / '+t.capacity+' seats':'Waiting for a table')+'</p>'+assigned.map(g=>'<div class="group"><span>'+esc(g.name)+' <span class="pill">'+g.size+'</span></span>'+tableSelect(g,tables)+'</div>').join('')+'</div>';}).join('');
+  box.querySelectorAll('select').forEach(s=>s.onchange=()=>assignTable(s.dataset.rsvpId,s.value||null));
+}
+function tableSelect(g,tables){return '<select data-rsvp-id="'+esc(g.rsvpId)+'"><option value="">Unassigned</option>'+tables.map(t=>'<option value="'+esc(t.id)+'" '+(g.tableId===t.id?'selected':'')+'>'+esc(t.label)+'</option>').join('')+'</select>';}
+async function assignTable(rsvpId,tableId){await fetch('/api/staff/table-assignment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),tableId})});await loadTables();await loadMembers();}
+if(location.hash==='#members')showView('members');else if(location.hash==='#tables')showView('tables');
 loadList();
 </script>
 </body>

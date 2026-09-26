@@ -3,14 +3,16 @@ import assert from "node:assert/strict";
 import {
   EVENT_KEY,
   SEAL_ALPHABET,
+  TICKET_RELEASE_AT,
   isDuplicatePlusOneEmail,
   isDuplicateSealCode,
   buildCheckInUrl,
+  buildCompanionRow,
   checkInRedirectPath,
   buildRsvpRow,
   buildRsvpUpdate,
-  referralBase,
-  referralGuestId,
+  isTicketReleased,
+  normalizePhone,
   doorScans,
   publicVenue,
   ticketForToken,
@@ -27,22 +29,89 @@ const FIXED_SEAL = () => "WSP·10·TEST";
 const PLUS_TOKEN = "987f6543e21b12d3a456426614174999";
 const ids = (...values) => () => values.shift();
 const seals = (...values) => () => values.shift();
+const CONTACT = { guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567" };
+
+test("attending RSVP requires full name, email and phone", () => {
+  assert.equal(validateRsvpPayload({ guestName: "Peter", status: "attending", guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567" }).error, "Please give your full name.");
+  assert.equal(validateRsvpPayload({ guestName: "Peter Popov", status: "attending", guestPhone: "+359 88 123 4567" }).error, "Please give a valid email.");
+  assert.equal(validateRsvpPayload({ guestName: "Peter Popov", status: "attending", guestEmail: "peter@example.com" }).error, "Please give your phone.");
+  assert.equal(validateRsvpPayload({ guestName: "Peter Popov", status: "attending", guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567" }).ok, true);
+});
+
+test("added guest email is optional but phone is required", () => {
+  const base = { guestName: "Peter Popov", guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567", status: "attending" };
+  assert.equal(validateRsvpPayload({ ...base, plusOne: { name: "Simona Ivanova", phone: "+359 88 765 4321" } }).ok, true);
+  assert.equal(validateRsvpPayload({ ...base, plusOne: { name: "Simona Ivanova", email: "bad", phone: "+359 88 765 4321" } }).error, "Please give a valid email.");
+  assert.equal(validateRsvpPayload({ ...base, plusOne: { name: "Simona Ivanova", email: "simona@example.com" } }).error, "Please give their phone.");
+});
+
+test("builds contact and reservation fields for the primary RSVP", () => {
+  const row = buildRsvpRow(
+    {
+      guestName: "Peter Popov",
+      guestEmail: " Peter@Example.COM ",
+      guestPhone: " +359   88 123 4567 ",
+      status: "attending",
+      wantsTableReservation: true,
+      plusOne: { name: "Simona Ivanova", phone: "+359 88 765 4321" },
+    },
+    ids(TOKEN, PLUS_TOKEN),
+    FIXED_NOW,
+    seals("WSP·10·TEST", "WSP·10·PLUS")
+  );
+  assert.equal(row.guest_email, "peter@example.com");
+  assert.equal(row.guest_phone, "+359 88 123 4567");
+  assert.equal(row.plus_one_email, "peter@example.com");
+  assert.equal(row.plus_one_email_is_fallback, true);
+  assert.equal(row.plus_one_phone, "+359 88 765 4321");
+  assert.equal(row.wants_table_reservation, true);
+});
+
+test("builds companion row with fallback email marker", () => {
+  const row = buildRsvpRow(
+    {
+      guestName: "Peter Popov",
+      guestEmail: "peter@example.com",
+      guestPhone: "+359 88 123 4567",
+      status: "attending",
+      plusOne: { name: "Simona Ivanova", phone: "+359 88 765 4321" },
+    },
+    ids(TOKEN, PLUS_TOKEN),
+    FIXED_NOW,
+    seals("WSP·10·TEST", "WSP·10·PLUS")
+  );
+  assert.deepEqual(buildCompanionRow(row, 42), {
+    rsvp_id: 42,
+    guest_name: "Simona Ivanova",
+    email: "peter@example.com",
+    email_is_fallback: true,
+    phone: "+359 88 765 4321",
+    ticket_token: PLUS_TOKEN,
+    seal_code: "WSP·10·PLUS",
+  });
+});
+
+test("ticket release gate opens exactly at 09.10 18:00 Sofia time", () => {
+  assert.equal(TICKET_RELEASE_AT, "2026-10-09T18:00:00+03:00");
+  assert.equal(isTicketReleased(new Date("2026-10-09T14:59:59.000Z")), false);
+  assert.equal(isTicketReleased(new Date("2026-10-09T15:00:00.000Z")), true);
+});
 
 test("RSVP requires a selected guest and valid status", () => {
   assert.equal(validateRsvpPayload({ status: "attending" }).error, "Invalid RSVP");
   assert.equal(
-    validateRsvpPayload({ guestId: "g1", guestName: "Peter Popov", status: "maybe" }).error,
+    validateRsvpPayload({ guestId: "g1", guestName: "Peter Popov", ...CONTACT, status: "maybe" }).error,
     "Invalid RSVP"
   );
   assert.equal(
-    validateRsvpPayload({ guestName: "Peter Popov", status: "attending" }).ok,
+    validateRsvpPayload({ guestName: "Peter Popov", ...CONTACT, status: "attending" }).ok,
     true
   );
-  assert.equal(validateRsvpPayload({ guestName: "Peter", status: "attending" }).ok, true);
+  assert.equal(validateRsvpPayload({ guestName: "Peter", ...CONTACT, status: "attending" }).error, "Please give your full name.");
 });
 
 test("RSVP rejects a guest id that is not a short string", () => {
-  const base = { guestName: "Peter Popov", status: "attending" };
+  const base = { guestName: "Peter Popov", ...CONTACT, status: "attending" };
   assert.equal(validateRsvpPayload({ ...base, guestId: "petarp" }).ok, true);
   assert.equal(validateRsvpPayload({ ...base, guestId: 42 }).error, "Invalid RSVP");
   assert.equal(validateRsvpPayload({ ...base, guestId: "x".repeat(121) }).error, "Invalid RSVP");
@@ -53,8 +122,9 @@ test("plus-one requires a name and valid email", () => {
     validateRsvpPayload({
       guestId: "g1",
       guestName: "Peter Popov",
+      ...CONTACT,
       status: "attending",
-      plusOne: { name: "Simona", email: "simona@example.com" },
+      plusOne: { name: "Simona Ivanova", email: "simona@example.com", phone: "+359 88 765 4321" },
     }).ok,
     true
   );
@@ -63,8 +133,9 @@ test("plus-one requires a name and valid email", () => {
     validateRsvpPayload({
       guestId: "g1",
       guestName: "Peter Popov",
+      ...CONTACT,
       status: "attending",
-      plusOne: { name: "Simona Ivanova", email: "simona" },
+      plusOne: { name: "Simona Ivanova", email: "simona", phone: "+359 88 765 4321" },
     }).error,
     "Please give a valid email."
   );
@@ -75,15 +146,15 @@ test("RSVP rejects non-string guest and plus-one fields", () => {
   assert.equal(validateRsvpPayload({ guestName: ["Peter", "Popov"], status: "attending" }).error, "Invalid RSVP");
   assert.equal(validateRsvpPayload({ guestName: "Peter Popov", status: ["attending"] }).error, "Invalid RSVP");
   assert.equal(
-    validateRsvpPayload({ guestName: "Peter Popov", status: "attending", plusOne: { name: {}, email: "a@example.com" } }).error,
+    validateRsvpPayload({ guestName: "Peter Popov", ...CONTACT, status: "attending", plusOne: { name: {}, email: "a@example.com", phone: "+359 88 765 4321" } }).error,
     "Invalid RSVP"
   );
   assert.equal(
-    validateRsvpPayload({ guestName: "Peter Popov", status: "attending", plusOne: { name: "Simona Ivanova", email: {} } }).error,
-    "Invalid RSVP"
+    validateRsvpPayload({ guestName: "Peter Popov", ...CONTACT, status: "attending", plusOne: { name: "Simona Ivanova", email: {}, phone: "+359 88 765 4321" } }).error,
+    "Please give a valid email."
   );
   assert.equal(
-    validateRsvpPayload({ guestName: "Peter Popov", status: "attending", plusOne: "Simona Ivanova" }).error,
+    validateRsvpPayload({ guestName: "Peter Popov", ...CONTACT, status: "attending", plusOne: "Simona Ivanova" }).error,
     "Invalid RSVP"
   );
 });
@@ -91,22 +162,22 @@ test("RSVP rejects non-string guest and plus-one fields", () => {
 test("RSVP caps name and email lengths", () => {
   const longName = `Peter ${"a".repeat(115)}`;
   assert.equal(longName.length, 121);
-  assert.equal(validateRsvpPayload({ guestName: longName, status: "attending" }).error, "Please give a shorter name.");
-  assert.equal(validateRsvpPayload({ guestName: longName.slice(0, 120), status: "attending" }).ok, true);
+  assert.equal(validateRsvpPayload({ guestName: longName, ...CONTACT, status: "attending" }).error, "Please give a shorter name.");
+  assert.equal(validateRsvpPayload({ guestName: longName.slice(0, 120), ...CONTACT, status: "attending" }).ok, true);
 
   assert.equal(
-    validateRsvpPayload({ guestName: "Peter Popov", status: "attending", plusOne: { name: longName, email: "a@example.com" } }).error,
+    validateRsvpPayload({ guestName: "Peter Popov", ...CONTACT, status: "attending", plusOne: { name: longName, email: "a@example.com", phone: "+359 88 765 4321" } }).error,
     "Please give a shorter name."
   );
 
   const longEmail = `${"a".repeat(243)}@example.com`;
   assert.equal(longEmail.length, 255);
   assert.equal(
-    validateRsvpPayload({ guestName: "Peter Popov", status: "attending", plusOne: { name: "Simona Ivanova", email: longEmail } }).error,
+    validateRsvpPayload({ guestName: "Peter Popov", ...CONTACT, status: "attending", plusOne: { name: "Simona Ivanova", email: longEmail, phone: "+359 88 765 4321" } }).error,
     "Please give a valid email."
   );
   assert.equal(
-    validateRsvpPayload({ guestName: "Peter Popov", status: "attending", plusOne: { name: "Simona Ivanova", email: longEmail.slice(1) } }).ok,
+    validateRsvpPayload({ guestName: "Peter Popov", ...CONTACT, status: "attending", plusOne: { name: "Simona Ivanova", email: longEmail.slice(1), phone: "+359 88 765 4321" } }).ok,
     true
   );
 });
@@ -130,8 +201,9 @@ test("builds normalized RSVP row for Supabase", () => {
   const row = buildRsvpRow(
     {
       guestName: "Peter Popov",
+      ...CONTACT,
       status: "attending",
-      plusOne: { name: " Simona Ivanova ", email: "  Simona@Example.COM " },
+      plusOne: { name: " Simona Ivanova ", email: "  Simona@Example.COM ", phone: "+359 88 765 4321" },
     },
     ids(TOKEN, PLUS_TOKEN),
     FIXED_NOW,
@@ -142,9 +214,14 @@ test("builds normalized RSVP row for Supabase", () => {
     event_key: "whispers-2026-10-10",
     guest_id: TOKEN,
     guest_name: "Peter Popov",
+    guest_email: "peter@example.com",
+    guest_phone: "+359 88 123 4567",
     status: "attending",
     plus_one_name: "Simona Ivanova",
     plus_one_email: "simona@example.com",
+    plus_one_email_is_fallback: false,
+    plus_one_phone: "+359 88 765 4321",
+    wants_table_reservation: false,
     seal_code: "WSP·10·TEST",
     ticket_token: TOKEN,
     plus_one_ticket_token: PLUS_TOKEN,
@@ -161,6 +238,7 @@ test("RSVP row ignores client-supplied token, event and timestamp", () => {
       ticketToken: "attacker-chosen-token",
       submittedAt: "1999-01-01T00:00:00.000Z",
       guestName: "Peter Popov",
+      ...CONTACT,
       status: "attending",
     },
     () => TOKEN,
@@ -175,19 +253,19 @@ test("RSVP row ignores client-supplied token, event and timestamp", () => {
 });
 
 test("RSVP row falls back to the ticket token when there is no invitation guest id", () => {
-  const row = buildRsvpRow({ guestName: "Peter Popov", status: "attending" }, () => TOKEN, FIXED_NOW);
+  const row = buildRsvpRow({ guestName: "Peter Popov", ...CONTACT, status: "attending" }, () => TOKEN, FIXED_NOW);
   assert.equal(row.guest_id, TOKEN);
 });
 
 test("RSVP row ignores a client-supplied seal code and uses the generated one", () => {
-  const body = { guestName: "Peter Popov", status: "attending", sealCode: "WSP·10·FAKE" };
+  const body = { guestName: "Peter Popov", ...CONTACT, status: "attending", sealCode: "WSP·10·FAKE" };
   assert.equal(validateRsvpPayload(body).ok, true);
   const row = buildRsvpRow(body, () => TOKEN, FIXED_NOW, FIXED_SEAL);
   assert.equal(row.seal_code, "WSP·10·TEST");
 });
 
 test("RSVP row generates a fresh seal code by default", () => {
-  const row = buildRsvpRow({ guestName: "Peter Popov", status: "attending" }, () => TOKEN, FIXED_NOW);
+  const row = buildRsvpRow({ guestName: "Peter Popov", ...CONTACT, status: "attending" }, () => TOKEN, FIXED_NOW);
   assert.match(row.seal_code, /^WSP·10·[ACDEFGHJKMNPQRTUVWXYZ234679]{4}$/);
 });
 
@@ -221,6 +299,7 @@ test("builds an RSVP row for a free-form guest name", () => {
   const row = buildRsvpRow(
     {
       guestName: "  Peter Popov  ",
+      ...CONTACT,
       status: "attending",
     },
     () => "ticket-token-1"
@@ -313,9 +392,14 @@ test("repeat RSVP update keeps the existing ticket and seal code", () => {
 
   assert.deepEqual(patch, {
     guest_name: "Michelle Georgieva",
+    guest_email: "",
+    guest_phone: "",
     status: "attending",
     plus_one_name: "Simona Ivanova",
     plus_one_email: "simona@example.com",
+    plus_one_phone: "",
+    plus_one_email_is_fallback: false,
+    wants_table_reservation: false,
     seal_code: "WSP·10·KEEP",
     plus_one_ticket_token: PLUS_TOKEN,
     plus_one_seal_code: "WSP·10·PKEP",
@@ -432,26 +516,9 @@ test("declining clears the plus-one and their ticket", () => {
   assert.equal(patch.plus_one_checked_in_at, null);
 });
 
-test("a referral link is the inviter's id followed by 'referral'", () => {
-  assert.equal(referralBase("michellegreferral"), "michelleg");
-  assert.equal(referralBase("wsp-7k3mreferral"), "wsp-7k3m");
-  assert.equal(referralBase("MichelleGReferral"), "MichelleG");
-  assert.equal(referralBase("michelleg"), null);
-  assert.equal(referralBase("referral"), null);
-  assert.equal(referralBase("michellegrefferal"), null);
-  assert.equal(referralBase("bad id!referral"), null);
-  assert.equal(referralBase(42), null);
-});
-
-test("each person on a referral link is keyed by their typed name", () => {
-  assert.equal(referralGuestId("michelleg", "  Maria   Nikolova "), "michelleg/referral/maria nikolova");
-  assert.equal(referralGuestId("michelleg", "МАРИЯ Николова"), "michelleg/referral/мария николова");
-  assert.notEqual(referralGuestId("michelleg", "Maria Nikolova"), referralGuestId("petarp", "Maria Nikolova"));
-});
-
-test("an RSVP may carry a referral token, and only a string one", () => {
-  const base = { guestName: "Maria Nikolova", status: "attending" };
-  assert.equal(validateRsvpPayload({ ...base, referral: "michellegreferral" }).ok, true);
+test("an RSVP may not carry a referral token for now", () => {
+  const base = { guestName: "Maria Nikolova", ...CONTACT, status: "attending" };
+  assert.equal(validateRsvpPayload({ ...base, referral: "michellegreferral" }).error, "Invalid RSVP");
   assert.equal(validateRsvpPayload({ ...base, referral: 5 }).error, "Invalid RSVP");
   assert.equal(validateRsvpPayload({ ...base, referral: "x".repeat(200) }).error, "Invalid RSVP");
 });
@@ -476,6 +543,8 @@ test("the guest's token opens the guest's ticket", () => {
     checked_in_at: "2026-10-10T20:00:00.000Z",
     bringing: "Simona Ivanova",
     brought_by: null,
+    table_label: null,
+    locked: false,
   });
 });
 
@@ -487,6 +556,8 @@ test("the plus-one's token opens their own ticket", () => {
     checked_in_at: null,
     bringing: null,
     brought_by: "Michelle Georgieva",
+    table_label: null,
+    locked: false,
   });
 });
 

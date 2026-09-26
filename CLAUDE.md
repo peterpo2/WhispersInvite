@@ -22,8 +22,8 @@ other branches get previews at `https://<branch>.whispers-invite.pages.dev` (no 
   them and sets `body[data-scene]` for the background.
 - `assets/`: seal, mark and rose PNGs; `ticket-card.js` draws/saves ticket images.
 - `functions/api/`: `rsvp`, `ticket`, `door`, `checkin` (old links → ticket), `guest-check`.
-- Links: `/hi/<id>` personal (name on the seal), `/hi/<id>referral` referral (guest types a name;
-  stored as `guest_id = <id>/referral/<name>`), plain `/` asks for a name.
+- Links: `/hi/<id>` personal (name on the seal); plain `/` asks for a name. Referral links are
+  out of scope for now.
 - `functions/ticket/[token].js`, `functions/hi/[token].js`, `functions/staff/rose-door-10.js`.
 - `functions/_middleware.js`: path allowlist (`_shared/access.js`) + headers (`_shared/security.js`).
 - `functions/_shared/rsvp.js`: pure, tested RSVP / ticket / door / venue logic.

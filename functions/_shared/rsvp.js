@@ -2,11 +2,11 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
 const TOKEN_RE = /^[A-Za-z0-9]{32,40}$/;
 const MAX_NAME = 120;
 const MAX_EMAIL = 254;
-const REFERRAL_SUFFIX = "referral";
-const REFERRAL_RE = /^([A-Za-z0-9_-]+)referral$/i;
+const MAX_PHONE = 40;
 const REDIRECT_TOKEN_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
 export const EVENT_KEY = "whispers-2026-10-10";
+export const TICKET_RELEASE_AT = "2026-10-09T18:00:00+03:00";
 // The brief's unambiguous alphabet: no 0/O, 1/I/L, 5/S, 8/B.
 export const SEAL_ALPHABET = "ACDEFGHJKMNPQRTUVWXYZ234679";
 const SEAL_PREFIX = "WSP·10·";
@@ -14,6 +14,32 @@ const SEAL_LENGTH = 4;
 
 export function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+export function normalizePhone(value) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+export function nameKey(value) {
+  return String(value || "").normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function hasFullName(value) {
+  return String(value || "").trim().split(/\s+/).filter(Boolean).length >= 2;
+}
+
+function validEmail(value) {
+  const email = normalizeEmail(value);
+  return email.length > 0 && email.length <= MAX_EMAIL && EMAIL_RE.test(email);
+}
+
+function validPhone(value) {
+  const phone = normalizePhone(value);
+  return phone.length > 0 && phone.length <= MAX_PHONE;
+}
+
+export function isTicketReleased(now = new Date()) {
+  return now >= new Date(TICKET_RELEASE_AT);
 }
 
 export function validateRsvpPayload(body) {
@@ -29,7 +55,7 @@ export function validateRsvpPayload(body) {
     return { error: "Invalid RSVP" };
   }
 
-  if (body.referral != null && (typeof body.referral !== "string" || body.referral.length > MAX_NAME + REFERRAL_SUFFIX.length)) {
+  if (body.referral != null) {
     return { error: "Invalid RSVP" };
   }
 
@@ -44,21 +70,43 @@ export function validateRsvpPayload(body) {
     return { error: "Please give a shorter name." };
   }
 
-  const plusOne = status === "attending" ? body.plusOne || null : null;
+  if (!hasFullName(guestName)) {
+    return { error: "Please give your full name." };
+  }
+
+  if (body.wantsTableReservation != null && typeof body.wantsTableReservation !== "boolean") {
+    return { error: "Invalid RSVP" };
+  }
+
+  const attending = status === "attending";
+  if (attending) {
+    if (!validEmail(body.guestEmail)) {
+      return { error: "Please give a valid email." };
+    }
+    if (!validPhone(body.guestPhone)) {
+      return { error: "Please give your phone." };
+    }
+  }
+
+  const plusOne = attending ? body.plusOne || null : null;
   if (plusOne) {
-    if (typeof plusOne !== "object" || typeof plusOne.name !== "string" || typeof plusOne.email !== "string") {
+    if (typeof plusOne !== "object" || typeof plusOne.name !== "string") {
       return { error: "Invalid RSVP" };
     }
 
     const name = plusOne.name.trim();
-    const email = normalizeEmail(plusOne.email);
-
     if (name.length > MAX_NAME) {
       return { error: "Please give a shorter name." };
     }
+    if (!hasFullName(name)) {
+      return { error: "Please give their full name." };
+    }
 
-    if (email.length > MAX_EMAIL || !EMAIL_RE.test(email)) {
+    if (plusOne.email != null && normalizeEmail(plusOne.email) && !validEmail(plusOne.email)) {
       return { error: "Please give a valid email." };
+    }
+    if (!validPhone(plusOne.phone)) {
+      return { error: "Please give their phone." };
     }
   }
 
@@ -67,17 +115,25 @@ export function validateRsvpPayload(body) {
 
 export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Date(), makeSeal = makeSealCode) {
   const status = String(body.status).trim();
-  const plusOne = status === "attending" ? body.plusOne || null : null;
+  const attending = status === "attending";
+  const plusOne = attending ? body.plusOne || null : null;
   const ticketToken = makeId();
-  const sealCode = status === "attending" ? makeSeal() : null;
+  const sealCode = attending ? makeSeal() : null;
+  const guestEmail = attending ? normalizeEmail(body.guestEmail) : null;
+  const plusOneEmail = plusOne && normalizeEmail(plusOne.email) ? normalizeEmail(plusOne.email) : (plusOne ? guestEmail : null);
 
   return {
     event_key: EVENT_KEY,
     guest_id: body.guestId ? String(body.guestId).trim() : ticketToken,
-    guest_name: String(body.guestName).trim(),
+    guest_name: String(body.guestName).trim().replace(/\s+/g, " "),
+    guest_email: guestEmail,
+    guest_phone: attending ? normalizePhone(body.guestPhone) : null,
     status,
-    plus_one_name: plusOne ? String(plusOne.name || "").trim() : null,
-    plus_one_email: plusOne ? normalizeEmail(plusOne.email) : null,
+    plus_one_name: plusOne ? String(plusOne.name || "").trim().replace(/\s+/g, " ") : null,
+    plus_one_email: plusOneEmail,
+    plus_one_email_is_fallback: Boolean(plusOne && !normalizeEmail(plusOne.email)),
+    plus_one_phone: plusOne ? normalizePhone(plusOne.phone) : null,
+    wants_table_reservation: attending ? body.wantsTableReservation === true : false,
     seal_code: sealCode,
     ticket_token: ticketToken,
     plus_one_ticket_token: plusOne ? makeId() : null,
@@ -86,29 +142,37 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
   };
 }
 
-// Names compare without case, extra spaces or Unicode look-alikes.
-export function nameKey(value) {
-  return String(value || "").normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+export function buildCompanionRow(row, rsvpId) {
+  if (!row || !row.plus_one_name || !row.plus_one_ticket_token) return null;
+  return {
+    rsvp_id: rsvpId,
+    guest_name: row.plus_one_name,
+    email: row.plus_one_email,
+    email_is_fallback: row.plus_one_email_is_fallback === true,
+    phone: row.plus_one_phone,
+    ticket_token: row.plus_one_ticket_token,
+    seal_code: row.plus_one_seal_code,
+  };
 }
 
-// The PATCH for a repeat RSVP from the same invitation. The guest always keeps their ticket.
-// - No plus-one given this time (and still attending): the existing plus-one stays as is.
-// - The same plus-one (same name and email): they keep their ticket.
-// - A different plus-one: a new ticket; the old one stops working.
-// - Declining: the plus-one and their ticket are cleared.
 export function buildRsvpUpdate(row, existing) {
-  const keepPlusOne = row.status === "attending" && !row.plus_one_email && Boolean(existing.plus_one_ticket_token);
+  const keepPlusOne = row.status === "attending" && !row.plus_one_name && Boolean(existing.plus_one_ticket_token);
   const samePlusOne = Boolean(
-    row.plus_one_email &&
+    row.plus_one_name &&
     existing.plus_one_ticket_token &&
     normalizeEmail(existing.plus_one_email) === row.plus_one_email &&
     nameKey(existing.plus_one_name) === nameKey(row.plus_one_name)
   );
   const patch = {
     guest_name: row.guest_name,
+    guest_email: row.guest_email,
+    guest_phone: row.guest_phone,
     status: row.status,
     plus_one_name: keepPlusOne ? existing.plus_one_name : row.plus_one_name,
     plus_one_email: keepPlusOne ? existing.plus_one_email : row.plus_one_email,
+    plus_one_phone: keepPlusOne ? existing.plus_one_phone : row.plus_one_phone,
+    plus_one_email_is_fallback: keepPlusOne ? existing.plus_one_email_is_fallback === true : row.plus_one_email_is_fallback === true,
+    wants_table_reservation: row.wants_table_reservation,
     seal_code: existing.seal_code || row.seal_code,
     plus_one_ticket_token: keepPlusOne || samePlusOne ? existing.plus_one_ticket_token : row.plus_one_ticket_token,
     plus_one_seal_code: keepPlusOne || samePlusOne ? existing.plus_one_seal_code || row.plus_one_seal_code : row.plus_one_seal_code,
@@ -118,50 +182,57 @@ export function buildRsvpUpdate(row, existing) {
   return patch;
 }
 
-// "michellegreferral" → "michelleg": the inviter's guest_list id, or null.
-export function referralBase(token) {
-  if (typeof token !== "string") return null;
-  const match = REFERRAL_RE.exec(token.trim());
-  return match ? match[1] : null;
-}
-
-// Everyone who joins through a referral link gets their own RSVP, keyed by the typed name,
-// so the same name on the same link finds the same ticket again.
-export function referralGuestId(baseId, name) {
-  return `${baseId}/referral/${nameKey(name)}`;
-}
-
-// One RSVP row holds up to two tickets. Return the one this token opens, for its holder.
-export function ticketForToken(row, token) {
+export function ticketForToken(row, token, options = {}) {
   if (!row || row.status !== "attending" || !token) return null;
+  const released = options.released ?? true;
+  const tableLabel = row.table_label || null;
   if (row.ticket_token === token) {
     return {
       holder: "guest",
       guest_name: row.guest_name,
-      seal_code: row.seal_code,
+      seal_code: released ? row.seal_code : null,
       checked_in_at: row.checked_in_at || null,
       bringing: row.plus_one_name || null,
       brought_by: null,
+      table_label: released ? tableLabel : null,
+      locked: !released,
     };
   }
   if (row.plus_one_ticket_token === token) {
     return {
       holder: "plus_one",
       guest_name: row.plus_one_name,
-      seal_code: row.plus_one_seal_code,
+      seal_code: released ? row.plus_one_seal_code : null,
       checked_in_at: row.plus_one_checked_in_at || null,
       bringing: null,
       brought_by: row.guest_name,
+      table_label: released ? tableLabel : null,
+      locked: !released,
     };
   }
   return null;
+}
+
+export function companionTicketForToken(row, primary, token, options = {}) {
+  if (!row || !primary || primary.status !== "attending" || row.ticket_token !== token) return null;
+  const released = options.released ?? true;
+  return {
+    holder: "companion",
+    guest_name: row.guest_name,
+    seal_code: released ? row.seal_code : null,
+    checked_in_at: row.checked_in_at || null,
+    bringing: null,
+    brought_by: primary.guest_name,
+    table_label: released ? primary.table_label || null : null,
+    locked: !released,
+  };
 }
 
 export function doorScans(rows, limit = 80) {
   const scans = [];
   for (const row of rows || []) {
     if (row.checked_in_at) {
-      scans.push({ guest_name: row.guest_name, seal_code: row.seal_code, checked_in_at: row.checked_in_at, brought_by: null });
+      scans.push({ guest_name: row.guest_name, seal_code: row.seal_code, checked_in_at: row.checked_in_at, brought_by: row.brought_by || null });
     }
     if (row.plus_one_checked_in_at) {
       scans.push({ guest_name: row.plus_one_name, seal_code: row.plus_one_seal_code, checked_in_at: row.plus_one_checked_in_at, brought_by: row.guest_name });
@@ -170,7 +241,6 @@ export function doorScans(rows, limit = 80) {
   return scans.sort((a, b) => b.checked_in_at.localeCompare(a.checked_in_at)).slice(0, limit);
 }
 
-// The address is secret until it is set in event_details and its reveal time has passed.
 export function publicVenue(details, now = new Date()) {
   if (!details || (!details.venue_name && !details.venue_address)) return null;
   if (details.reveal_at && now < new Date(details.reveal_at)) return null;
