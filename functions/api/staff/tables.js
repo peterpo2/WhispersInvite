@@ -16,26 +16,32 @@ export async function onRequestGet({ env }) {
 
   const companions = await supabaseFetch(
     env,
-    "/rest/v1/rsvp_companions?select=rsvp_id,id,rsvps!inner(event_key,status)&order=created_at.asc"
+    "/rest/v1/rsvp_companions?select=rsvp_id,id,guest_name,rsvps!inner(event_key,status)&order=created_at.asc"
   );
   if (companions.error) return companions.error;
   if (!companions.response.ok) return json({ error: "Could not load tables" }, 502);
 
-  const companionCounts = new Map();
+  const companionsByRsvp = new Map();
   for (const row of await companions.response.json()) {
     const parent = Array.isArray(row.rsvps) ? row.rsvps[0] : row.rsvps;
     if (parent?.event_key !== EVENT_KEY || parent?.status !== "attending") continue;
-    companionCounts.set(row.rsvp_id, (companionCounts.get(row.rsvp_id) || 0) + 1);
+    const people = companionsByRsvp.get(row.rsvp_id) || [];
+    people.push(row.guest_name);
+    companionsByRsvp.set(row.rsvp_id, people);
   }
 
   const groups = (await rsvps.response.json()).map((row) => {
     const assignment = Array.isArray(row.staff_table_assignments) ? row.staff_table_assignments[0] : row.staff_table_assignments;
-    const legacyPlusOne = row.plus_one_name ? 1 : 0;
-    const companionCount = Math.max(companionCounts.get(row.id) || 0, legacyPlusOne);
+    const people = [row.guest_name];
+    if (row.plus_one_name) people.push(row.plus_one_name);
+    for (const name of companionsByRsvp.get(row.id) || []) {
+      if (name && !people.includes(name)) people.push(name);
+    }
     return {
       rsvpId: row.id,
       name: row.guest_name,
-      size: 1 + companionCount,
+      size: people.length,
+      people,
       tableId: assignment?.table_id || null,
     };
   });

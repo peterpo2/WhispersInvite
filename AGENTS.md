@@ -291,6 +291,10 @@ first, so the result is "already checked in".
 
 ## Design rules (from the brief)
 
+- Frontend/design source of truth: `docs/whispers-frontend-style-guide-2026-09-26.md`.
+  Read it before adding or changing public screens, ticket UI, staff/admin UI, copy, motion,
+  assets or frontend CSS. New frontend work must preserve the existing restrained, cinematic,
+  dark, iPhone-first WHISPERS visual system.
 - Colour tokens (CSS vars):
 
   | Var | Token | Value |
