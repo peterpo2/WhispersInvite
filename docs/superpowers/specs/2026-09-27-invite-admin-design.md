@@ -11,6 +11,8 @@ Add an `Invite` section to `/staff/rose-door-10` where staff can create and mana
   - confirmation link: `/hi/<invite-token>`
   - ticket link: `/ticket/<ticket-token>`
 - Invite tokens and ticket tokens are long random alphanumeric values. Human-readable ids such as `michelleg` remain supported for older/demo rows, but newly created invites must not use predictable ids.
+- Staff can create an invite with only the guest's full name. Email and phone are optional
+  prefill fields; if missing, the guest enters them during RSVP.
 - The Invite page creates primary guests only. A `+1` ticket is generated later, when the primary guest completes RSVP and adds the person.
 - Admin security is not enabled yet. The page stays behind the current obscure staff URL until domain/email/admin auth are ready.
 
@@ -35,7 +37,7 @@ Add a fourth tab: `Invite`.
 The page includes:
 
 - search across name, email, phone, RSVP status and both links
-- create form with full name, email and phone
+- create form with required full name and optional email/phone
 - generated confirmation link
 - generated ticket link
 - RSVP status summary from `rsvps`
@@ -47,7 +49,8 @@ The page includes:
 Add `/api/staff/invites`:
 
 - `GET` returns invite rows from `guest_list` plus RSVP status joined by `guest_id`.
-- `POST` validates `name`, `email` and `phone`, generates `id` and `ticket_token`, inserts the invite and returns the created row with absolute links.
+- `POST` validates required `name` and optional `email`/`phone`, generates `id` and
+  `ticket_token`, inserts the invite and returns the created row with absolute links.
 
 The middleware allowlist must include `/api/staff/invites`.
 

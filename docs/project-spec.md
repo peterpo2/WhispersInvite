@@ -121,6 +121,9 @@ New admin-created invites use random alphanumeric `id` values for confirmation l
 `ticket_token` values for future ticket links. A ticket token in `guest_list` does not check a
 guest in and does not show a QR until a matching attending RSVP exists.
 
+Admin-created invites require only a full name. Email and phone may be prefilled by staff, but
+they are optional; when missing, the guest enters them during the personal RSVP flow.
+
 The Invite admin view lists every invited primary guest. Members lists only RSVP rows. Invite
 statuses are shown as `Not responded`, `Attending` or `Declined`.
 If an invite has an email, the Invite view shows `Send` until the first send is recorded, then

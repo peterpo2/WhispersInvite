@@ -23,6 +23,8 @@ test("staff admin includes an invite registry tab", () => {
   assert.match(staffPage, /function sendInviteCell\(i\)/);
   assert.match(staffPage, /\/api\/staff\/invite-send/);
   assert.match(staffPage, /Send again/);
+  assert.match(staffPage, /placeholder="Email optional"/);
+  assert.match(staffPage, /placeholder="Phone optional"/);
   assert.match(staffPage, /function inviteStatusLabel\(status\)/);
   assert.match(staffPage, /Not responded/);
   assert.match(staffPage, /function filteredInvites\(\)/);

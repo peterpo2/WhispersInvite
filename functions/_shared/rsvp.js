@@ -153,15 +153,17 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
 
 export function validateInvitePayload(body) {
   if (!body || typeof body !== "object") return { error: "Invalid invite" };
-  if (typeof body.name !== "string" || typeof body.email !== "string" || typeof body.phone !== "string") {
+  if (typeof body.name !== "string") {
     return { error: "Invalid invite" };
   }
+  if (body.email != null && typeof body.email !== "string") return { error: "Invalid invite" };
+  if (body.phone != null && typeof body.phone !== "string") return { error: "Invalid invite" };
 
   const name = body.name.trim();
   if (name.length > MAX_NAME) return { error: "Please give a shorter name." };
   if (!hasFullName(name)) return { error: "Please give their full name." };
-  if (!validEmail(body.email)) return { error: "Please give a valid email." };
-  if (!validPhone(body.phone)) return { error: "Please give their phone." };
+  if (normalizeEmail(body.email) && !validEmail(body.email)) return { error: "Please give a valid email." };
+  if (normalizePhone(body.phone) && !validPhone(body.phone)) return { error: "Please give a valid phone." };
   return { ok: true };
 }
 
@@ -170,8 +172,8 @@ export function buildInviteRow(body, makeId = makeTicketToken, now = () => new D
   return {
     id: makeId(),
     name: String(body.name).trim().replace(/\s+/g, " "),
-    email: normalizeEmail(body.email),
-    phone: normalizePhone(body.phone),
+    email: normalizeEmail(body.email) || null,
+    phone: normalizePhone(body.phone) || null,
     ticket_token: makeId(),
     created_at: created,
     updated_at: created,

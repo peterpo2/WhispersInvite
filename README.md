@@ -32,7 +32,9 @@ The middleware allowlist blocks repository files, docs, SQL files, tests and unk
 
 1. Guest opens `/hi/<id>` or `/`.
 2. The page plays seal -> film -> letter.
-3. A plain link asks for the guest's full name. A personal link uses `guest_list`.
+3. A plain link asks for the guest's full name, email and phone. A personal link uses
+   `guest_list`; if staff entered only a name, the guest confirms their own email and phone
+   during RSVP.
 4. The guest accepts or declines.
 5. If accepting, they may add one plus-one with full name and email.
 6. They may request a table reservation for themselves or their two-person group.
@@ -51,8 +53,9 @@ event, a primary RSVP can have maximum one added guest.
 
 ## Invite Admin
 
-The staff page has an **Invite** tab. Staff can create a primary guest invite with full name,
-email and phone. The system generates:
+The staff page has an **Invite** tab. Staff can create a primary guest invite with only a full
+name. Email and phone are optional admin prefill fields; if they are missing, the guest fills them
+in from their personal confirmation link. The system generates:
 
 - confirmation link: `/hi/<random-token>`
 - ticket link: `/ticket/<random-ticket-token>`

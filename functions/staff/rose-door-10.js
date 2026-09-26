@@ -71,7 +71,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 </div>
 <div class="view" id="view-invite">
 <section class="panel">
-<form class="invite-form" id="inviteForm"><input id="inviteName" maxlength="120" placeholder="Full name" autocomplete="name"/><input id="inviteEmail" maxlength="254" placeholder="Email" autocomplete="email" inputmode="email"/><input id="invitePhone" maxlength="40" placeholder="Phone" autocomplete="tel" inputmode="tel"/><button class="primary" type="submit">Create Invite</button></form>
+<form class="invite-form" id="inviteForm"><input id="inviteName" maxlength="120" placeholder="Full name" autocomplete="name"/><input id="inviteEmail" maxlength="254" placeholder="Email optional" autocomplete="email" inputmode="email"/><input id="invitePhone" maxlength="40" placeholder="Phone optional" autocomplete="tel" inputmode="tel"/><button class="primary" type="submit">Create Invite</button></form>
 <p class="invite-state" id="inviteState" aria-live="polite"></p>
 <div class="toolbar"><input id="inviteSearch" placeholder="Search invites" autocomplete="off"/><button id="reloadInvites">Reload</button></div>
 <div class="grid"><table id="invitesTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Send</th><th>Confirmation</th><th>Ticket</th><th>Created</th></tr></thead><tbody></tbody></table></div>

@@ -76,10 +76,11 @@ test("builds contact and reservation fields for the primary RSVP", () => {
   assert.equal(row.wants_table_reservation, true);
 });
 
-test("invite payload requires a full name, email and phone", () => {
+test("invite payload requires only a full name, with optional valid contact details", () => {
   assert.equal(validateInvitePayload({ name: "Peter", email: "peter@example.com", phone: "+359 88 123 4567" }).error, "Please give their full name.");
   assert.equal(validateInvitePayload({ name: "Peter Popov", email: "bad", phone: "+359 88 123 4567" }).error, "Please give a valid email.");
-  assert.equal(validateInvitePayload({ name: "Peter Popov", email: "peter@example.com", phone: "" }).error, "Please give their phone.");
+  assert.equal(validateInvitePayload({ name: "Peter Popov", email: "peter@example.com", phone: "" }).ok, true);
+  assert.equal(validateInvitePayload({ name: "Peter Popov" }).ok, true);
   assert.equal(validateInvitePayload({ name: "Петър Попов", email: "peter@example.com", phone: "+359 88 123 4567" }).ok, true);
 });
 
@@ -98,6 +99,18 @@ test("builds an invite row with separate confirmation and ticket tokens", () => 
     created_at: "2026-09-24T21:00:00.000Z",
     updated_at: "2026-09-24T21:00:00.000Z",
   });
+});
+
+test("builds a name-only invite row without contact details", () => {
+  const row = buildInviteRow(
+    { name: "  Ivan   Ivanov " },
+    ids("invite11111111111111111111111111", TOKEN),
+    FIXED_NOW
+  );
+  assert.equal(row.name, "Ivan Ivanov");
+  assert.equal(row.email, null);
+  assert.equal(row.phone, null);
+  assert.equal(row.ticket_token, TOKEN);
 });
 
 test("a personal invite can provide the primary RSVP ticket token", () => {
