@@ -40,12 +40,13 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 .view{display:none}.view.active{display:block}.toolbar{display:flex;gap:8px;align-items:center;margin:0 0 12px}.toolbar input{width:100%;text-transform:none;letter-spacing:0;font:400 16px var(--sans);cursor:text}.toolbar button{flex:0 0 142px;white-space:nowrap;letter-spacing:.16em}.grid{overflow:auto;border:1px solid var(--line);border-radius:3px;background:rgba(8,6,5,.2)}table{width:100%;border-collapse:collapse;min-width:1160px}th,td{text-align:left;border:1px solid rgba(217,174,120,.18);padding:11px 9px;font-size:13px;vertical-align:middle}th{position:sticky;top:0;background:#0D0A08;color:var(--gold);font-weight:400;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;z-index:1}td{color:#E7DED4;background:rgba(8,6,5,.18)}tbody tr:hover td{background:rgba(217,174,120,.06)}td input[type=checkbox]{min-height:0;width:20px;height:20px}.pill{display:inline-block;border:1px solid rgba(217,174,120,.35);padding:4px 7px;border-radius:999px;color:var(--gold-hi);font-size:12px;white-space:nowrap}.tables-layout{display:grid;gap:14px}.table-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.table-chip{min-height:72px;text-align:left;letter-spacing:.08em;text-transform:none;padding:10px 12px}.table-chip b{display:block;font:300 23px var(--serif);color:#F6EFE4}.table-chip small{display:block;margin-top:4px;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}.table-chip.active{color:#1C130A;border-color:#E6C48C;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%)}.table-chip.active b,.table-chip.active small{color:#1C130A}.table-detail{border:1px solid var(--line);border-radius:3px;background:rgba(8,6,5,.28);padding:14px}.table-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(217,174,120,.16);padding-bottom:12px;margin-bottom:10px}.table-detail h2{font:300 34px/1.05 var(--serif);margin:0}.capacity{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);white-space:nowrap}.table-groups{display:grid;gap:8px}.group{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid rgba(217,174,120,.16);border-radius:3px;padding:10px;background:rgba(0,0,0,.16)}.group-main{font-family:var(--serif);font-size:22px;color:#F6EFE4;overflow-wrap:anywhere}.people{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.person{border:1px solid rgba(217,174,120,.28);border-radius:999px;padding:3px 7px;color:var(--muted);font-size:12px}.group-actions{display:flex;gap:8px;align-items:center}.group-actions button{min-height:42px;padding:0 10px;letter-spacing:.12em}.group select{min-height:42px;background:#090706;color:var(--bone);border:1px solid rgba(217,174,120,.5);border-radius:3px}.table-add{margin-top:16px;border-top:1px solid rgba(217,174,120,.16);padding-top:14px}.table-add h3{margin:0 0 10px;font:300 24px var(--serif)}.available-list{display:grid;gap:8px}.available-list .group{grid-template-columns:1fr auto}.empty-state{border:1px dashed rgba(217,174,120,.28);border-radius:3px;padding:14px;color:var(--muted);font-style:italic}@media(min-width:760px){.tables-layout{grid-template-columns:300px 1fr;align-items:start}.table-list{grid-template-columns:1fr}.table-detail{position:sticky;top:12px}}@media(max-width:759px){.table-detail{order:-1}}@media(max-width:460px){.table-list{grid-template-columns:1fr}.table-detail-head{display:block}.capacity{display:block;margin-top:8px}.group,.available-list .group{grid-template-columns:1fr}.group-actions{justify-content:flex-start;flex-wrap:wrap}.toolbar{display:grid}.toolbar button{width:100%;flex:auto}}
 .group-actions{flex-wrap:wrap}.mini-check{min-height:42px;display:flex;align-items:center;gap:7px;border:1px solid rgba(217,174,120,.35);border-radius:3px;padding:0 10px;color:var(--bone);font-size:12px;letter-spacing:.1em;text-transform:uppercase}.mini-check input{min-height:0;width:18px;height:18px;padding:0}
 .table-add-head{display:grid;grid-template-columns:1fr minmax(220px,340px);gap:10px;align-items:center;margin-bottom:10px}.table-add-head h3{margin:0}.table-search{width:100%;min-height:44px;text-transform:none;letter-spacing:0;font:400 15px var(--sans);cursor:text}@media(max-width:460px){.table-add-head{display:block}.table-search{margin-top:10px}}
+.invite-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:12px}.invite-form input{text-transform:none;letter-spacing:0;font:400 15px var(--sans);cursor:text;min-width:0}.invite-form button{white-space:nowrap}.link-cell{max-width:260px;overflow-wrap:anywhere;color:#D8CEC2}.copy-btn{min-height:38px;padding:0 9px;letter-spacing:.1em;font-size:11px}.invite-state{min-height:20px;color:var(--muted);font-size:13px;margin:0 0 10px}.invite-state.err{color:#E8808A}@media(max-width:900px){.invite-form{grid-template-columns:1fr}.link-cell{max-width:unset}}
 </style>
 </head>
 <body>
 <main>
 <div class="top"><div class="brand"><img src="/assets/whispers-mark.png" alt=""/><div><div class="k">WHISPERS</div><h1>Door</h1></div></div><button id="refresh">Refresh</button></div>
-<nav class="tabs" aria-label="Staff sections"><button class="tab active" data-view="scanner">Scanner</button><button class="tab" data-view="members">Members</button><button class="tab" data-view="tables">Tables</button></nav>
+<nav class="tabs" aria-label="Staff sections"><button class="tab active" data-view="scanner">Scanner</button><button class="tab" data-view="members">Members</button><button class="tab" data-view="tables">Tables</button><button class="tab" data-view="invite">Invite</button></nav>
 <div class="view active" id="view-scanner">
 <section class="panel camera"><video id="video" playsinline muted></video><div class="scanline"></div></section>
 <section class="panel">
@@ -61,6 +62,14 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 </div>
 <div class="view" id="view-tables">
 <section class="panel"><p class="small">All attending groups can be assigned to tables. Reservation requests are marked. Default model: five 6-seat tables and five 4-seat tables until the venue gives final data.</p><div class="tables-layout" id="tablesView"></div></section>
+</div>
+<div class="view" id="view-invite">
+<section class="panel">
+<form class="invite-form" id="inviteForm"><input id="inviteName" maxlength="120" placeholder="Full name" autocomplete="name"/><input id="inviteEmail" maxlength="254" placeholder="Email" autocomplete="email" inputmode="email"/><input id="invitePhone" maxlength="40" placeholder="Phone" autocomplete="tel" inputmode="tel"/><button class="primary" type="submit">Create Invite</button></form>
+<p class="invite-state" id="inviteState" aria-live="polite"></p>
+<div class="toolbar"><input id="inviteSearch" placeholder="Search invites" autocomplete="off"/><button id="reloadInvites">Reload</button></div>
+<div class="grid"><table id="invitesTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Confirmation</th><th>Ticket</th><th>Created</th></tr></thead><tbody></tbody></table></div>
+</section>
 </div>
 </main>
 <canvas id="canvas" hidden></canvas>
@@ -189,7 +198,7 @@ document.getElementById('start').onclick=()=>{toTop();startCamera().catch(e=>{st
 document.getElementById('stop').onclick=stopCamera;
 document.getElementById('manualBtn').onclick=()=>scanValue(document.getElementById('manual').value.trim(),true);
 document.getElementById('refresh').onclick=refreshCurrent;
-let members=[],sortKey='submittedAt',sortDir=-1,tablesData=null,selectedTableId=null,tableSearch='',currentView='scanner';
+let members=[],sortKey='submittedAt',sortDir=-1,tablesData=null,selectedTableId=null,tableSearch='',invites=[],currentView='scanner';
 document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>showView(btn.dataset.view));
 function showView(name){
   currentView=name;
@@ -198,8 +207,9 @@ function showView(name){
   location.hash=name==='scanner'?'':'#'+name;
   if(name==='members')loadMembers();
   if(name==='tables')loadTables();
+  if(name==='invite')loadInvites();
 }
-function refreshCurrent(){if(currentView==='members')loadMembers();else if(currentView==='tables')loadTables();else loadList();}
+function refreshCurrent(){if(currentView==='members')loadMembers();else if(currentView==='tables')loadTables();else if(currentView==='invite')loadInvites();else loadList();}
 function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 function exportCsv(){
   const rows=[['Name','Type','Guest of','Email','Phone','Reservation requested','Reservation confirmed','Table','Checked in','Scanned at','Registered at']].concat(filteredMembers().map(m=>[m.name,m.type,m.guestOf,m.email,m.phone,m.wantsTableReservation?'yes':'no',m.reservationConfirmed?'yes':'no',m.table,m.checkedIn?'yes':'no',m.checkedInAt,m.submittedAt]));
@@ -260,7 +270,30 @@ function groupCard(g,currentId,tables,asAdd){
 }
 function tableSelect(g,tables){return '<select aria-label="Move group" data-rsvp-id="'+esc(g.rsvpId)+'"><option value="">Unassigned</option>'+tables.map(t=>'<option value="'+esc(t.id)+'" '+(g.tableId===t.id?'selected':'')+'>'+esc(t.label)+'</option>').join('')+'</select>';}
 async function assignTable(rsvpId,tableId){await fetch('/api/staff/table-assignment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),tableId})});await loadTables();await loadMembers();}
-if(location.hash==='#members')showView('members');else if(location.hash==='#tables')showView('tables');
+async function loadInvites(){
+  const body=document.querySelector('#invitesTable tbody');body.innerHTML='<tr><td colspan="7">Loading...</td></tr>';
+  let res,data;try{res=await fetch('/api/staff/invites',{headers:{'Accept':'application/json'}});data=await res.json();}catch(e){body.innerHTML='<tr><td colspan="7">No connection.</td></tr>';return;}
+  if(!res.ok){body.innerHTML='<tr><td colspan="7">'+esc(data.error||'Could not load invites')+'</td></tr>';return;}
+  invites=data.invites||[];renderInvites();
+}
+function filteredInvites(){const q=document.getElementById('inviteSearch').value.trim().toLowerCase();return invites.filter(i=>!q||[i.name,i.email,i.phone,i.status,i.confirmationLink,i.ticketLink].some(v=>String(v||'').toLowerCase().includes(q)));}
+function renderInvites(){
+  const body=document.querySelector('#invitesTable tbody'),rows=filteredInvites();
+  body.innerHTML=rows.map(i=>'<tr><td>'+esc(i.name)+'</td><td>'+esc(i.email)+'</td><td>'+esc(i.phone)+'</td><td>'+esc(i.status)+(i.submittedAt?'<br><span class="pill">'+esc(new Date(i.submittedAt).toLocaleString())+'</span>':'')+'</td><td><div class="link-cell">'+esc(i.confirmationLink)+'</div><button class="copy-btn" data-copy="'+esc(i.confirmationLink)+'">Copy</button></td><td><div class="link-cell">'+esc(i.ticketLink)+'</div><button class="copy-btn" data-copy="'+esc(i.ticketLink)+'" '+(i.ticketLink?'':'disabled')+'>Copy</button></td><td>'+esc(i.createdAt?new Date(i.createdAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="7">No invites.</td></tr>';
+  body.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy,b));
+}
+async function copyText(value,button){if(!value)return;try{await navigator.clipboard.writeText(value);button.textContent='Copied';setTimeout(()=>button.textContent='Copy',1200);}catch(_){window.prompt('Copy link',value);}}
+document.getElementById('inviteSearch').oninput=renderInvites;
+document.getElementById('reloadInvites').onclick=loadInvites;
+document.getElementById('inviteForm').onsubmit=async(e)=>{
+  e.preventDefault();
+  const state=document.getElementById('inviteState');state.className='invite-state';state.textContent='Creating invite...';
+  const payload={name:document.getElementById('inviteName').value,email:document.getElementById('inviteEmail').value,phone:document.getElementById('invitePhone').value};
+  let res,data;try{res=await fetch('/api/staff/invites',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)});data=await res.json();}catch(err){state.className='invite-state err';state.textContent='No connection.';return;}
+  if(!res.ok){state.className='invite-state err';state.textContent=data.error||'Could not create invite';return;}
+  document.getElementById('inviteForm').reset();state.textContent='Invite created.';await loadInvites();
+};
+if(location.hash==='#members')showView('members');else if(location.hash==='#tables')showView('tables');else if(location.hash==='#invite')showView('invite');
 loadList();
 </script>
 </body>

@@ -19,6 +19,7 @@ custom-domain email delivery and final address blast are not complete yet.
 |---|---|
 | `/` | Shared invitation. Visitor enters their full name. |
 | `/hi/<id>` | Personal invitation. `/api/guest-check` loads the guest name from `guest_list`. |
+| `/ticket/<token>` | Private ticket link. Admin-created primary invites can have this before RSVP; it stays pending/locked until the guest confirms. |
 
 `/hi/<token>` redirects to `/?token=<token>`. The front end calls `/api/guest-check` when a token
 is present.
@@ -71,6 +72,9 @@ shows the ticket. Only `/staff/rose-door-10` checks people in by POSTing to `/ap
 Tickets and location unlock at `2026-10-09T18:00:00+03:00`. Before that time, ticket pages show a
 locked state without QR, seal code or venue.
 
+Admin-created primary invites receive their future ticket link before RSVP. If that ticket link is
+opened before the guest confirms attendance, the page shows a pending locked state and no QR code.
+
 Table numbers are staff-only. `wants_table_reservation` means the guest asked for a table;
 `reservation_confirmed` is the separate staff/admin confirmation. If `reservation_confirmed` is
 true, the guest ticket can show generic copy such as `Your table is confirmed.`, but it must not
@@ -91,6 +95,8 @@ avoids ambiguous characters: no `0/O`, `1/I/L`, `5/S`, or `8/B`.
 | `GET` | `/api/checkin?token=` | Redirects to `/ticket/<token>`; does not mutate data. |
 | `GET` | `/api/door` | Returns recent guest and plus-one check-ins as separate entries. |
 | `POST` | `/api/door` | Atomically checks in the scanned guest or plus-one ticket. |
+| `GET` | `/api/staff/invites` | Lists primary invite registry rows with confirmation and ticket links. |
+| `POST` | `/api/staff/invites` | Creates a primary invite with random confirmation and ticket tokens. |
 
 All JSON responses are `Cache-Control: no-store`.
 
@@ -103,7 +109,14 @@ All JSON responses are `Cache-Control: no-store`.
 | `id` | text primary key | Personal invitation id. |
 | `name` | text | Guest name shown on personal links. |
 | `email` | text | Optional owner/import data. |
+| `phone` | text | Optional owner/import phone data. |
+| `ticket_token` | text | Pre-generated primary ticket token for admin-created invites. |
 | `created_at` | timestamptz | Created timestamp. |
+| `updated_at` | timestamptz | Updated timestamp. |
+
+New admin-created invites use random alphanumeric `id` values for confirmation links and random
+`ticket_token` values for future ticket links. A ticket token in `guest_list` does not check a
+guest in and does not show a QR until a matching attending RSVP exists.
 
 ### `rsvps`
 

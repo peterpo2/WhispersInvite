@@ -83,6 +83,17 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   const t=data&&data.ticket;
   if(!t){failed();return;}
   if(data.locked||t.locked){
+    if(t.pending){
+      $('guest').textContent=t.guest_name||'Your ticket';
+      document.querySelector('.role').textContent='Invited guest';
+      $('code').textContent='RSVP FIRST';
+      $('qr').classList.add('fallback');
+      $('qr').textContent='Please confirm your attendance first. Your private ticket will appear here after RSVP and ticket release.';
+      $('venue').innerHTML='Use your confirmation link to RSVP. Location remains sealed until 09.10 at 18:00.';
+      $('bringing').innerHTML='';
+      $('state').textContent='Waiting for RSVP';
+      return;
+    }
     $('guest').textContent=t.guest_name||'Your ticket';
     document.querySelector('.role').textContent='Registered guest';
     $('code').textContent='09.10 · 18:00';

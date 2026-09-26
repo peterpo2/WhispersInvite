@@ -151,6 +151,38 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
   };
 }
 
+export function validateInvitePayload(body) {
+  if (!body || typeof body !== "object") return { error: "Invalid invite" };
+  if (typeof body.name !== "string" || typeof body.email !== "string" || typeof body.phone !== "string") {
+    return { error: "Invalid invite" };
+  }
+
+  const name = body.name.trim();
+  if (name.length > MAX_NAME) return { error: "Please give a shorter name." };
+  if (!hasFullName(name)) return { error: "Please give their full name." };
+  if (!validEmail(body.email)) return { error: "Please give a valid email." };
+  if (!validPhone(body.phone)) return { error: "Please give their phone." };
+  return { ok: true };
+}
+
+export function buildInviteRow(body, makeId = makeTicketToken, now = () => new Date()) {
+  const created = now().toISOString();
+  return {
+    id: makeId(),
+    name: String(body.name).trim().replace(/\s+/g, " "),
+    email: normalizeEmail(body.email),
+    phone: normalizePhone(body.phone),
+    ticket_token: makeId(),
+    created_at: created,
+    updated_at: created,
+  };
+}
+
+export function applyInviteToRsvpRow(row, invite) {
+  if (!row || !invite || !invite.ticket_token || row.guest_id !== invite.id) return row;
+  return { ...row, ticket_token: invite.ticket_token };
+}
+
 export function buildCompanionRow(row, rsvpId) {
   if (!row || !row.plus_one_name || !row.plus_one_ticket_token) return null;
   return {
@@ -200,6 +232,22 @@ export function buildRsvpUpdate(row, existing) {
   };
   if (!keepPlusOne && !samePlusOne) patch.plus_one_checked_in_at = null;
   return patch;
+}
+
+export function pendingInviteTicket(row, token) {
+  if (!row || !token || row.ticket_token !== token) return null;
+  return {
+    holder: "invite",
+    guest_name: row.name,
+    seal_code: null,
+    checked_in_at: null,
+    bringing: null,
+    brought_by: null,
+    table_label: null,
+    table_reserved: false,
+    locked: true,
+    pending: true,
+  };
 }
 
 export function ticketForToken(row, token, options = {}) {

@@ -11,3 +11,13 @@ test("tables add-to-table panel has a broad guest search", () => {
   assert.match(staffPage, /concat\(g\.people\|\|\[\]\)/);
   assert.match(staffPage, /No matching reservation groups\./);
 });
+
+test("staff admin includes an invite registry tab", () => {
+  assert.match(staffPage, /data-view="invite"/);
+  assert.match(staffPage, /id="inviteForm"/);
+  assert.match(staffPage, /id="inviteSearch"/);
+  assert.match(staffPage, /\/api\/staff\/invites/);
+  assert.match(staffPage, /confirmationLink/);
+  assert.match(staffPage, /ticketLink/);
+  assert.match(staffPage, /function filteredInvites\(\)/);
+});

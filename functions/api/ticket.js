@@ -1,5 +1,5 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { EVENT_KEY, TICKET_RELEASE_AT, buildCheckInUrl, buildTicketUrl, companionTicketForToken, isTicketReleased, publicVenue, ticketForToken, tokenFromValue } from "../_shared/rsvp.js";
+import { EVENT_KEY, TICKET_RELEASE_AT, buildCheckInUrl, buildTicketUrl, companionTicketForToken, isTicketReleased, pendingInviteTicket, publicVenue, ticketForToken, tokenFromValue } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const PRIMARY_COLUMNS = "id,guest_name,seal_code,ticket_token,checked_in_at,status,plus_one_name,plus_one_seal_code,plus_one_ticket_token,plus_one_checked_in_at,reservation_confirmed";
@@ -22,6 +22,12 @@ export async function onRequestGet({ request, env }) {
     ticket = companion.ticket;
   }
 
+  if (!ticket) {
+    const invite = await findPendingInviteTicket(env, token);
+    if (invite.error) return invite.error;
+    ticket = invite.ticket;
+  }
+
   if (!ticket) return json({ error: "Ticket not found" }, 404);
 
   let venue = null;
@@ -38,13 +44,24 @@ export async function onRequestGet({ request, env }) {
 
   return json({
     ok: true,
-    locked: !released,
+    locked: !released || ticket.pending === true,
     ticketReleaseAt: TICKET_RELEASE_AT,
     ticket,
     venue,
     ticketUrl: buildTicketUrl(request.url, token),
     checkInUrl: buildCheckInUrl(request.url, token),
   });
+}
+
+async function findPendingInviteTicket(env, token) {
+  const lookup = await supabaseFetch(
+    env,
+    `/rest/v1/guest_list?select=name,ticket_token&ticket_token=eq.${token}&limit=1`
+  );
+  if (lookup.error) return { error: lookup.error };
+  if (!lookup.response.ok) return { error: json({ error: "Could not load ticket" }, 502) };
+  const [row] = await lookup.response.json();
+  return { ticket: pendingInviteTicket(row, token) };
 }
 
 async function findPrimaryTicket(env, token, released) {

@@ -2,7 +2,10 @@ create table if not exists guest_list (
   id text primary key,
   name text not null,
   email text,
-  created_at timestamptz default now()
+  phone text,
+  ticket_token text,
+  created_at timestamptz default now(),
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists rsvps (
@@ -31,6 +34,9 @@ create table if not exists rsvps (
 );
 
 create index if not exists guest_list_name_idx on guest_list using gin (to_tsvector('simple', name));
+create unique index if not exists guest_list_ticket_token_unique
+  on guest_list (ticket_token)
+  where ticket_token is not null;
 create unique index if not exists rsvps_event_plus_one_email_unique
   on rsvps (event_key, lower(plus_one_email))
   where plus_one_email is not null;
@@ -128,3 +134,8 @@ insert into guest_list (id, name, email) values
   ('demo-georgi-petrov', 'Georgi Petrov', null),
   ('demo-alex-stoyanov', 'Alex Stoyanov', null)
 on conflict (id) do nothing;
+
+update guest_list
+set ticket_token = replace(gen_random_uuid()::text, '-', ''),
+    updated_at = now()
+where ticket_token is null;

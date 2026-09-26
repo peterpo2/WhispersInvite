@@ -23,7 +23,7 @@ Postgres through the REST API. There is no framework, no bundler and no build st
 |---|---|
 | `/` | Shared invitation. The guest types their full name. |
 | `/hi/<id>` | Personal invitation. The name from `guest_list` is shown on the seal. |
-| `/ticket/<token>` | Private ticket page for a guest or plus-one. |
+| `/ticket/<token>` | Private ticket page for a guest or plus-one. Admin-created invite ticket links can exist before RSVP and stay pending/locked. |
 | `/staff/rose-door-10` | Staff scanner. Keep private and do not link from public pages. |
 
 The middleware allowlist blocks repository files, docs, SQL files, tests and unknown routes.
@@ -49,6 +49,17 @@ Repeat RSVPs from the same personal identity or the same email+phone keep the gu
 the guest confirms again without entering a plus-one, the existing plus-one is kept. For the first
 event, a primary RSVP can have maximum one added guest.
 
+## Invite Admin
+
+The staff page has an **Invite** tab. Staff can create a primary guest invite with full name,
+email and phone. The system generates:
+
+- confirmation link: `/hi/<random-token>`
+- ticket link: `/ticket/<random-ticket-token>`
+
+The ticket link is generated in advance, but it stays pending until the primary guest confirms
+attendance. Plus-one ticket links are generated later during RSVP.
+
 ## Door Flow
 
 Open `/staff/rose-door-10`, tap **Open camera**, and scan the QR from the ticket page or saved
@@ -71,6 +82,8 @@ The scanner keeps guest and plus-one check-ins separate and shows the latest arr
 | `GET` | `/api/checkin?token=` | Legacy read-only link. Redirects to `/ticket/<token>`. |
 | `GET` | `/api/door` | Returns recent checked-in guests and plus-ones. |
 | `POST` | `/api/door` | Checks in a scanned guest or plus-one ticket atomically. |
+| `GET` | `/api/staff/invites` | Lists primary invites and generated links. |
+| `POST` | `/api/staff/invites` | Creates a primary invite. |
 
 ## Setup
 

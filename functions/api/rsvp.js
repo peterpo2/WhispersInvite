@@ -1,5 +1,5 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { addedGuestLimitReached, buildCompanionRow, buildRsvpRow, isDuplicateSealCode, isRsvpClosed, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
+import { addedGuestLimitReached, applyInviteToRsvpRow, buildCompanionRow, buildRsvpRow, isDuplicateSealCode, isRsvpClosed, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const ALREADY_INSIDE = "This invitation has already been used at the door.";
@@ -40,6 +40,11 @@ export async function onRequestPost({ request, env }) {
   if (isRsvpClosed()) return json({ error: "RSVP is closed." }, 409);
 
   let row = buildRsvpRow(body);
+  if (body.guestId) {
+    const invite = await findInvite(env, body.guestId);
+    if (invite.error) return invite.error;
+    row = applyInviteToRsvpRow(row, invite.row);
+  }
   const existing = await findExistingRsvp(env, row);
   if (existing.error) return existing.error;
   if (existing.row) return updateExistingRsvp(env, request.url, row, existing.row);
@@ -71,6 +76,17 @@ export async function onRequestPost({ request, env }) {
     }
     row = buildRsvpRow(body);
   }
+}
+
+async function findInvite(env, id) {
+  const result = await supabaseFetch(
+    env,
+    `/rest/v1/guest_list?select=id,ticket_token&id=eq.${encodeURIComponent(id)}&limit=1`
+  );
+  if (result.error) return { error: result.error };
+  if (!result.response.ok) return { error: json({ error: "Could not save RSVP" }, 502) };
+  const [row] = await result.response.json();
+  return { row: row || null };
 }
 
 async function findExistingRsvp(env, row) {

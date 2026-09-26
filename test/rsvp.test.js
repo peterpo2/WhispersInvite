@@ -7,9 +7,11 @@ import {
   SEAL_ALPHABET,
   TICKET_RELEASE_AT,
   addedGuestLimitReached,
+  applyInviteToRsvpRow,
   isDuplicatePlusOneEmail,
   isDuplicateSealCode,
   buildCheckInUrl,
+  buildInviteRow,
   buildCompanionRow,
   checkInRedirectPath,
   buildRsvpRow,
@@ -18,6 +20,7 @@ import {
   isTicketReleased,
   normalizePhone,
   doorScans,
+  pendingInviteTicket,
   publicVenue,
   sameAddedGuest,
   ticketForToken,
@@ -25,6 +28,7 @@ import {
   makeSealCode,
   makeTicketToken,
   tokenFromValue,
+  validateInvitePayload,
   validateRsvpPayload,
 } from "../functions/_shared/rsvp.js";
 
@@ -70,6 +74,54 @@ test("builds contact and reservation fields for the primary RSVP", () => {
   assert.equal(row.plus_one_email_is_fallback, false);
   assert.equal(row.plus_one_phone, "+359 88 765 4321");
   assert.equal(row.wants_table_reservation, true);
+});
+
+test("invite payload requires a full name, email and phone", () => {
+  assert.equal(validateInvitePayload({ name: "Peter", email: "peter@example.com", phone: "+359 88 123 4567" }).error, "Please give their full name.");
+  assert.equal(validateInvitePayload({ name: "Peter Popov", email: "bad", phone: "+359 88 123 4567" }).error, "Please give a valid email.");
+  assert.equal(validateInvitePayload({ name: "Peter Popov", email: "peter@example.com", phone: "" }).error, "Please give their phone.");
+  assert.equal(validateInvitePayload({ name: "Петър Попов", email: "peter@example.com", phone: "+359 88 123 4567" }).ok, true);
+});
+
+test("builds an invite row with separate confirmation and ticket tokens", () => {
+  const row = buildInviteRow(
+    { name: "  Peter   Popov ", email: " Peter@Example.COM ", phone: " +359   88 123 4567 " },
+    ids("invite00000000000000000000000000", TOKEN),
+    FIXED_NOW
+  );
+  assert.deepEqual(row, {
+    id: "invite00000000000000000000000000",
+    name: "Peter Popov",
+    email: "peter@example.com",
+    phone: "+359 88 123 4567",
+    ticket_token: TOKEN,
+    created_at: "2026-09-24T21:00:00.000Z",
+    updated_at: "2026-09-24T21:00:00.000Z",
+  });
+});
+
+test("a personal invite can provide the primary RSVP ticket token", () => {
+  const row = buildRsvpRow({ guestId: "invite-token", guestName: "Peter Popov", ...CONTACT, status: "attending" }, () => "generated0000000000000000000000", FIXED_NOW, FIXED_SEAL);
+  const applied = applyInviteToRsvpRow(row, { id: "invite-token", ticket_token: TOKEN });
+  assert.equal(applied.guest_id, "invite-token");
+  assert.equal(applied.ticket_token, TOKEN);
+  assert.equal(row.ticket_token, "generated0000000000000000000000");
+});
+
+test("pending invite tickets are locked until the guest RSVPs", () => {
+  assert.deepEqual(pendingInviteTicket({ name: "Peter Popov", ticket_token: TOKEN }, TOKEN), {
+    holder: "invite",
+    guest_name: "Peter Popov",
+    seal_code: null,
+    checked_in_at: null,
+    bringing: null,
+    brought_by: null,
+    table_label: null,
+    table_reserved: false,
+    locked: true,
+    pending: true,
+  });
+  assert.equal(pendingInviteTicket({ name: "Peter Popov", ticket_token: TOKEN }, PLUS_TOKEN), null);
 });
 
 test("builds companion row with optional phone", () => {

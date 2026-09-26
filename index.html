@@ -400,7 +400,11 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
         if (!data || !data.found || state.guestName) return;
         state.guestName = data.name;
         state.guestId   = data.id || urlToken;
+        state.guestEmail = data.email || null;
+        state.guestPhone = data.phone || null;
         if (nameInput) nameInput.value = data.name;
+        if (emailInput && data.email) emailInput.value = data.email;
+        if (phoneInput && data.phone) phoneInput.value = data.phone;
         // Show name on seal screen
         const el = document.querySelector('.issued.generic-issued');
         if (el) {
