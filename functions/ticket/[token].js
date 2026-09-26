@@ -42,7 +42,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 .code{font-size:21px;letter-spacing:.24em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,174,120,.4)}
 .qr{width:min(62vw,230px);height:min(62vw,230px);margin:22px auto;background:var(--paper);padding:10px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
-.qr.fallback{width:auto;height:auto;color:var(--bg);font:400 13px/1.5 var(--sans);overflow-wrap:anywhere;text-align:left}
+.qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
 .meta{font-size:21px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}.meta b{font-weight:400;color:#F6EFE4}
 #bringing{display:block;border-top:1px solid rgba(217,174,120,.14);padding-top:10px;margin-top:10px}#bringing:empty{display:none}
 .small{font-style:italic;font-size:19px;line-height:1.55;color:#CFC3B3;margin:22px auto 0;max-width:360px}
