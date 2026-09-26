@@ -512,6 +512,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
     if(state.wantsTableReservation)$('#bringingLine').innerHTML+='<br/><b>Table reservation requested.</b>';
     $('#qr').classList.add('release-note');$('#qr').textContent=state.plusOne?'On 09.10 at 18:00, you and your registered guest will each receive an email with the confirmed location and your private ticket.':'On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.';
     $('#doneCopy').textContent=state.plusOne?'Your registration is confirmed. On 09.10 at 18:00, you and your registered guest will each receive an email with the confirmed location and your private ticket.':'Your registration is confirmed. On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.';
+    $('#saveTickets').hidden=true;$('#saveState').textContent='';imagesReady=null;
     show('#s-done');
   });
 
