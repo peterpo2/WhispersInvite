@@ -58,7 +58,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 <section class="panel"><div class="toolbar"><input id="memberSearch" placeholder="Search members" autocomplete="off"/><button id="exportMembers">Export CSV</button></div><div class="grid"><table id="membersTable"><thead><tr><th data-sort="name">Name</th><th data-sort="type">Type</th><th data-sort="guestOf">Guest of</th><th data-sort="email">Email</th><th data-sort="phone">Phone</th><th data-sort="wantsTableReservation">Table</th><th data-sort="table">Assigned</th><th data-sort="checkedIn">In</th><th data-sort="submittedAt">Submitted</th></tr></thead><tbody></tbody></table></div></section>
 </div>
 <div class="view" id="view-tables">
-<section class="panel"><p class="small">Reservation groups only. Default model: five 6-seat tables and five 4-seat tables until the venue gives final data.</p><div class="tables-layout" id="tablesView"></div></section>
+<section class="panel"><p class="small">All attending groups can be assigned to tables. Reservation requests are marked. Default model: five 6-seat tables and five 4-seat tables until the venue gives final data.</p><div class="tables-layout" id="tablesView"></div></section>
 </div>
 </main>
 <canvas id="canvas" hidden></canvas>
@@ -186,16 +186,18 @@ function toTop(){window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-mo
 document.getElementById('start').onclick=()=>{toTop();startCamera().catch(e=>{stopCamera();show('bad','Camera blocked.','<p>Allow camera access or paste the QR value manually.</p>');});};
 document.getElementById('stop').onclick=stopCamera;
 document.getElementById('manualBtn').onclick=()=>scanValue(document.getElementById('manual').value.trim(),true);
-document.getElementById('refresh').onclick=loadList;
-let members=[],sortKey='submittedAt',sortDir=-1,tablesData=null,selectedTableId=null;
+document.getElementById('refresh').onclick=refreshCurrent;
+let members=[],sortKey='submittedAt',sortDir=-1,tablesData=null,selectedTableId=null,currentView='scanner';
 document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>showView(btn.dataset.view));
 function showView(name){
+  currentView=name;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));
   location.hash=name==='scanner'?'':'#'+name;
   if(name==='members')loadMembers();
   if(name==='tables')loadTables();
 }
+function refreshCurrent(){if(currentView==='members')loadMembers();else if(currentView==='tables')loadTables();else loadList();}
 function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 function exportCsv(){
   const rows=[['Name','Type','Guest of','Email','Phone','Reservation','Table','Checked in','Submitted']].concat(filteredMembers().map(m=>[m.name,m.type,m.guestOf,m.email,m.phone,m.wantsTableReservation?'yes':'no',m.table,m.checkedIn?'yes':'no',m.submittedAt]));
@@ -232,17 +234,18 @@ function renderTables(){
   const box=document.getElementById('tablesView'),tables=tablesData.tables||[],groups=tablesData.groups||[];
   const cards=[{id:null,label:'Unassigned',capacity:null}].concat(tables);
   if(selectedTableId!==null&&!tables.some(t=>t.id===selectedTableId))selectedTableId=null;
-  const current=cards.find(t=>(t.id||null)===selectedTableId)||cards[0],assigned=groups.filter(g=>(g.tableId||null)===(current.id||null)),available=groups.filter(g=>(g.tableId||null)!==(current.id||null));
+  const current=cards.find(t=>(t.id||null)===selectedTableId)||cards[0],assigned=groups.filter(g=>(g.tableId||null)===(current.id||null)),available=groups.filter(g=>(g.tableId||null)!==(current.id||null)).sort((a,b)=>Number(b.wantsTableReservation)-Number(a.wantsTableReservation));
   const used=assigned.reduce((s,g)=>s+g.size,0);
-  box.innerHTML='<div class="table-list">'+cards.map(t=>{const rows=groups.filter(g=>(g.tableId||null)===(t.id||null)),seats=rows.reduce((s,g)=>s+g.size,0),active=(t.id||null)===(current.id||null);return '<button class="table-chip '+(active?'active':'')+'" data-table-id="'+esc(t.id||'')+'"><b>'+esc(t.label)+'</b><small>'+(t.id?seats+' / '+t.capacity+' seats':rows.length+' waiting')+'</small></button>';}).join('')+'</div><div class="table-detail"><div class="table-detail-head"><div><h2>'+esc(current.label)+'</h2><p class="small">'+(current.id?'Assigned reservation groups':'Reservation groups waiting for a table')+'</p></div><div class="capacity">'+(current.id?used+' / '+current.capacity+' seats':'Unassigned')+'</div></div><div class="table-groups">'+(assigned.map(g=>groupCard(g,current.id,tables)).join('')||'<div class="empty-state">No groups here.</div>')+'</div>'+(current.id?'<div class="table-add"><h3>Add to '+esc(current.label)+'</h3><div class="available-list">'+(available.map(g=>groupCard(g,current.id,tables,true)).join('')||'<div class="empty-state">No other reservation groups.</div>')+'</div></div>':'')+'</div>';
+  box.innerHTML='<div class="table-list">'+cards.map(t=>{const rows=groups.filter(g=>(g.tableId||null)===(t.id||null)),seats=rows.reduce((s,g)=>s+g.size,0),active=(t.id||null)===(current.id||null);return '<button class="table-chip '+(active?'active':'')+'" data-table-id="'+esc(t.id||'')+'"><b>'+esc(t.label)+'</b><small>'+(t.id?seats+' / '+t.capacity+' seats':rows.length+' waiting')+'</small></button>';}).join('')+'</div><div class="table-detail"><div class="table-detail-head"><div><h2>'+esc(current.label)+'</h2><p class="small">'+(current.id?'Assigned reservation groups':'Attending groups waiting for a table')+'</p></div><div class="capacity">'+(current.id?used+' / '+current.capacity+' seats':'Unassigned')+'</div></div><div class="table-groups">'+(assigned.map(g=>groupCard(g,current.id,tables)).join('')||'<div class="empty-state">No groups here.</div>')+'</div>'+(current.id?'<div class="table-add"><h3>Add to '+esc(current.label)+'</h3><div class="available-list">'+(available.map(g=>groupCard(g,current.id,tables,true)).join('')||'<div class="empty-state">No other reservation groups.</div>')+'</div></div>':'')+'</div>';
   box.querySelectorAll('.table-chip').forEach(b=>b.onclick=()=>{selectedTableId=b.dataset.tableId||null;renderTables();});
   box.querySelectorAll('[data-assign]').forEach(b=>b.onclick=()=>assignTable(b.dataset.rsvpId,b.dataset.assign||null));
   box.querySelectorAll('select').forEach(s=>s.onchange=()=>assignTable(s.dataset.rsvpId,s.value||null));
 }
 function groupCard(g,currentId,tables,asAdd){
   const people=(g.people&&g.people.length?g.people:[g.name]).map(p=>'<span class="person">'+esc(p)+'</span>').join('');
+  const request=g.wantsTableReservation?' <span class="pill">requested table</span>':'';
   const action=asAdd?'<button class="primary" data-rsvp-id="'+esc(g.rsvpId)+'" data-assign="'+esc(currentId)+'">Add</button>':(currentId?'<button data-rsvp-id="'+esc(g.rsvpId)+'" data-assign="">Remove</button>':'');
-  return '<div class="group"><div><div class="group-main">'+esc(g.name)+' <span class="pill">'+g.size+'</span></div><div class="people">'+people+'</div></div><div class="group-actions">'+action+tableSelect(g,tables)+'</div></div>';
+  return '<div class="group"><div><div class="group-main">'+esc(g.name)+' <span class="pill">'+g.size+'</span>'+request+'</div><div class="people">'+people+'</div></div><div class="group-actions">'+action+tableSelect(g,tables)+'</div></div>';
 }
 function tableSelect(g,tables){return '<select aria-label="Move group" data-rsvp-id="'+esc(g.rsvpId)+'"><option value="">Unassigned</option>'+tables.map(t=>'<option value="'+esc(t.id)+'" '+(g.tableId===t.id?'selected':'')+'>'+esc(t.label)+'</option>').join('')+'</select>';}
 async function assignTable(rsvpId,tableId){await fetch('/api/staff/table-assignment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),tableId})});await loadTables();await loadMembers();}

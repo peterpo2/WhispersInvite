@@ -9,7 +9,7 @@ export async function onRequestGet({ env }) {
 
   const rsvps = await supabaseFetch(
     env,
-    `/rest/v1/rsvps?select=id,guest_name,wants_table_reservation,status,plus_one_name,staff_table_assignments(table_id)&event_key=eq.${encodeURIComponent(EVENT_KEY)}&status=eq.attending&wants_table_reservation=eq.true&order=submitted_at.asc`
+    `/rest/v1/rsvps?select=id,guest_name,wants_table_reservation,status,plus_one_name,staff_table_assignments(table_id)&event_key=eq.${encodeURIComponent(EVENT_KEY)}&status=eq.attending&order=submitted_at.asc`
   );
   if (rsvps.error) return rsvps.error;
   if (!rsvps.response.ok) return json({ error: "Could not load tables" }, 502);
@@ -42,6 +42,7 @@ export async function onRequestGet({ env }) {
       name: row.guest_name,
       size: people.length,
       people,
+      wantsTableReservation: row.wants_table_reservation === true,
       tableId: assignment?.table_id || null,
     };
   });

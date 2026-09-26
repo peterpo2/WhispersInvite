@@ -439,13 +439,13 @@ Security note: admin security is planned but not active yet. The current staff a
 
 **Helper text**
 
-- Reservation groups only. Default model: five 6-seat tables and five 4-seat tables until the venue gives final data.
+- All attending groups can be assigned to tables. Reservation requests are marked. Default model: five 6-seat tables and five 4-seat tables until the venue gives final data.
 
 **Default table group**
 
 - Unassigned
 - Waiting for a table
-- Reservation groups waiting for a table
+- Attending groups waiting for a table
 - Assigned reservation groups
 
 **Capacity text**
@@ -460,6 +460,7 @@ Security note: admin security is planned but not active yet. The current staff a
 - Remove
 - Add to [table label]
 - Move group
+- requested table
 
 **Loading and error states**
 
