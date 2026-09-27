@@ -208,12 +208,6 @@
 - Your ticket is saved to this device.
 - Both tickets are saved to this device.
 
-**Sponsor footer**
-
-- Powered by
-- Sponsor 1 logo
-- Sponsor 2 logo
-
 ### 8. Declined RSVP Screen
 
 **Brand**
@@ -229,12 +223,6 @@
 **Buttons**
 
 - Start over
-
-**Sponsor footer**
-
-- Powered by
-- Sponsor 1 logo
-- Sponsor 2 logo
 
 ## Ticket Link Page
 
@@ -257,6 +245,15 @@
 **Buttons**
 
 - Private ticket
+
+## Global Partner Bottom Bar
+
+Shown on the public invitation flow and ticket pages, fixed above the mobile safe area.
+
+- Powered by
+- Beluga logo from `/assets/partner-beluga-bv.png`
+- Beluga supplied JPG from `/assets/partner-beluga.jpg`
+- Barons de Rothschild supplied JPG from `/assets/partner-rothschild.jpg`
 
 **Released ticket helper text**
 

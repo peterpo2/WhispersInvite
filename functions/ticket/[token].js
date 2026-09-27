@@ -29,7 +29,7 @@ export async function onRequestGet({ params, request }) {
 <style>
 :root{--bg:#070605;--gold:#D9AE78;--gold-hi:#EBCB95;--bone:#EDE6DA;--mute:#BDB2A5;--paper:#F1E9DC;--line:rgba(217,174,120,.26);--serif:'Cormorant Garamond',Cambria,Georgia,serif;--sans:'Jost','Helvetica Neue',Arial,sans-serif;color-scheme:dark}
 *{box-sizing:border-box}html{background:var(--bg)}
-body{margin:0;min-height:100vh;min-height:100dvh;display:flex;background:radial-gradient(60% 40% at 50% 36%,rgba(120,78,36,.24),transparent 72%),radial-gradient(120% 60% at 50% 112%,rgba(90,11,19,.42),transparent 64%),linear-gradient(180deg,#0A0807,#070605 55%,#060404);color:var(--bone);font-family:var(--serif);font-weight:300;padding:calc(24px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom))}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;background:radial-gradient(60% 40% at 50% 36%,rgba(120,78,36,.24),transparent 72%),radial-gradient(120% 60% at 50% 112%,rgba(90,11,19,.42),transparent 64%),linear-gradient(180deg,#0A0807,#070605 55%,#060404);color:var(--bone);font-family:var(--serif);font-weight:300;padding:calc(24px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(104px + env(safe-area-inset-bottom))}
 body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:url("/assets/whispers-rose.png") 50% 42%/min(150vw,920px) auto no-repeat;opacity:.13;filter:blur(1px) saturate(1.08)}
 body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.64) 100%)}
 .grain{position:fixed;inset:-50%;z-index:0;pointer-events:none;opacity:.045;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");animation:grain 1.1s steps(3) infinite}@keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}100%{transform:translate(0,0)}}@media (prefers-reduced-motion:reduce){.grain{animation:none}}
@@ -56,10 +56,19 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 .save{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:400 15px/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6)}
 .save[hidden]{display:none}.save:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
 .saved{font-style:italic;font-size:18px;color:var(--mute);margin:10px 0 0;min-height:1em}
+.partner-bar{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:5;width:min(520px,calc(100vw - 24px));display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 10px;border:1px solid rgba(217,174,120,.22);border-radius:3px;background:rgba(7,5,4,.72);box-shadow:0 14px 42px rgba(0,0,0,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.partner-bar span{font:300 10px/1 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:rgba(237,230,218,.68);white-space:nowrap}
+.partner-logos{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0}
+.partner-logo{width:70px;height:30px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(217,174,120,.18);background:rgba(241,233,220,.92)}
+.partner-logo.dark{background:rgba(0,0,0,.2)}
+.partner-logo img{display:block;width:100%;height:100%;object-fit:contain;padding:3px;filter:saturate(.92) contrast(.96)}
+.partner-logo.dark img{padding:1px;filter:brightness(1.8) contrast(1.06) saturate(.9)}
+@media (max-width:360px){.partner-bar{width:calc(100vw - 18px);gap:8px;padding:7px}.partner-bar span{font-size:9px;letter-spacing:.18em}.partner-logo{width:58px;height:26px}}
 </style>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo dark"><img alt="Beluga" src="/assets/partner-beluga-bv.png"/></div><div class="partner-logo"><img alt="Beluga" src="/assets/partner-beluga.jpg"/></div><div class="partner-logo"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.jpg"/></div></div></aside>
 <main class="ticket loading">
 <img class="mark" src="/assets/whispers-mark.png" alt=""/>
 <div class="rose">WHISPERS</div>

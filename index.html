@@ -70,7 +70,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
 /* ── screens: full viewport, safe-area aware, scroll inside ── */
 .screen{position:fixed;top:0;left:0;right:0;height:100vh;height:100dvh;z-index:10;display:none;flex-direction:column;
   overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;text-align:center;
-  padding:calc(24px + env(safe-area-inset-top)) var(--side) calc(24px + env(safe-area-inset-bottom))}
+  padding:calc(24px + env(safe-area-inset-top)) var(--side) calc(104px + env(safe-area-inset-bottom))}
 .screen.on{display:flex;animation:sceneIn 1.15s var(--ease) both}
 .screen.out{display:flex;z-index:9;pointer-events:none;animation:sceneOut .7s ease both}
 @keyframes sceneIn{from{opacity:0;filter:blur(10px);transform:translateY(14px) scale(1.012)}to{opacity:1;filter:blur(0);transform:none}}
@@ -206,11 +206,13 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 .bringing{display:block;margin-top:10px;padding-top:10px;border-top:1px solid rgba(217,174,120,.14)}
 #saveTickets{margin-top:24px}
 .save-state{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--mute);margin:10px 0 0;min-height:1em}
-.sponsors{margin:24px auto 0;padding-top:18px;border-top:1px solid rgba(217,174,120,.16);max-width:320px}.sponsors[hidden]{display:none}
-.sponsors p{margin:0 0 12px;font:300 11px/1.2 var(--sans);letter-spacing:.28em;text-transform:uppercase;color:var(--mute)}
-.sponsor-logos{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}
-.sponsor-logos img{max-width:112px;max-height:42px;object-fit:contain;opacity:.82;filter:saturate(.9) brightness(.95)}
-.sponsor-logos img:only-child{max-width:140px}
+.partner-bar{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:65;width:min(520px,calc(100vw - 24px));display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 10px;border:1px solid rgba(217,174,120,.22);border-radius:3px;background:rgba(7,5,4,.72);box-shadow:0 14px 42px rgba(0,0,0,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.partner-bar span{font:300 10px/1 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:rgba(237,230,218,.68);white-space:nowrap}
+.partner-logos{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0}
+.partner-logo{width:70px;height:30px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(217,174,120,.18);background:rgba(241,233,220,.92)}
+.partner-logo.dark{background:rgba(0,0,0,.2)}
+.partner-logo img{display:block;width:100%;height:100%;object-fit:contain;padding:3px;filter:saturate(.92) contrast(.96)}
+.partner-logo.dark img{padding:1px;filter:brightness(1.8) contrast(1.06) saturate(.9)}
 .tickets-carousel{width:100%}
 .ticket-slide{display:none}
 .ticket-slide.active{display:block;animation:lineIn .5s var(--ease) both}
@@ -233,6 +235,9 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   :root{--side:max(14px,env(safe-area-inset-left),env(safe-area-inset-right))}
   .row{grid-template-columns:4.4em 1fr;gap:10px}.row dt{font-size:11px;letter-spacing:.16em}.row dd{font-size:21px}
   .btn.caps{font-size:14px;letter-spacing:.24em}.wordmark{font-size:23px}
+  .partner-bar{width:calc(100vw - 18px);gap:8px;padding:7px}
+  .partner-bar span{font-size:9px;letter-spacing:.18em}
+  .partner-logo{width:58px;height:26px}
 }
 @media (max-height:640px){
   .brand{margin-bottom:16px}.mark{width:60px;height:60px}.rule{margin:20px auto}.row{padding:13px 0}
@@ -248,6 +253,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <body data-scene="seal">
 <div aria-hidden="true" class="atmos"><div class="a-glow"></div><div class="a-beam"></div><div class="a-rose"></div><div class="a-haze"></div></div>
 <div class="grain"></div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo dark"><img alt="Beluga" src="/assets/partner-beluga-bv.png"/></div><div class="partner-logo"><img alt="Beluga" src="/assets/partner-beluga.jpg"/></div><div class="partner-logo"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.jpg"/></div></div></aside>
 
 <!-- ══ 1. SEAL ══ -->
 <section class="screen on" id="s-seal">
@@ -368,7 +374,6 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <p class="sub st" id="doneCopy">Your registration is confirmed. On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.</p>
 <button class="btn primary caps st" hidden id="saveTickets">Private ticket</button>
 <p aria-live="polite" class="save-state st" id="saveState"></p>
-<div class="sponsors st" id="sponsorsDone"><p>Powered by</p><div class="sponsor-logos"><img alt="Sponsor 1" src="/assets/sponsor-1.png"/><img alt="Sponsor 2" src="/assets/sponsor-2.png"/></div></div>
 <button class="btn caps st" id="reset" style="margin-top:14px">Start over</button>
 <button class="btn caps small st" id="cancelAttendance" style="margin-top:12px">Cancel attendance</button>
 </div>
@@ -381,7 +386,6 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <h2 class="lede st">Understood.</h2>
 <p class="sub st">Your place on the list stays where it is.<br/>You'll hear from us before the next one.</p>
 <div class="rule st"></div>
-<div class="sponsors st"><p>Powered by</p><div class="sponsor-logos"><img alt="Sponsor 1" src="/assets/sponsor-1.png"/><img alt="Sponsor 2" src="/assets/sponsor-2.png"/></div></div>
 <button class="btn caps st" id="reset2">Start over</button>
 </div>
 </section>
@@ -498,9 +502,6 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
       return {ok:true,data};
     }catch(e){return {ok:false,error:'The invitation could not reach us. Please try again.'}}finally{clearTimeout(to)}
   }
-
-  function cleanSponsors(box){if(box&&!box.querySelector('img'))box.closest('.sponsors').hidden=true}
-  document.querySelectorAll('.sponsor-logos img').forEach(img=>{img.closest('.sponsors').hidden=true;img.addEventListener('load',()=>{img.closest('.sponsors').hidden=false});img.addEventListener('error',()=>{const box=img.parentNode;img.remove();cleanSponsors(box);});});
 
   $('#confirm').addEventListener('click',async()=>{
     if(busy)return;let plusOne=null;
