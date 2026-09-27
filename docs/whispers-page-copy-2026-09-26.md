@@ -254,11 +254,14 @@
 - Private guest
 - Saturday 10 October · Doors 22:00
 - Sofia · private location in central Sofia. Address released on 09.10 at 18:00.
-- Show this seal at the door. The QR confirms your place in the WHISPERS list.
 
 **Buttons**
 
 - Private ticket
+
+**Released ticket helper text**
+
+- Show this seal at the door. The QR confirms your place in the WHISPERS list.
 
 ### 2. Locked Ticket Before 09.10 at 18:00
 
@@ -270,6 +273,10 @@
 - Your ticket will be released on 09.10 at 18:00.
 - Location remains sealed until 09.10 at 18:00.
 - Locked until release
+
+**Important copy rule**
+
+- Do not show the QR / door helper text before ticket release.
 
 **Dynamic relationship text**
 

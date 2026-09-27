@@ -17,6 +17,7 @@ test("pre-release confirmation does not expose the private ticket action", () =>
 test("pre-release confirmation message is not styled as a white QR card", () => {
   assert.match(html, /\.qr\.release-note\{[^}]*background:rgba\(8,6,5,\.\d+\)/);
   assert.doesNotMatch(html, /\.qr\.release-note\{[^}]*background:#F1E9DC/);
+  assert.match(html, /\$\('#doneCopy'\)\.textContent=''/);
 });
 
 test("cancel attendance asks for confirmation before submitting", () => {
@@ -36,6 +37,9 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
   assert.doesNotMatch(ticketPage, /\.qr\.fallback\{[^}]*background:var\(--paper\)/);
   assert.match(ticketPage, /darkQr\('This ticket link is invalid\.'\)/);
   assert.match(ticketPage, /darkQr\('Your ticket could not be loaded\. Please refresh to try again\.'\)/);
+  assert.match(ticketPage, /id="ticketNote"><\/p>/);
+  assert.match(ticketPage, /\$\('ticketNote'\)\.textContent=''/);
+  assert.match(ticketPage, /\$\('ticketNote'\)\.textContent='Show this seal at the door\. The QR confirms your place in the WHISPERS list\.'/);
 });
 
 test("all public HTML shells use the WHISPERS tab icon", () => {
@@ -57,4 +61,16 @@ test("successful RSVP moves the browser to the private ticket link", () => {
   assert.match(rsvpApi, /ticketUrl: attending && row\.ticket_token \? buildTicketUrl\(requestUrl, row\.ticket_token\) : null/);
   assert.match(html, /state\.ticketUrl=result\.data\?\.ticketUrl\|\|null/);
   assert.match(html, /history\.replaceState\(null,'',state\.ticketUrl\)/);
+});
+
+test("start over returns to the invitation entry point, not the replaced ticket URL", () => {
+  assert.match(html, /const startUrl = urlToken \? '\/\?token=' \+ encodeURIComponent\(urlToken\) : '\/'/);
+  assert.match(html, /function reset\(\)\{window\.location\.assign\(startUrl\)\}/);
+  assert.doesNotMatch(html, /function reset\(\)\{location\.reload\(\)\}/);
+});
+
+test("sponsor footer stays hidden until real logos load", () => {
+  assert.match(html, /\.sponsors\[hidden\]\{display:none\}/);
+  assert.match(html, /img\.closest\('\.sponsors'\)\.hidden=true/);
+  assert.match(html, /addEventListener\('load',\(\)=>\{img\.closest\('\.sponsors'\)\.hidden=false\}\)/);
 });

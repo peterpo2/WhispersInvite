@@ -48,7 +48,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
 .meta{font-size:21px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}.meta b{font-weight:400;color:#F6EFE4}
 #bringing{display:block;border-top:1px solid rgba(217,174,120,.14);padding-top:10px;margin-top:10px}#bringing:empty{display:none}
-.small{font-style:italic;font-size:19px;line-height:1.55;color:#CFC3B3;margin:22px auto 0;max-width:360px}
+.small{font-style:italic;font-size:19px;line-height:1.55;color:#CFC3B3;margin:22px auto 0;max-width:360px}.small:empty{display:none}
 .state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
 .meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
 .save{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:400 15px/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6)}
@@ -67,7 +67,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <div class="code" id="code">WSP · 10</div>
 <div class="qr" id="qr"></div>
 <p class="meta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia. Address released on <b>09.10 at 18:00</b>.</span><span id="bringing"></span></p>
-<p class="small">Show this seal at the door. The QR confirms your place in the WHISPERS list.</p>
+<p class="small" id="ticketNote"></p>
 <p class="state" id="state"></p>
 <button class="save" hidden id="save" type="button">Private ticket</button>
 <p aria-live="polite" class="saved" id="saved"></p>
@@ -96,6 +96,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
       $('qr').textContent='Please confirm your attendance first. Your private ticket will appear here after RSVP and ticket release.';
       $('venue').innerHTML='Use your confirmation link to RSVP. Location remains sealed until 09.10 at 18:00.';
       $('bringing').innerHTML='';
+      $('ticketNote').textContent='';
       $('state').textContent='Waiting for RSVP';
       return;
     }
@@ -106,6 +107,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
     $('qr').textContent='Your ticket will be released on 09.10 at 18:00.';
     $('venue').innerHTML='Location remains sealed until 09.10 at 18:00.';
     $('bringing').innerHTML=t.bringing?'Registered with <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'Guest of '+escapeHtml(t.brought_by):'');
+    $('ticketNote').textContent='';
     $('state').textContent='Locked until release';
     return;
   }
@@ -117,6 +119,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia · private location in central Sofia. Address released on 09.10 at 18:00.';
   if(v)$('venue').innerHTML=v.mapUrl?'<a href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+escapeHtml(venueText)+'</a>':escapeHtml(venueText);
   if(t.table_reserved)$('bringing').innerHTML += '<br/><b>Your table is confirmed.</b>';
+  $('ticketNote').textContent='Show this seal at the door. The QR confirms your place in the WHISPERS list.';
   $('state').textContent=t.checked_in_at?'Already checked in':'Ready for the door';
   if(window.WhispersTickets){
     const lines=['Saturday 10 October · Doors 22:00',venueText];
