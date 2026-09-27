@@ -180,7 +180,6 @@
 - 09.10 · 18:00
 - Ticket release
 - Saturday 10 October · Doors 22:00
-- Sofia · private location in central Sofia. Address released on 09.10 at 18:00.
 - Coming on your own
 
 **Solo registration confirmation**
@@ -200,8 +199,8 @@
 **Buttons**
 
 - Private ticket
-- Cancel attendance
 - Start over
+- Cancel attendance
 
 **Save ticket messages**
 

@@ -22,6 +22,14 @@ test("pre-release confirmation message is not styled as a white QR card", () => 
 
 test("cancel attendance asks for confirmation before submitting", () => {
   assert.match(html, /confirm\('Are you sure you want to cancel your attendance\?'\)/);
+  assert.match(html, /id="reset"[\s\S]*id="cancelAttendance"/);
+  assert.match(html, /class="btn caps small st"[^>]*id="cancelAttendance"/);
+  assert.match(html, /\.btn\.small\{[^}]*min-height:44px/);
+});
+
+test("pre-release confirmation avoids repeated location release copy", () => {
+  assert.match(html, /<p class="passfoot">Saturday <b>10 October<\/b> · Doors <b>22:00<\/b><span class="bringing" id="bringingLine">/);
+  assert.doesNotMatch(html, /<p class="passfoot">Saturday <b>10 October<\/b> · Doors <b>22:00<\/b><br\/><span class="venue-line">Sofia · private location/);
 });
 
 test("personal invite contact step does not keep the shared name prompt", () => {
