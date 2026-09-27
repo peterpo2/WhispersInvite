@@ -231,16 +231,28 @@ async function loadMembers(){
 }
 function renderMembers(){
   const body=document.querySelector('#membersTable tbody'),rows=filteredMembers();
-  body.innerHTML=rows.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.type)+'</td><td>'+esc(m.guestOf||'')+'</td><td>'+esc(m.email)+(m.emailIsFallback?' <span class="pill">fallback</span>':'')+'</td><td>'+esc(m.phone)+'</td><td>'+(m.wantsTableReservation?'yes':'')+'</td><td><input type="checkbox" '+(m.reservationConfirmed?'checked':'')+' data-reservation-id="'+esc(m.rsvpId)+'"/></td><td>'+esc(m.table||'')+'</td><td><input type="checkbox" '+(m.checkedIn?'checked':'')+' data-checkin-id="'+esc(m.id)+'"/></td><td>'+esc(m.checkedInAt?new Date(m.checkedInAt).toLocaleString():'')+'</td><td>'+esc(m.submittedAt?new Date(m.submittedAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="11">No members.</td></tr>';
-  body.querySelectorAll('[data-checkin-id]').forEach(cb=>cb.onchange=()=>toggleMember(cb.dataset.checkinId,cb.checked));
-  body.querySelectorAll('[data-reservation-id]').forEach(cb=>cb.onchange=()=>toggleReservation(cb.dataset.reservationId,cb.checked));
+  body.innerHTML=rows.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.type)+'</td><td>'+esc(m.guestOf||'')+'</td><td>'+esc(m.email)+(m.emailIsFallback?' <span class="pill">fallback</span>':'')+'</td><td>'+esc(m.phone)+'</td><td><input type="checkbox" '+(m.wantsTableReservation?'checked':'')+' data-request-id="'+esc(m.rsvpId)+'"/></td><td><input type="checkbox" '+(m.reservationConfirmed?'checked':'')+' data-reservation-id="'+esc(m.rsvpId)+'"/></td><td>'+esc(m.table||'')+'</td><td><input type="checkbox" '+(m.checkedIn?'checked':'')+' data-checkin-id="'+esc(m.id)+'"/></td><td>'+esc(m.checkedInAt?new Date(m.checkedInAt).toLocaleString():'')+'</td><td>'+esc(m.submittedAt?new Date(m.submittedAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="11">No members.</td></tr>';
+  body.querySelectorAll('[data-checkin-id]').forEach(cb=>cb.onchange=()=>toggleMember(cb,cb.dataset.checkinId,cb.checked));
+  body.querySelectorAll('[data-request-id]').forEach(cb=>cb.onchange=()=>toggleRequest(cb,cb.dataset.requestId,cb.checked));
+  body.querySelectorAll('[data-reservation-id]').forEach(cb=>cb.onchange=()=>toggleReservation(cb,cb.dataset.reservationId,cb.checked));
 }
-async function toggleMember(id,checkedIn){
+function confirmToggle(cb,message){if(window.confirm(message))return true;cb.checked=!cb.checked;return false;}
+async function toggleMember(cb,id,checkedIn){
+  if(!confirmToggle(cb,checkedIn?'Mark this guest as inside?':'Remove this guest check-in?'))return;
   const m=members.find(x=>x.id===id);if(!m)return;
   await fetch('/api/staff/checkin-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:m.rsvpId,companionId:m.companionId,holder:m.holder,checkedIn})});
   await loadMembers();await loadList();
 }
-async function toggleReservation(rsvpId,reservationConfirmed){await fetch('/api/staff/reservation-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),reservationConfirmed})});await loadTables();await loadMembers();}
+async function toggleRequest(cb,rsvpId,wantsTableReservation){
+  if(!confirmToggle(cb,wantsTableReservation?'Mark table request for this group?':'Remove table request for this group?'))return;
+  await fetch('/api/staff/reservation-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),wantsTableReservation})});
+  await loadTables();await loadMembers();
+}
+async function toggleReservation(cb,rsvpId,reservationConfirmed){
+  if(!confirmToggle(cb,reservationConfirmed?'Confirm this table reservation?':'Remove table reservation confirmation?'))return;
+  await fetch('/api/staff/reservation-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),reservationConfirmed})});
+  await loadTables();await loadMembers();
+}
 document.getElementById('memberSearch').oninput=renderMembers;
 document.getElementById('exportMembers').onclick=exportCsv;
 document.querySelectorAll('#membersTable th').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=1;}renderMembers();});
@@ -261,7 +273,7 @@ function renderTables(){
   const search=box.querySelector('#tableSearch');if(search)search.oninput=()=>{tableSearch=search.value;renderTables();};
   box.querySelectorAll('[data-assign]').forEach(b=>b.onclick=()=>assignTable(b.dataset.rsvpId,b.dataset.assign||null));
   box.querySelectorAll('select').forEach(s=>s.onchange=()=>assignTable(s.dataset.rsvpId,s.value||null));
-  box.querySelectorAll('[data-reservation-id]').forEach(cb=>cb.onchange=()=>toggleReservation(cb.dataset.reservationId,cb.checked));
+  box.querySelectorAll('[data-reservation-id]').forEach(cb=>cb.onchange=()=>toggleReservation(cb,cb.dataset.reservationId,cb.checked));
 }
 function groupMatchesTableSearch(g){
   const q=tableSearch.trim().toLowerCase();if(!q)return true;
