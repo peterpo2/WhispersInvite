@@ -33,7 +33,8 @@ body{margin:0;min-height:100vh;min-height:100dvh;display:flex;background:radial-
 body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:url("/assets/whispers-rose.png") 50% 42%/min(150vw,920px) auto no-repeat;opacity:.13;filter:blur(1px) saturate(1.08)}
 body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.64) 100%)}
 .grain{position:fixed;inset:-50%;z-index:0;pointer-events:none;opacity:.045;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");animation:grain 1.1s steps(3) infinite}@keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}100%{transform:translate(0,0)}}@media (prefers-reduced-motion:reduce){.grain{animation:none}}
-.ticket{position:relative;z-index:1;width:100%;max-width:480px;margin:auto;text-align:center}
+.ticket{position:relative;z-index:1;width:100%;max-width:480px;margin:auto;text-align:center;transition:opacity .22s ease}
+.ticket.loading{opacity:0}
 .mark{display:block;width:60px;height:60px;margin:0 auto;filter:drop-shadow(0 0 22px rgba(163,22,33,.3))}
 .rose{font-weight:300;font-size:22px;letter-spacing:.44em;margin:12px 0 0 .44em;color:var(--gold)}
 .rose:after{content:"";display:block;width:48px;height:1px;margin:16px auto 0;background:rgba(217,174,120,.65)}
@@ -59,7 +60,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
-<main class="ticket">
+<main class="ticket loading">
 <img class="mark" src="/assets/whispers-mark.png" alt=""/>
 <div class="rose">WHISPERS</div>
 <h1 id="guest">…</h1>
@@ -79,12 +80,13 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 (async()=>{
   const api=${JSON.stringify(apiUrl)},ticketUrl=${JSON.stringify(ticketUrl)};
   const $=(id)=>document.getElementById(id);
+  const shell=document.querySelector('.ticket'),reveal=()=>shell.classList.remove('loading');
   const escapeHtml=(s)=>String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const darkQr=(message)=>{$('qr').classList.remove('ready');$('qr').classList.add('fallback');$('qr').textContent=message;};
-  const failed=()=>{$('guest').textContent='We could not load your seal.';darkQr('Your ticket could not be loaded. Please refresh to try again.');$('state').textContent='Refresh to try again.';};
+  const failed=()=>{$('guest').textContent='We could not load your seal.';darkQr('Your ticket could not be loaded. Please refresh to try again.');$('state').textContent='Refresh to try again.';reveal();};
   let res,data;
   try{res=await fetch(api,{headers:{'Accept':'application/json'}});}catch(e){failed();return;}
-  if(!res.ok){if(res.status>=500){failed();return;}$('guest').textContent='Ticket not found';darkQr('This ticket link is invalid.');$('state').textContent='Invalid seal';return;}
+  if(!res.ok){if(res.status>=500){failed();return;}$('guest').textContent='Ticket not found';darkQr('This ticket link is invalid.');$('state').textContent='Invalid seal';reveal();return;}
   try{data=await res.json();}catch(e){failed();return;}
   const t=data&&data.ticket;
   if(!t){failed();return;}
@@ -99,6 +101,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
       $('bringing').innerHTML='';
       $('ticketNote').textContent='';
       $('state').textContent='Waiting for RSVP';
+      reveal();
       return;
     }
     $('guest').textContent=t.guest_name||'Your ticket';
@@ -110,6 +113,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
     $('bringing').innerHTML=t.bringing?'Registered with <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'Guest of '+escapeHtml(t.brought_by):'');
     $('ticketNote').textContent='';
     $('state').textContent='Locked until release';
+    reveal();
     return;
   }
   const role=t.brought_by?'Guest of '+t.brought_by:'Founding guest';
@@ -135,6 +139,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   const qr=$('qr');
   const fallback=()=>{qr.classList.remove('ready');qr.classList.add('fallback');qr.textContent=ticketUrl;};
   if(window.QRCode){QRCode.toCanvas(ticketUrl,{width:384,margin:2,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else{qr.classList.add('ready');qr.appendChild(canvas);}});}else{fallback();}
+  reveal();
 })();
 </script>
 </body>
