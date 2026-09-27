@@ -32,8 +32,11 @@ test("personal invite contact step does not keep the shared name prompt", () => 
 });
 
 test("ticket fallback and pending states are dark, not paper-white QR cards", () => {
+  assert.match(ticketPage, /\.qr\{[^}]*background:rgba\(8,6,5,\.\d+\)/);
+  assert.match(ticketPage, /\.qr\.ready\{[^}]*background:var\(--paper\)/);
   assert.match(ticketPage, /\.qr\.fallback\{[^}]*background:rgba\(8,6,5,\.\d+\)/);
   assert.match(ticketPage, /\.qr\.fallback\{[^}]*border:1px solid rgba\(217,174,120,\.\d+\)/);
+  assert.doesNotMatch(ticketPage, /\.qr\{[^}]*background:var\(--paper\)/);
   assert.doesNotMatch(ticketPage, /\.qr\.fallback\{[^}]*background:var\(--paper\)/);
   assert.match(ticketPage, /darkQr\('This ticket link is invalid\.'\)/);
   assert.match(ticketPage, /darkQr\('Your ticket could not be loaded\. Please refresh to try again\.'\)/);

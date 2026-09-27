@@ -43,7 +43,8 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 .rule:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;background:var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
 .code,.state{font-family:var(--sans);font-weight:300;text-transform:uppercase}
 .code{font-size:21px;letter-spacing:.24em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,174,120,.4)}
-.qr{width:min(62vw,230px);height:min(62vw,230px);margin:22px auto;background:var(--paper);padding:10px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.qr{width:min(62vw,230px);height:min(62vw,230px);margin:22px auto;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);padding:10px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.qr.ready{background:var(--paper);border:0}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
 .meta{font-size:21px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}.meta b{font-weight:400;color:#F6EFE4}
@@ -79,7 +80,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   const api=${JSON.stringify(apiUrl)},ticketUrl=${JSON.stringify(ticketUrl)};
   const $=(id)=>document.getElementById(id);
   const escapeHtml=(s)=>String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const darkQr=(message)=>{$('qr').classList.add('fallback');$('qr').textContent=message;};
+  const darkQr=(message)=>{$('qr').classList.remove('ready');$('qr').classList.add('fallback');$('qr').textContent=message;};
   const failed=()=>{$('guest').textContent='We could not load your seal.';darkQr('Your ticket could not be loaded. Please refresh to try again.');$('state').textContent='Refresh to try again.';};
   let res,data;
   try{res=await fetch(api,{headers:{'Accept':'application/json'}});}catch(e){failed();return;}
@@ -132,8 +133,8 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
     $('save').onclick=async()=>{$('saved').textContent='';const files=await ready;if(!files){$('saved').textContent='Your ticket could not be prepared. Please try again.';ready=prep();return;}if(await window.WhispersTickets.save(files)==='downloaded')$('saved').textContent='Your ticket is saved to this device.';};
   }
   const qr=$('qr');
-  const fallback=()=>{qr.classList.add('fallback');qr.textContent=ticketUrl;};
-  if(window.QRCode){QRCode.toCanvas(ticketUrl,{width:384,margin:2,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else qr.appendChild(canvas);});}else{fallback();}
+  const fallback=()=>{qr.classList.remove('ready');qr.classList.add('fallback');qr.textContent=ticketUrl;};
+  if(window.QRCode){QRCode.toCanvas(ticketUrl,{width:384,margin:2,color:{dark:'#0b0908',light:'#f1e9dc'}},(err,canvas)=>{if(err)fallback();else{qr.classList.add('ready');qr.appendChild(canvas);}});}else{fallback();}
 })();
 </script>
 </body>
