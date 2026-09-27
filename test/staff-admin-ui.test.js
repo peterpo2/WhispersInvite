@@ -31,6 +31,18 @@ test("staff admin includes an invite registry tab", () => {
   assert.match(staffPage, /function filteredInvites\(\)/);
 });
 
+test("members and invite tables paginate at twenty rows per page", () => {
+  assert.match(staffPage, /const PAGE_SIZE=20/);
+  assert.match(staffPage, /id="membersPager"/);
+  assert.match(staffPage, /id="invitesPager"/);
+  assert.match(staffPage, /function pageRows\(rows,page\)/);
+  assert.match(staffPage, /rows\.slice\(start,start\+PAGE_SIZE\)/);
+  assert.match(staffPage, /renderPager\('membersPager',rows,membersPage/);
+  assert.match(staffPage, /renderPager\('invitesPager',rows,invitesPage/);
+  assert.match(staffPage, /document\.getElementById\('memberSearch'\)\.oninput=\(\)=>\{membersPage=1;renderMembers\(\);\}/);
+  assert.match(staffPage, /document\.getElementById\('inviteSearch'\)\.oninput=\(\)=>\{invitesPage=1;renderInvites\(\);\}/);
+});
+
 test("staff admin navigation and controls have compact phone layouts", () => {
   assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.tabs\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.tab\{width:100%;min-height:52px;padding:0 8px;letter-spacing:\.2em;font-size:12px/);
