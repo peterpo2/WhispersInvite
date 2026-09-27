@@ -251,9 +251,8 @@
 Shown on the public invitation flow and ticket pages, fixed above the mobile safe area.
 
 - Powered by
-- Beluga logo from `/assets/partner-beluga-bv.png`
-- Beluga supplied JPG from `/assets/partner-beluga.jpg`
-- Barons de Rothschild supplied JPG from `/assets/partner-rothschild.jpg`
+- Beluga logo from `/assets/partner-beluga.png`
+- Barons de Rothschild logo from `/assets/partner-rothschild.png`
 
 **Released ticket helper text**
 

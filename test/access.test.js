@@ -23,8 +23,8 @@ test("allows the invitation, API routes, ticket pages and the staff scanner", ()
     "/assets/whispers-favicon.png",
     "/assets/whispers-mark.png",
     "/assets/whispers-seal.png",
-    "/assets/partner-beluga.jpg",
-    "/assets/partner-rothschild.jpg",
+    "/assets/partner-beluga.png",
+    "/assets/partner-rothschild.png",
     "/assets/ticket-card.js",
   ]) {
     assert.equal(isPublicPath(path), true, path);

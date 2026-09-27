@@ -85,13 +85,17 @@ test("start over returns to the invitation entry point, not the replaced ticket 
 
 test("public invitation shells use the fixed partner bar with real logo assets", () => {
   assert.match(html, /class="partner-bar"/);
-  assert.match(html, /\/assets\/partner-beluga-bv\.png/);
-  assert.match(html, /\/assets\/partner-beluga\.jpg/);
-  assert.match(html, /\/assets\/partner-rothschild\.jpg/);
+  assert.match(html, /\/assets\/partner-beluga\.png/);
+  assert.match(html, /\/assets\/partner-rothschild\.png/);
+  assert.doesNotMatch(html, /\/assets\/partner-beluga-bv\.png/);
+  assert.doesNotMatch(html, /\/assets\/partner-beluga\.jpg/);
+  assert.doesNotMatch(html, /\/assets\/partner-rothschild\.jpg/);
   assert.doesNotMatch(html, /\/assets\/sponsor-1\.png/);
   assert.doesNotMatch(html, /\/assets\/sponsor-2\.png/);
   assert.match(ticketPage, /class="partner-bar"/);
-  assert.match(ticketPage, /\/assets\/partner-beluga-bv\.png/);
-  assert.match(ticketPage, /\/assets\/partner-beluga\.jpg/);
-  assert.match(ticketPage, /\/assets\/partner-rothschild\.jpg/);
+  assert.match(ticketPage, /\/assets\/partner-beluga\.png/);
+  assert.match(ticketPage, /\/assets\/partner-rothschild\.png/);
+  assert.doesNotMatch(ticketPage, /\/assets\/partner-beluga-bv\.png/);
+  assert.doesNotMatch(ticketPage, /\/assets\/partner-beluga\.jpg/);
+  assert.doesNotMatch(ticketPage, /\/assets\/partner-rothschild\.jpg/);
 });
