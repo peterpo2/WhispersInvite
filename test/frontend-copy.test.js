@@ -125,3 +125,14 @@ test("public floating actions sit above the partner bar", () => {
   assert.match(html, /\.skip\{[\s\S]*bottom:calc\(var\(--partner-action-clearance\) \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(html, /\.skip\{[\s\S]*z-index:70/);
 });
+
+test("letter respond CTA is fixed above scrollable text with restrained glow", () => {
+  assert.match(html, /#s-letter\{padding-bottom:calc\(154px \+ env\(safe-area-inset-bottom\)\);scroll-padding-bottom:calc\(154px \+ env\(safe-area-inset-bottom\)\)\}/);
+  assert.match(html, /#s-letter \.inner\{padding-bottom:106px\}/);
+  assert.match(html, /#toRsvp\{position:fixed;z-index:90;left:50%;right:auto;bottom:calc\(22px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(html, /#toRsvp\{[\s\S]*width:min\(430px,calc\(100vw - 36px\)\)/);
+  assert.match(html, /#toRsvp\{[\s\S]*animation:respondGlow 3\.6s ease-in-out infinite/);
+  assert.match(html, /#toRsvp::before\{[\s\S]*animation:respondSweep 4\.8s ease-in-out infinite/);
+  assert.match(html, /#toRsvp::after\{[\s\S]*animation:respondHalo 3\.6s ease-in-out infinite/);
+  assert.match(html, /#s-letter\.on #toRsvp\.st\{animation:respondGlow 3\.6s ease-in-out infinite;transform:translateX\(-50%\)\}/);
+});
