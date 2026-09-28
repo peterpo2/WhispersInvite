@@ -1,4 +1,5 @@
 import { connect } from "cloudflare:sockets";
+import { buildSmtpMimeMessage } from "./smtp-message.js";
 
 const CRLF = "\r\n";
 const encoder = new TextEncoder();
@@ -19,7 +20,7 @@ export async function sendSmtpMail(config, message) {
     await command(writer, reader, `MAIL FROM:<${mailbox(config.from)}>`, 250);
     await command(writer, reader, `RCPT TO:<${mailbox(message.to)}>`, [250, 251]);
     await command(writer, reader, "DATA", 354);
-    await writeLine(writer, mimeMessage(message));
+    await writeLine(writer, buildSmtpMimeMessage(message));
     await readResponse(reader, 250);
     await command(writer, reader, "QUIT", 221);
   } finally {
@@ -65,35 +66,6 @@ async function readResponse(reader, expected) {
   }
 }
 
-function mimeMessage(message) {
-  const boundary = `whispers-${crypto.randomUUID().replace(/-/g, "")}`;
-  return [
-    `From: ${message.from}`,
-    `To: ${message.to}`,
-    `Reply-To: ${message.replyTo}`,
-    `Subject: ${encodeHeader(message.subject)}`,
-    "MIME-Version: 1.0",
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    "",
-    `--${boundary}`,
-    "Content-Type: text/plain; charset=UTF-8",
-    "Content-Transfer-Encoding: 8bit",
-    "",
-    dotStuff(message.text),
-    `--${boundary}`,
-    "Content-Type: text/html; charset=UTF-8",
-    "Content-Transfer-Encoding: 8bit",
-    "",
-    dotStuff(message.html),
-    `--${boundary}--`,
-    ".",
-  ].join(CRLF);
-}
-
-function dotStuff(value) {
-  return String(value || "").replace(/\r?\n/g, CRLF).replace(/^\./gm, "..");
-}
-
 function mailbox(value) {
   const match = String(value || "").match(/<([^<>@\s]+@[^<>\s]+)>/);
   if (match) return match[1];
@@ -102,10 +74,6 @@ function mailbox(value) {
 
 function base64Auth(user, pass) {
   return bytesToBase64(encoder.encode(`\0${user}\0${pass}`));
-}
-
-function encodeHeader(value) {
-  return /^[\x20-\x7E]*$/.test(value) ? value : `=?UTF-8?B?${bytesToBase64(encoder.encode(value))}?=`;
 }
 
 function bytesToBase64(bytes) {
