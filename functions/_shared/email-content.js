@@ -121,6 +121,73 @@ export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName
   return emails;
 }
 
+export function buildTicketEmail({ to, name, ticketLink, guestOf, config }) {
+  const safeName = String(name || "").trim() || "Guest";
+  const link = String(ticketLink || "").trim();
+  const subject = "WHISPERS Ticket";
+  const contact = config.replyTo;
+  const phone = config.contactPhone;
+  const title = "Your private ticket is ready.";
+  const lines = [
+    guestOf ? `Guest of ${guestOf}.` : "",
+    "Saturday 10 October · Doors 22:00",
+    "Show this ticket at the door.",
+  ].filter(Boolean);
+  const text = [
+    "WHISPERS",
+    "",
+    `${safeName},`,
+    "",
+    title,
+    ...lines,
+    "",
+    "Open ticket:",
+    link,
+    "",
+    "For questions:",
+    contact,
+    phone,
+  ].join("\n");
+  const htmlLines = lines.map((line) => `<tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">${escapeHtml(line)}</td></tr>`).join("");
+  const html = `<!doctype html>
+<html>
+<body style="margin:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0B0908;color:#EDE6DA;">
+    <tr>
+      <td align="center" style="padding:40px 18px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;">
+          <tr><td style="font-family:Arial,sans-serif;letter-spacing:0.34em;text-transform:uppercase;color:#D9AE78;font-size:13px;text-align:center;">WHISPERS</td></tr>
+          <tr><td style="height:28px;"></td></tr>
+          <tr><td style="font-size:28px;line-height:1.2;text-align:center;color:#F6EFE4;">${escapeHtml(safeName)}</td></tr>
+          <tr><td style="height:18px;"></td></tr>
+          <tr><td style="font-size:20px;line-height:1.5;text-align:center;color:#EDE6DA;">${escapeHtml(title)}</td></tr>
+          <tr><td style="height:12px;"></td></tr>
+          ${htmlLines}
+          <tr><td style="height:26px;"></td></tr>
+          <tr>
+            <td align="center">
+              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #D9AE78;color:#0B0908;background:#D9AE78;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;padding:16px 24px;">Open Ticket</a>
+            </td>
+          </tr>
+          <tr><td style="height:30px;"></td></tr>
+          <tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">For questions:<br><a href="mailto:${escapeHtml(contact)}" style="color:#D9AE78;">${escapeHtml(contact)}</a><br>${escapeHtml(phone)}</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return {
+    from: config.from,
+    replyTo: config.replyTo,
+    to,
+    subject,
+    text,
+    html,
+  };
+}
+
 function rsvpEmail({ to, name, title, lines, contact, phone, config }) {
   const subject = "WHISPERS RSVP confirmed";
   const text = [

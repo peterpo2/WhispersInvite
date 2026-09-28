@@ -1,10 +1,14 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
-import { buildInviteEmail, emailConfigFromEnv } from "../../_shared/email-content.js";
+import { buildInviteEmail, buildRsvpConfirmationEmails, buildTicketEmail, emailConfigFromEnv } from "../../_shared/email-content.js";
 import { retryAsync } from "../../_shared/retry.js";
+import { EVENT_KEY, buildConfirmationUrl, buildInviteUrl, buildTicketUrl } from "../../_shared/rsvp.js";
 import { sendSmtpMail } from "../../_shared/smtp.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 const COLUMNS = "id,name,email,confirmation_email_send_count";
+const RSVP_COLUMNS = "id,guest_id,guest_name,guest_email,status,confirmation_token,ticket_token,wants_table_reservation";
+const COMPANION_COLUMNS = "id,rsvp_id,guest_name,email,confirmation_token,ticket_token";
+const SEND_TYPES = new Set(["invite", "confirmation", "ticket"]);
 
 export async function onRequestPost({ request, env }) {
   let body;
@@ -15,7 +19,9 @@ export async function onRequestPost({ request, env }) {
   }
 
   const id = typeof body?.id === "string" ? body.id.trim() : "";
+  const type = typeof body?.type === "string" ? body.type.trim() : "invite";
   if (!id || id.length > 120) return json({ error: "Invalid invite send" }, 400);
+  if (!SEND_TYPES.has(type)) return json({ error: "Invalid invite send" }, 400);
 
   const found = await supabaseFetch(
     env,
@@ -26,25 +32,27 @@ export async function onRequestPost({ request, env }) {
 
   const [invite] = await found.response.json();
   if (!invite) return json({ error: "Invite not found" }, 404);
-  if (!invite.email) return json({ error: "Invite has no email" }, 400);
 
   const config = emailConfigFromEnv(env);
   if (config.error) return json({ error: config.error }, 500);
 
-  const inviteLink = `${new URL(request.url).origin}/invite/${encodeURIComponent(invite.id)}`;
+  const built = await buildEmailsForType({ env, requestUrl: request.url, invite, type, config });
+  if (built.error instanceof Response) return built.error;
+  if (built.error) return json({ error: built.error }, built.status || 400);
+
   try {
-    const email = buildInviteEmail({
-      to: invite.email,
-      name: invite.name,
-      inviteLink,
-      config,
-    });
-    await retryAsync(() => sendSmtpMail(config, email), { attempts: 2, delayMs: 350 });
+    for (const email of built.emails) {
+      await retryAsync(() => sendSmtpMail(config, email), { attempts: 2, delayMs: 350 });
+    }
   } catch {
-    return json({ error: "Could not send invite email" }, 502);
+    return json({ error: `Could not send ${type} email` }, 502);
   }
 
   const sentAt = new Date().toISOString();
+  if (type !== "invite") {
+    return json({ ok: true, type, sentAt, sent: built.emails.length });
+  }
+
   const sendCount = Number(invite.confirmation_email_send_count || 0) + 1;
   const updated = await supabaseFetch(
     env,
@@ -62,7 +70,79 @@ export async function onRequestPost({ request, env }) {
   if (updated.error) return updated.error;
   if (!updated.response.ok) return json({ error: "Could not send invite" }, 502);
 
-  return json({ ok: true, confirmationEmailSentAt: sentAt, confirmationEmailSendCount: sendCount });
+  return json({ ok: true, type, confirmationEmailSentAt: sentAt, confirmationEmailSendCount: sendCount, sent: built.emails.length });
+}
+
+async function buildEmailsForType({ env, requestUrl, invite, type, config }) {
+  if (type === "invite") {
+    if (!invite.email) return { error: "Invite has no email", status: 400 };
+    return {
+      emails: [
+        buildInviteEmail({
+          to: invite.email,
+          name: invite.name,
+          inviteLink: buildInviteUrl(requestUrl, invite.id),
+          config,
+        }),
+      ],
+    };
+  }
+
+  const found = await supabaseFetch(
+    env,
+    `/rest/v1/rsvps?select=${RSVP_COLUMNS}&event_key=eq.${encodeURIComponent(EVENT_KEY)}&guest_id=eq.${encodeURIComponent(invite.id)}&limit=1`
+  );
+  if (found.error) return { error: found.error };
+  if (!found.response.ok) return { error: "Could not load registration", status: 502 };
+
+  const [rsvp] = await found.response.json();
+  if (!rsvp || rsvp.status !== "attending") return { error: "Invite is not registered", status: 400 };
+
+  const companionsFound = await supabaseFetch(
+    env,
+    `/rest/v1/rsvp_companions?select=${COMPANION_COLUMNS}&rsvp_id=eq.${encodeURIComponent(rsvp.id)}&limit=10`
+  );
+  if (companionsFound.error) return { error: companionsFound.error };
+  if (!companionsFound.response.ok) return { error: "Could not load registration", status: 502 };
+  const companions = await companionsFound.response.json();
+
+  if (type === "confirmation") {
+    const firstCompanion = companions.find((item) => item.email && item.confirmation_token) || null;
+    const emails = buildRsvpConfirmationEmails({
+      guestName: rsvp.guest_name,
+      guestEmail: rsvp.guest_email,
+      plusOneName: firstCompanion?.guest_name || "",
+      plusOneEmail: firstCompanion?.email || "",
+      confirmationLink: rsvp.confirmation_token ? buildConfirmationUrl(requestUrl, rsvp.confirmation_token) : "",
+      plusOneConfirmationLink: firstCompanion?.confirmation_token ? buildConfirmationUrl(requestUrl, firstCompanion.confirmation_token) : "",
+      wantsTableReservation: rsvp.wants_table_reservation === true,
+      config,
+    });
+    if (!emails.length) return { error: "No confirmation email available", status: 400 };
+    return { emails };
+  }
+
+  const emails = [];
+  if (rsvp.guest_email && rsvp.ticket_token) {
+    emails.push(buildTicketEmail({
+      to: rsvp.guest_email,
+      name: rsvp.guest_name,
+      ticketLink: buildTicketUrl(requestUrl, rsvp.ticket_token),
+      config,
+    }));
+  }
+  for (const companion of companions) {
+    if (!companion.email || !companion.ticket_token) continue;
+    emails.push(buildTicketEmail({
+      to: companion.email,
+      name: companion.guest_name,
+      guestOf: rsvp.guest_name,
+      ticketLink: buildTicketUrl(requestUrl, companion.ticket_token),
+      config,
+    }));
+  }
+  if (!emails.length) return { error: "No ticket email available", status: 400 };
+  return { emails };
 }
 
 export async function onRequest() {

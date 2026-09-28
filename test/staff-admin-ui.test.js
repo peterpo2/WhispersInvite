@@ -22,16 +22,31 @@ test("staff admin includes an invite registry tab", () => {
   assert.match(staffPage, /confirmationLink/);
   assert.match(staffPage, /ticketLink/);
   assert.match(staffPage, /confirmationEmailSentAt/);
-  assert.match(staffPage, /function sendInviteCell\(i\)/);
+  assert.match(staffPage, /function linkActionCell\(i,type,link\)/);
   assert.match(staffPage, /\/api\/staff\/invite-send/);
-  assert.match(staffPage, /Send again/);
+  assert.match(staffPage, /data-send-link-type/);
   assert.match(staffPage, /placeholder="Email optional"/);
   assert.match(staffPage, /placeholder="Phone optional"/);
   assert.match(staffPage, /function inviteStatusLabel\(status\)/);
   assert.match(staffPage, /Not responded/);
   assert.match(staffPage, /function filteredInvites\(\)/);
   assert.match(staffPage, /<th>Invite<\/th><th>Confirmation<\/th><th>Ticket<\/th>/);
+  assert.doesNotMatch(staffPage, /<th>Send<\/th>/);
   assert.match(staffPage, /i\.inviteLink,i\.confirmationLink,i\.ticketLink/);
+});
+
+test("invite link columns can send their own email type", () => {
+  const inviteSendApi = readFileSync("functions/api/staff/invite-send.js", "utf8");
+
+  assert.match(inviteSendApi, /const SEND_TYPES = new Set\(\["invite", "confirmation", "ticket"\]\)/);
+  assert.match(inviteSendApi, /const type = typeof body\?\.type === "string" \? body\.type\.trim\(\) : "invite"/);
+  assert.match(inviteSendApi, /buildInviteEmail/);
+  assert.match(inviteSendApi, /buildRsvpConfirmationEmails/);
+  assert.match(inviteSendApi, /buildTicketEmail/);
+  assert.match(staffPage, /JSON\.stringify\(\{id,type\}\)/);
+  assert.match(staffPage, /linkActionCell\(i,'invite',i\.inviteLink\)/);
+  assert.match(staffPage, /linkActionCell\(i,'confirmation',i\.confirmationLink\)/);
+  assert.match(staffPage, /linkActionCell\(i,'ticket',i\.ticketLink\)/);
 });
 
 test("members and invite tables paginate at twenty rows per page", () => {
