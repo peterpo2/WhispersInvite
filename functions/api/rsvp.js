@@ -232,8 +232,8 @@ async function sendRsvpConfirmation(env, row) {
     try {
       await retryAsync(() => sendSmtpMail(config, email), { attempts: 2, delayMs: 350 });
       sent += 1;
-    } catch {
-      return { attempted: true, sent, error: "Could not send RSVP confirmation email" };
+    } catch (error) {
+      return { attempted: true, sent, error: `Could not send RSVP confirmation email: ${String(error?.message || error)}` };
     }
   }
   return { attempted: emails.length > 0, sent };
