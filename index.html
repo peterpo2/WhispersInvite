@@ -514,7 +514,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   async function submitRSVP(extra){
     if(!state.guestName) return {ok:false,error:'Please give your full name.'};
     const payload={guestName:state.guestName,guestEmail:state.guestEmail,guestPhone:state.guestPhone,guestId:state.guestId||undefined,status:extra.status,wantsTableReservation:extra.wantsTableReservation===true,plusOne:extra.plusOne||null};
-    const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),12000);
+    const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),30000);
     try{
       const res=await fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),signal:ctl.signal});
       const data=await res.json().catch(()=>({}));
