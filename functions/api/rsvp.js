@@ -1,5 +1,8 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
+import { buildRsvpConfirmationEmails, emailConfigFromEnv } from "../_shared/email-content.js";
+import { retryAsync } from "../_shared/retry.js";
 import { addedGuestLimitReached, applyInviteToRsvpRow, buildCompanionRow, buildRsvpRow, buildTicketUrl, isDuplicateSealCode, isRsvpClosed, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
+import { sendSmtpMail } from "../_shared/smtp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const ALREADY_INSIDE = "This invitation has already been used at the door.";
@@ -65,7 +68,8 @@ export async function onRequestPost({ request, env }) {
         const insertedCompanion = await insertCompanion(env, inserted.id, row);
         if (insertedCompanion.error) return insertedCompanion.error;
       }
-      return confirmationResponse(request.url, row);
+      const emailDelivery = await sendRsvpConfirmation(env, row);
+      return confirmationResponse(request.url, row, emailDelivery);
     }
 
     if (saved.response.status !== 409) return json({ error: "Could not save RSVP" }, 502);
@@ -160,7 +164,9 @@ async function updateExistingRsvp(env, requestUrl, row, existing) {
     }
   }
 
-  return confirmationResponse(requestUrl, { ...row, ticket_token: rows[0].ticket_token || existing.ticket_token });
+  const responseRow = { ...row, ticket_token: rows[0].ticket_token || existing.ticket_token };
+  const emailDelivery = await sendRsvpConfirmation(env, responseRow);
+  return confirmationResponse(requestUrl, responseRow, emailDelivery);
 }
 
 async function findDuplicateCompanion(env, rsvpId, row) {
@@ -209,7 +215,31 @@ async function insertCompanion(env, rsvpId, row) {
   return { ok: true };
 }
 
-function confirmationResponse(requestUrl, row) {
+async function sendRsvpConfirmation(env, row) {
+  if (row.status !== "attending") return { attempted: false, sent: 0 };
+  const config = emailConfigFromEnv(env);
+  if (config.error) return { attempted: false, sent: 0, error: config.error };
+  const emails = buildRsvpConfirmationEmails({
+    guestName: row.guest_name,
+    guestEmail: row.guest_email,
+    plusOneName: row.plus_one_name,
+    plusOneEmail: row.plus_one_email,
+    wantsTableReservation: row.wants_table_reservation === true,
+    config,
+  });
+  let sent = 0;
+  for (const email of emails) {
+    try {
+      await retryAsync(() => sendSmtpMail(config, email), { attempts: 2, delayMs: 350 });
+      sent += 1;
+    } catch {
+      return { attempted: true, sent, error: "Could not send RSVP confirmation email" };
+    }
+  }
+  return { attempted: emails.length > 0, sent };
+}
+
+function confirmationResponse(requestUrl, row, emailDelivery = { attempted: false, sent: 0 }) {
   const attending = row.status === "attending";
   return json({
     ok: true,
@@ -223,6 +253,7 @@ function confirmationResponse(requestUrl, row) {
     plusOneTicketToken: attending ? row.plus_one_ticket_token || null : null,
     plusOneTicketUrl: attending && row.plus_one_ticket_token ? buildTicketUrl(requestUrl, row.plus_one_ticket_token) : null,
     ticketReleaseAt: TICKET_RELEASE_AT,
+    emailDelivery,
   });
 }
 
