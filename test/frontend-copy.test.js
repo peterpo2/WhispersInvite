@@ -57,10 +57,12 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
 });
 
 test("locked registered ticket shows event time before the release note", () => {
-  assert.match(ticketPage, /<p class="state" id="state"><\/p>\s*<p class="small" id="ticketNote"><\/p>/);
+  assert.match(ticketPage, /<div class="code" id="code">WSP[\s\S]*<p class="ticket-type" id="ticketType">Ticket<\/p>[\s\S]*<div class="qr" id="qr"><\/div>\s*<p class="state" id="state"><\/p>\s*<p class="meta" id="ticketMeta">/);
+  assert.match(ticketPage, /\.qr\[hidden\]\{display:none\}/);
   assert.match(ticketPage, /\$\('code'\)\.textContent='10\.10 · 22:00'/);
+  assert.match(ticketPage, /\$\('ticketType'\)\.style\.display='block'/);
   assert.match(ticketPage, /\$\('qr'\)\.hidden=true/);
-  assert.match(ticketPage, /\$\('state'\)\.textContent='Locked until release';\s*\$\('ticketNote'\)\.textContent='Your ticket will be released on 09\.10 at 18:00\.'/);
+  assert.match(ticketPage, /\$\('state'\)\.textContent='Locked until release';\s*\$\('ticketMeta'\)\.innerHTML='Location remains sealed until 09\.10 at 18:00\.';\s*\$\('ticketNote'\)\.textContent='Your ticket will be sent to you on 09\.10 at 18:00\.'/);
   assert.doesNotMatch(ticketPage, /\$\('code'\)\.textContent='09\.10 · 18:00'/);
   assert.doesNotMatch(ticketPage, /\$\('qr'\)\.textContent='Your ticket will be released on 09\.10 at 18:00\.'/);
 });

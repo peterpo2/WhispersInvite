@@ -42,9 +42,11 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 .role{font-style:italic;color:#CDB894;margin:0;font-size:22px}
 .rule{position:relative;width:84px;height:1px;margin:22px auto;background:linear-gradient(90deg,transparent,rgba(217,174,120,.85),transparent)}
 .rule:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;background:var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
-.code,.state{font-family:var(--sans);font-weight:300;text-transform:uppercase}
+.code,.state,.ticket-type{font-family:var(--sans);font-weight:300;text-transform:uppercase}
 .code{font-size:21px;letter-spacing:.24em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,174,120,.4)}
+.ticket-type{display:none;font-size:12px;letter-spacing:.3em;color:var(--mute);margin:-2px 0 22px}
 .qr{width:min(62vw,230px);height:min(62vw,230px);margin:22px auto;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);padding:10px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.qr[hidden]{display:none}
 .qr.ready{background:var(--paper);border:0}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
@@ -72,9 +74,10 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <p class="role">Private guest</p>
 <div class="rule"></div>
 <div class="code" id="code">WSP · 10</div>
+<p class="ticket-type" id="ticketType">Ticket</p>
 <div class="qr" id="qr"></div>
-<p class="meta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia. Address released on <b>09.10 at 18:00</b>.</span><span id="bringing"></span></p>
 <p class="state" id="state"></p>
+<p class="meta" id="ticketMeta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia. Address released on <b>09.10 at 18:00</b>.</span><span id="bringing"></span></p>
 <p class="small" id="ticketNote"></p>
 <button class="save" hidden id="save" type="button">Private ticket</button>
 <p aria-live="polite" class="saved" id="saved"></p>
@@ -113,17 +116,18 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
     $('guest').textContent=t.guest_name||'Your ticket';
     document.querySelector('.role').textContent='Registered guest';
     $('code').textContent='10.10 · 22:00';
+    $('ticketType').style.display='block';
     $('qr').hidden=true;
-    $('venue').innerHTML='Location remains sealed until 09.10 at 18:00.';
-    $('bringing').innerHTML=t.bringing?'Registered with <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'Guest of '+escapeHtml(t.brought_by):'');
     $('state').textContent='Locked until release';
-    $('ticketNote').textContent='Your ticket will be released on 09.10 at 18:00.';
+    $('ticketMeta').innerHTML='Location remains sealed until 09.10 at 18:00.';
+    $('ticketNote').textContent='Your ticket will be sent to you on 09.10 at 18:00.';
     reveal();
     return;
   }
   const role=t.brought_by?'Guest of '+t.brought_by:'Founding guest';
   $('guest').textContent=t.guest_name;
   document.querySelector('.role').textContent=role;
+  $('ticketType').style.display='none';
   $('code').textContent=t.seal_code||'WSP · 10';
   $('bringing').innerHTML=t.bringing?'Bringing <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'':'Coming on your own');
   const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia · private location in central Sofia. Address released on 09.10 at 18:00.';

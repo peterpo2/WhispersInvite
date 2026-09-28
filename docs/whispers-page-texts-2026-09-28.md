@@ -317,9 +317,10 @@ Role:
 Main text:
 
 - 10.10 · 22:00
-- Location remains sealed until 09.10 at 18:00.
+- Ticket
 - Locked until release
-- Your ticket will be released on 09.10 at 18:00.
+- Location remains sealed until 09.10 at 18:00.
+- Your ticket will be sent to you on 09.10 at 18:00.
 
 Dynamic relationship text:
 
