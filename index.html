@@ -430,9 +430,11 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 (function(){
   const $ = (s) => document.querySelector(s);
   const SUBMIT_URL = '/api/rsvp';
-  const state = { guestName:null, guestEmail:null, guestPhone:null, guestId:null, attending:null, plusOne:null, wantsTableReservation:false, sealCode:null, confirmationUrl:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null };
+  const state = { guestName:null, guestEmail:null, guestPhone:null, guestId:null, attending:null, plusOne:null, wantsTableReservation:false, sealCode:null, confirmationUrl:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null, alreadyRegistered:false, updateMode:false };
 
   // ── Token personalisation ──────────────────────────
+  const confirmationToken = new URLSearchParams(window.location.search).get('confirmation') || null;
+  const updateRequested = new URLSearchParams(window.location.search).get('update') === '1';
   const urlToken = new URLSearchParams(window.location.search).get('token') || null;
   const startUrl = urlToken ? '/?token=' + encodeURIComponent(urlToken) : '/';
   if (urlToken) {
@@ -444,6 +446,8 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
         state.guestId   = data.id || urlToken;
         state.guestEmail = data.email || null;
         state.guestPhone = data.phone || null;
+        state.alreadyRegistered = data.alreadyRegistered === true;
+        state.confirmationUrl = data.confirmationUrl || null;
         if (nameInput) nameInput.value = data.name;
         if (emailInput && data.email) emailInput.value = data.email;
         if (phoneInput && data.phone) phoneInput.value = data.phone;
@@ -457,6 +461,29 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
         }
       })
       .catch(() => {});
+  }
+  if (confirmationToken && updateRequested) {
+    fetch('/api/confirmation?token=' + encodeURIComponent(confirmationToken))
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || !data.canUpdate || !data.ticket) { window.location.assign('/hi/' + encodeURIComponent(confirmationToken)); return; }
+        const t=data.ticket;
+        state.updateMode=true;
+        state.guestName=t.guest_name||null;
+        state.guestId=t.guest_id||null;
+        state.guestEmail=t.guest_email||null;
+        state.guestPhone=t.guest_phone||null;
+        state.confirmationUrl='/hi/' + encodeURIComponent(confirmationToken);
+        if (nameInput && state.guestName) nameInput.value=state.guestName;
+        if (emailInput && state.guestEmail) emailInput.value=state.guestEmail;
+        if (phoneInput && state.guestPhone) phoneInput.value=state.guestPhone;
+        const el = document.querySelector('.issued.generic-issued');
+        if (el && state.guestName) {
+          el.className = 'issued personalized-issued';
+          el.innerHTML = 'This invitation was issued to<b>' + escapeHtml(state.guestName) + '</b>';
+        }
+      })
+      .catch(() => { window.location.assign('/hi/' + encodeURIComponent(confirmationToken)); });
   }
   function show(id){
     const next=$(id),cur=document.querySelector('.screen.on');
@@ -492,7 +519,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   $('#skipfilm').addEventListener('click',()=>{clearTimers();show('#s-letter')});
 
   // RESPOND: personal links already know the name; the shared link asks for it
-  $('#toRsvp').addEventListener('click',()=>show(state.guestEmail&&state.guestPhone?'#s-rsvp':'#s-identify'));
+  $('#toRsvp').addEventListener('click',()=>{if(state.updateMode){show('#s-plus');return;}if(state.alreadyRegistered&&state.confirmationUrl){window.location.assign(state.confirmationUrl);return;}show(state.guestEmail&&state.guestPhone?'#s-rsvp':'#s-identify')});
 
   // Name (shared link only)
   const nameInput=$('#guestName'),emailInput=$('#guestEmail'),phoneInput=$('#guestPhone'),nameOk=v=>v.split(/\s+/).filter(Boolean).length>=2&&v.length<=120,emailOk=v=>/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v.trim());

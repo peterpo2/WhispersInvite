@@ -1,6 +1,7 @@
 const DEFAULT_FROM = "WHISPERS <noreply@whisperssociety.com>";
 const DEFAULT_REPLY_TO = "guestlist@whisperssociety.com";
 const DEFAULT_PHONE = "+359 888 012 380";
+const LOGO_URL = "https://whisperssociety.com/assets/whispers-mark.png";
 
 export function emailConfigFromEnv(env) {
   const smtpHost = String(env.SMTP_HOST || "").trim();
@@ -45,7 +46,7 @@ export function buildInviteEmail({ to, name, inviteLink, confirmationLink, confi
     <tr>
       <td align="center" style="padding:40px 18px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;">
-          <tr><td style="font-family:Arial,sans-serif;letter-spacing:0.34em;text-transform:uppercase;color:#D9AE78;font-size:13px;text-align:center;">WHISPERS</td></tr>
+          ${brandHeader()}
           <tr><td style="height:28px;"></td></tr>
           <tr><td style="font-size:28px;line-height:1.2;text-align:center;color:#F6EFE4;">${escapeHtml(safeName)}</td></tr>
           <tr><td style="height:18px;"></td></tr>
@@ -156,7 +157,7 @@ export function buildTicketEmail({ to, name, ticketLink, guestOf, config }) {
     <tr>
       <td align="center" style="padding:40px 18px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;">
-          <tr><td style="font-family:Arial,sans-serif;letter-spacing:0.34em;text-transform:uppercase;color:#D9AE78;font-size:13px;text-align:center;">WHISPERS</td></tr>
+          ${brandHeader()}
           <tr><td style="height:28px;"></td></tr>
           <tr><td style="font-size:28px;line-height:1.2;text-align:center;color:#F6EFE4;">${escapeHtml(safeName)}</td></tr>
           <tr><td style="height:18px;"></td></tr>
@@ -210,7 +211,7 @@ function rsvpEmail({ to, name, title, lines, contact, phone, config }) {
     <tr>
       <td align="center" style="padding:40px 18px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;">
-          <tr><td style="font-family:Arial,sans-serif;letter-spacing:0.34em;text-transform:uppercase;color:#D9AE78;font-size:13px;text-align:center;">WHISPERS</td></tr>
+          ${brandHeader()}
           <tr><td style="height:28px;"></td></tr>
           <tr><td style="font-size:28px;line-height:1.2;text-align:center;color:#F6EFE4;">${escapeHtml(name)}</td></tr>
           <tr><td style="height:18px;"></td></tr>
@@ -234,6 +235,10 @@ function rsvpEmail({ to, name, title, lines, contact, phone, config }) {
     text,
     html,
   };
+}
+
+function brandHeader() {
+  return `<tr><td align="center" style="padding:0 0 14px;"><img alt="WHISPERS" src="${LOGO_URL}" width="72" height="72" style="display:block;width:72px;height:72px;margin:0 auto;border:0;outline:none;text-decoration:none;"/></td></tr><tr><td style="font-family:Arial,sans-serif;letter-spacing:0.34em;text-transform:uppercase;color:#D9AE78;font-size:13px;text-align:center;">WHISPERS</td></tr>`;
 }
 
 function normalizeEmailForSend(value) {

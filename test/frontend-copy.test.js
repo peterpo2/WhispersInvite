@@ -113,6 +113,22 @@ test("successful RSVP moves the browser to the confirmation link", () => {
   assert.doesNotMatch(html, /history\.replaceState\(null,'',state\.ticketUrl\)/);
 });
 
+test("confirmation update mode skips primary contact and goes to plus and table details", () => {
+  assert.match(html, /confirmationToken = new URLSearchParams\(window\.location\.search\)\.get\('confirmation'\)/);
+  assert.match(html, /state\.updateMode=true/);
+  assert.match(html, /fetch\('\/api\/confirmation\?token=' \+ encodeURIComponent\(confirmationToken\)/);
+  assert.match(html, /if\(state\.updateMode\)\{show\('#s-plus'\);return;\}/);
+  assert.match(html, /state\.alreadyRegistered&&state\.confirmationUrl/);
+  assert.doesNotMatch(html, /state\.updateMode\)\{show\('#s-identify'\)/);
+});
+
+test("confirmation page shows update details only when the API allows it", () => {
+  assert.match(confirmationPage, /id="updateDetails"/);
+  assert.match(confirmationPage, /if\(data\.canUpdate&&data\.updateUrl\)/);
+  assert.match(confirmationPage, /\$\('updateDetails'\)\.href=data\.updateUrl/);
+  assert.match(confirmationPage, /\$\('updateDetails'\)\.hidden=false/);
+});
+
 test("start over returns to the invitation entry point, not the replaced ticket URL", () => {
   assert.match(html, /const startUrl = urlToken \? '\/\?token=' \+ encodeURIComponent\(urlToken\) : '\/'/);
   assert.match(html, /function reset\(\)\{window\.location\.assign\(startUrl\)\}/);

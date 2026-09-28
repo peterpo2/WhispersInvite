@@ -17,25 +17,37 @@ custom-domain email delivery and final address blast are not complete yet.
 
 | Link | Behaviour |
 |---|---|
-| `/` | Shared invitation. Visitor enters their full name. |
-| `/hi/<id>` | Personal invitation. `/api/guest-check` loads the guest name from `guest_list`. |
-| `/ticket/<token>` | Private ticket link. Admin-created primary invites can have this before RSVP; it stays pending/locked until the guest confirms. |
+| `/` | Public invitation. Visitor goes through the full RSVP flow. |
+| `/invite/<token>` | Personal invitation. `/api/guest-check` loads the invited name and any contact details from `guest_list`. |
+| `/hi/<confirmation_token>` | Confirmation/status after RSVP. Can offer a safe update path before ticket release. |
+| `/ticket/<token>` | Real ticket link. It stays locked until `2026-10-09T18:00:00+03:00`. |
 
-`/hi/<token>` redirects to `/?token=<token>`. The front end calls `/api/guest-check` when a token
-is present.
+`/invite/<token>` redirects to `/?token=<token>`. The front end calls `/api/guest-check` when a
+token is present. `/hi/<confirmation_token>` renders the confirmation shell directly.
 
 ### Screens
 
 1. Seal: press and hold for 1.25 seconds, or use the escape button.
 2. Film: typographic placeholder sequence until the final client video exists.
 3. Letter: event details and restrained invitation copy.
-4. Identify: shown for shared links; personal links skip this once the guest is found.
+4. Identify: shown for public links and for personal links missing email/phone.
 5. RSVP: accept or decline.
 6. Plus-one/reservation: optional one-person guest with full name and email, plus a
    table reservation request checkbox.
-7. Done or decline: registration confirmation for attending guests, quiet declined state
-   otherwise. The attending confirmation does not reveal QR, seal code, ticket URL or venue before
-   ticket release.
+7. Done or decline: attending guests land on `/hi/<confirmation_token>`. The confirmation does
+   not reveal QR, seal code, ticket URL or venue before ticket release.
+
+### Confirmation Update
+
+`/hi/<confirmation_token>` shows `Update details` only when the viewer is the primary guest, the
+RSVP is attending, no added guest exists, and ticket release has not happened. The update link
+opens `/?confirmation=<confirmation_token>&update=1`, which skips primary name/email/phone and
+lets the guest add one guest and/or request a table. After submit, the guest returns to the
+confirmation page.
+
+After `2026-10-09T18:00:00+03:00`, `Update details` is hidden and `/api/rsvp` rejects
+guest-facing changes with `Guest-list changes are closed.` Existing checked-in protections remain
+in place.
 
 ## RSVP Rules
 
@@ -89,8 +101,9 @@ avoids ambiguous characters: no `0/O`, `1/I/L`, `5/S`, or `8/B`.
 
 | Method | Path | Behaviour |
 |---|---|---|
-| `GET` | `/api/guest-check?token=` | Finds a personal guest token. |
+| `GET` | `/api/guest-check?token=` | Finds a personal guest token and existing RSVP status. |
 | `POST` | `/api/rsvp` | Validates RSVP, inserts or updates `rsvps`, returns a confirmation summary. |
+| `GET` | `/api/confirmation?token=` | Returns confirmation/status payload and update eligibility. |
 | `GET` | `/api/ticket?token=` | Finds either `ticket_token` or `plus_one_ticket_token`. |
 | `GET` | `/api/checkin?token=` | Redirects to `/ticket/<token>`; does not mutate data. |
 | `GET` | `/api/door` | Returns recent guest and plus-one check-ins as separate entries. |
@@ -126,9 +139,10 @@ they are optional; when missing, the guest enters them during the personal RSVP 
 
 The Invite admin view lists every invited primary guest. Members lists only RSVP rows. Invite
 statuses are shown as `Not responded`, `Attending` or `Declined`.
-If an invite has an email, the Invite view shows `Send` until the first send is recorded, then
-`Send again`. The send action emails the personal `/hi/<id>` confirmation link through the
-SuperHosting SMTP mailbox `noreply@whisperssociety.com`. Automatic emails use
+Invite / Confirmation / Ticket columns each have their own copy/send action. Invite sends
+`/invite/<id>`, confirmation sends `/hi/<confirmation_token>`, and ticket sends
+`/ticket/<ticket_token>`. Automatic emails use the SuperHosting SMTP mailbox
+`noreply@whisperssociety.com`,
 `Reply-To: guestlist@whisperssociety.com` and include `guestlist@whisperssociety.com` plus
 `+359 888 012 380` as the guest contact details.
 

@@ -1,7 +1,7 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
 import { buildRsvpConfirmationEmails, emailConfigFromEnv } from "../_shared/email-content.js";
 import { retryAsync } from "../_shared/retry.js";
-import { addedGuestLimitReached, applyInviteToRsvpRow, buildCompanionRow, buildConfirmationUrl, buildRsvpRow, buildTicketUrl, isDuplicateSealCode, isRsvpClosed, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
+import { addedGuestLimitReached, applyInviteToRsvpRow, buildCompanionRow, buildConfirmationUrl, buildRsvpRow, buildTicketUrl, isDuplicateSealCode, isRsvpClosed, isTicketReleased, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
 import { sendSmtpMail } from "../_shared/smtp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
@@ -117,6 +117,7 @@ async function findExistingRsvp(env, row) {
 
 async function updateExistingRsvp(env, requestUrl, row, existing) {
   if (existing.checked_in_at) return json({ error: ALREADY_INSIDE }, 409);
+  if (isTicketReleased()) return json({ error: "Guest-list changes are closed." }, 409);
 
   const patch = {
     guest_name: row.guest_name,

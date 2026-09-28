@@ -9,6 +9,7 @@ import {
   addedGuestLimitReached,
   applyInviteToRsvpRow,
   buildConfirmationUrl,
+  buildConfirmationUpdateUrl,
   isDuplicatePlusOneEmail,
   isDuplicateSealCode,
   buildCheckInUrl,
@@ -18,6 +19,7 @@ import {
   checkInRedirectPath,
   buildRsvpRow,
   buildRsvpUpdate,
+  confirmationCanUpdate,
   isRsvpClosed,
   isLocalTicketReleasePreview,
   isTicketReleased,
@@ -201,6 +203,20 @@ test("ticket release gate opens exactly at 09.10 18:00 Sofia time", () => {
   assert.equal(TICKET_RELEASE_AT, "2026-10-09T18:00:00+03:00");
   assert.equal(isTicketReleased(new Date("2026-10-09T14:59:59.000Z")), false);
   assert.equal(isTicketReleased(new Date("2026-10-09T15:00:00.000Z")), true);
+});
+
+test("confirmation update is available only before ticket release and without an added guest", () => {
+  assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T14:59:59.000Z")), true);
+  assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: "Michelle G" }, new Date("2026-10-09T14:59:59.000Z")), false);
+  assert.equal(confirmationCanUpdate({ holder: "companion", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T14:59:59.000Z")), false);
+  assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T15:00:00.000Z")), false);
+});
+
+test("builds a confirmation update URL without exposing ticket links", () => {
+  assert.equal(
+    buildConfirmationUpdateUrl("https://whisperssociety.com/hi/abc", "confirm000000000000000000000000"),
+    "https://whisperssociety.com/?confirmation=confirm000000000000000000000000&update=1"
+  );
 });
 
 test("ticket release preview works only on local development hosts", () => {

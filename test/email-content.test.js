@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildInviteEmail, buildRsvpConfirmationEmails, emailConfigFromEnv } from "../functions/_shared/email-content.js";
+import { buildInviteEmail, buildRsvpConfirmationEmails, buildTicketEmail, emailConfigFromEnv } from "../functions/_shared/email-content.js";
 
 test("invite email uses noreply sender, guestlist reply-to and contact details", () => {
   const config = emailConfigFromEnv({
@@ -34,6 +34,7 @@ test("invite email uses noreply sender, guestlist reply-to and contact details",
   assert.match(email.text, /\+359 888 012 380/);
   assert.match(email.html, /guestlist@whisperssociety\.com/);
   assert.match(email.html, /\+359 888 012 380/);
+  assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/whispers-mark\.png/);
 });
 
 test("email config reports missing required sender settings", () => {
@@ -76,4 +77,32 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
   assert.match(emails[1].text, /https:\/\/whisperssociety\.com\/hi\/plusconfirm/);
   assert.match(emails[1].html, /guestlist@whisperssociety\.com/);
   assert.match(emails[1].html, /\+359 888 012 380/);
+  assert.match(emails[0].html, /https:\/\/whisperssociety\.com\/assets\/whispers-mark\.png/);
+});
+
+test("ticket release email uses the ticket link and polished WHISPERS copy", () => {
+  const config = emailConfigFromEnv({
+    SMTP_HOST: "mail.whisperssociety.com",
+    SMTP_PORT: "465",
+    SMTP_USER: "noreply@whisperssociety.com",
+    SMTP_PASS: "secret",
+    EMAIL_FROM: "WHISPERS <noreply@whisperssociety.com>",
+    EMAIL_REPLY_TO: "guestlist@whisperssociety.com",
+    EMAIL_CONTACT_PHONE: "+359 888 012 380",
+  });
+
+  const email = buildTicketEmail({
+    to: "guest@example.com",
+    name: "Peter Popov",
+    ticketLink: "https://whisperssociety.com/ticket/tickettoken",
+    config,
+  });
+
+  assert.equal(email.subject, "WHISPERS Ticket");
+  assert.match(email.text, /Your private ticket is ready/);
+  assert.match(email.text, /https:\/\/whisperssociety\.com\/ticket\/tickettoken/);
+  assert.doesNotMatch(email.text, /https:\/\/whisperssociety\.com\/hi\//);
+  assert.match(email.html, /WHISPERS/);
+  assert.match(email.html, /Open Ticket/);
+  assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/whispers-mark\.png/);
 });

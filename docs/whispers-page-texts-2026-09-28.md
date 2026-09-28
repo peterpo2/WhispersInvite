@@ -305,7 +305,7 @@ Main text:
 
 - RSVP FIRST
 - Please confirm your attendance first. Your private ticket will appear here after RSVP and ticket release.
-- Use your confirmation link to RSVP. Location remains sealed until 09.10 at 18:00.
+- Use your invite link to RSVP. Location remains sealed until 09.10 at 18:00.
 - Waiting for RSVP
 
 ### Locked Registered Ticket

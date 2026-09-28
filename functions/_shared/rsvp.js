@@ -45,6 +45,17 @@ export function isTicketReleased(now = new Date()) {
   return now >= new Date(TICKET_RELEASE_AT);
 }
 
+export function confirmationCanUpdate(ticket, now = new Date()) {
+  return Boolean(
+    ticket &&
+    ticket.holder === "guest" &&
+    ticket.status === "attending" &&
+    ticket.guest_id &&
+    !ticket.bringing &&
+    !isTicketReleased(now)
+  );
+}
+
 export function isLocalTicketReleasePreview(requestUrl) {
   try {
     const url = new URL(requestUrl);
@@ -407,6 +418,11 @@ export function buildInviteUrl(requestUrl, token) {
 
 export function buildConfirmationUrl(requestUrl, token) {
   return `${siteOriginFromRequestUrl(requestUrl)}/hi/${encodeURIComponent(token)}`;
+}
+
+export function buildConfirmationUpdateUrl(requestUrl, token) {
+  const origin = siteOriginFromRequestUrl(requestUrl);
+  return `${origin}/?confirmation=${encodeURIComponent(token)}&update=1`;
 }
 
 export function buildCheckInUrl(requestUrl, token) {

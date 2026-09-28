@@ -21,26 +21,26 @@ Postgres through the REST API. There is no framework, no bundler and no build st
 
 | URL | Purpose |
 |---|---|
-| `/` | Shared invitation. The guest types their full name. |
-| `/hi/<id>` | Personal invitation. The name from `guest_list` is shown on the seal. |
-| `/ticket/<token>` | Private ticket page for a guest or plus-one. Admin-created invite ticket links can exist before RSVP and stay pending/locked. |
+| `/` | Public invitation. The guest goes through the full RSVP flow. |
+| `/invite/<token>` | Personal invitation. The invited name is shown, and missing email/phone are collected before RSVP. |
+| `/hi/<token>` | Confirmation/status page after RSVP. May offer `Update details` only before ticket release and only when no added guest exists. |
+| `/ticket/<token>` | Real ticket page for a guest or plus-one. It stays locked until `09.10 18:00`. |
 | `/staff/rose-door-10` | Staff scanner. Keep private and do not link from public pages. |
 
 The middleware allowlist blocks repository files, docs, SQL files, tests and unknown routes.
 
 ## Guest Flow
 
-1. Guest opens `/hi/<id>` or `/`.
+1. Guest opens `/`, `/invite/<token>` or a post-RSVP `/hi/<token>`.
 2. The page plays seal -> film -> letter.
-3. A plain link asks for the guest's full name, email and phone. A personal link uses
-   `guest_list`; if staff entered only a name, the guest confirms their own email and phone
-   during RSVP.
+3. The public link asks for full name, email and phone. A personal invite uses `guest_list`;
+   if staff entered only a name, the guest confirms their own email and phone before RSVP.
 4. The guest accepts or declines.
 5. If accepting, they may add one plus-one with full name and email.
 6. They may request a table reservation for themselves or their two-person group.
 7. The server creates private ticket tokens and seal codes, but does not reveal them before
    `2026-10-09T18:00:00+03:00`.
-8. The done screen shows a registration confirmation, not a QR ticket.
+8. The done screen redirects to `/hi/<confirmation_token>`, which shows confirmation/status, not a QR ticket.
 
 The guest and the plus-one each get their own ticket token, seal code, QR code and check-in
 state. QR codes encode `/ticket/<token>`, not `/api/checkin`. A normal phone camera opens the
@@ -48,8 +48,8 @@ ticket page; only the staff scanner checks people in. Before ticket release, tic
 locked state without QR, seal code or location.
 
 Repeat RSVPs from the same personal identity or the same email+phone keep the guest ticket. If
-the guest confirms again without entering a plus-one, the existing plus-one is kept. For the first
-event, a primary RSVP can have maximum one added guest.
+the guest already has an added guest, `Update details` is hidden and the server rejects a second
+added guest. After ticket release (`2026-10-09T18:00:00+03:00`), guest-facing changes are closed.
 
 ## Invite Admin
 
@@ -57,17 +57,18 @@ The staff page has an **Invite** tab. Staff can create a primary guest invite wi
 name. Email and phone are optional admin prefill fields; if they are missing, the guest fills them
 in from their personal confirmation link. The system generates:
 
-- confirmation link: `/hi/<random-token>`
-- ticket link: `/ticket/<random-ticket-token>`
+- invite link: `/invite/<guest_list.id>`
+- confirmation link: `/hi/<confirmation_token>` after RSVP
+- ticket link: `/ticket/<ticket_token>`
 
-The ticket link is generated in advance, but it stays pending until the primary guest confirms
-attendance. Plus-one ticket links are generated later during RSVP.
+The ticket link may exist internally in advance, but guests do not need it before release. Plus-one
+confirmation and ticket links are generated during RSVP.
 
 Invite shows all invited primary guests, including people who have not answered yet. Members shows
 only people with an RSVP response. Invite statuses are `Not responded`, `Attending` and `Declined`.
-If an invite has an email, staff can press **Send** to email the personal confirmation link.
-After the first successful send, the action becomes **Send again** and updates the sent
-timestamp/count. Automatic emails are sent from `noreply@whisperssociety.com`, use
+Invite / Confirmation / Ticket columns each have their own copy/send action. Invite email sends
+`/invite/<token>`, RSVP confirmation email sends `/hi/<confirmation_token>`, and ticket release
+email sends `/ticket/<ticket_token>`. Automatic emails are sent from `noreply@whisperssociety.com`, use
 `guestlist@whisperssociety.com` as the reply-to address, and include the guest-list email plus
 `+359 888 012 380` as contact details.
 
@@ -87,8 +88,9 @@ The scanner keeps guest and plus-one check-ins separate and shows the latest arr
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/guest-check?token=` | Looks up personal invitation links. |
+| `GET` | `/api/guest-check?token=` | Looks up personal invitation links and existing RSVP status. |
 | `POST` | `/api/rsvp` | Validates RSVP, writes or updates the row, returns a confirmation summary. |
+| `GET` | `/api/confirmation?token=` | Returns confirmation/status payload and safe update eligibility. |
 | `GET` | `/api/ticket?token=` | Returns the public ticket payload for a guest or plus-one token. |
 | `GET` | `/api/checkin?token=` | Legacy read-only link. Redirects to `/ticket/<token>`. |
 | `GET` | `/api/door` | Returns recent checked-in guests and plus-ones. |
