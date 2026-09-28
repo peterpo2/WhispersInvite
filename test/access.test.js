@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isPublicPath } from "../functions/_shared/access.js";
+import { isPublicPath, isSiteLocked } from "../functions/_shared/access.js";
 
 test("allows the invitation, API routes, ticket pages and the staff scanner", () => {
   for (const path of [
@@ -82,4 +82,12 @@ test("rejects non-string paths", () => {
   assert.equal(isPublicPath(undefined), false);
   assert.equal(isPublicPath(null), false);
   assert.equal(isPublicPath({}), false);
+});
+
+test("site lock is enabled only by an explicit production flag", () => {
+  assert.equal(isSiteLocked({ SITE_LOCKED: "1" }), true);
+  assert.equal(isSiteLocked({ SITE_LOCKED: "true" }), true);
+  assert.equal(isSiteLocked({ SITE_LOCKED: "0" }), false);
+  assert.equal(isSiteLocked({}), false);
+  assert.equal(isSiteLocked(null), false);
 });

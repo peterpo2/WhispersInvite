@@ -24,3 +24,8 @@ export function isPublicPath(pathname) {
   if (typeof pathname !== "string") return false;
   return PUBLIC_PATHS.has(pathname) || TICKET_PATH_RE.test(pathname) || HI_PATH_RE.test(pathname) || ASSET_PATH_RE.test(pathname);
 }
+
+export function isSiteLocked(env) {
+  const value = String(env?.SITE_LOCKED || "").trim().toLowerCase();
+  return value === "1" || value === "true";
+}
