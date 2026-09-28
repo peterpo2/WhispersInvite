@@ -59,6 +59,8 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
 test("locked registered ticket shows event time before the release note", () => {
   assert.match(ticketPage, /<div class="code" id="code">WSP[\s\S]*<p class="ticket-type" id="ticketType">Ticket<\/p>[\s\S]*<div class="qr" id="qr"><\/div>\s*<p class="state" id="state"><\/p>\s*<p class="meta" id="ticketMeta">/);
   assert.match(ticketPage, /\.qr\[hidden\]\{display:none\}/);
+  assert.match(ticketPage, /\.ticket-type\{display:none;font-size:13px;letter-spacing:\.3em;color:var\(--gold\);margin:34px 0 0;min-height:16px\}/);
+  assert.match(ticketPage, /\.ticket-type \+ \.qr\[hidden\] \+ \.state\{margin-top:8px\}/);
   assert.match(ticketPage, /\$\('code'\)\.textContent='10\.10 · 22:00'/);
   assert.match(ticketPage, /\$\('ticketType'\)\.style\.display='block'/);
   assert.match(ticketPage, /\$\('qr'\)\.hidden=true/);
