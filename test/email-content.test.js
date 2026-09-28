@@ -24,8 +24,10 @@ test("invite email uses noreply sender, guestlist reply-to and contact details",
   });
 
   assert.equal(email.to, "guest@example.com");
-  assert.equal(email.subject, "WHISPERS Door");
+  assert.equal(email.subject, "Your WHISPERS invitation");
   assert.match(email.text, /Georgi Petrov/);
+  assert.match(email.text, /You have been invited to WHISPERS/);
+  assert.doesNotMatch(email.text, /private invitation is waiting/i);
   assert.match(email.text, /https:\/\/whisperssociety\.com\/hi\/abc123/);
   assert.match(email.text, /guestlist@whisperssociety\.com/);
   assert.match(email.text, /\+359 888 012 380/);

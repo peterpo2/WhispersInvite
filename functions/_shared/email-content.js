@@ -23,14 +23,14 @@ export function buildInviteEmail({ to, name, confirmationLink, config }) {
   const link = String(confirmationLink || "").trim();
   const contact = config.replyTo;
   const phone = config.contactPhone;
-  const subject = "WHISPERS Door";
+  const subject = "Your WHISPERS invitation";
   const text = [
     "WHISPERS",
     "",
     `${safeName},`,
     "",
-    "Your private invitation is waiting.",
-    "Open your personal link and complete the RSVP steps:",
+    "You have been invited to WHISPERS.",
+    "Please confirm your attendance using your private RSVP link:",
     "",
     link,
     "",
@@ -49,7 +49,9 @@ export function buildInviteEmail({ to, name, confirmationLink, config }) {
           <tr><td style="height:28px;"></td></tr>
           <tr><td style="font-size:28px;line-height:1.2;text-align:center;color:#F6EFE4;">${escapeHtml(safeName)}</td></tr>
           <tr><td style="height:18px;"></td></tr>
-          <tr><td style="font-size:20px;line-height:1.5;text-align:center;color:#EDE6DA;">Your private invitation is waiting.</td></tr>
+          <tr><td style="font-size:20px;line-height:1.5;text-align:center;color:#EDE6DA;">You have been invited to WHISPERS.</td></tr>
+          <tr><td style="height:10px;"></td></tr>
+          <tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">Please confirm your attendance using your private RSVP link.</td></tr>
           <tr><td style="height:26px;"></td></tr>
           <tr>
             <td align="center">
