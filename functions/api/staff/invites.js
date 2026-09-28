@@ -1,10 +1,10 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
-import { EVENT_KEY, buildInviteRow, buildTicketUrl, validateInvitePayload } from "../../_shared/rsvp.js";
+import { EVENT_KEY, buildConfirmationUrl, buildInviteRow, buildInviteUrl, buildTicketUrl, validateInvitePayload } from "../../_shared/rsvp.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 const MAX_RETRIES = 3;
 const INVITE_COLUMNS = "id,name,email,phone,ticket_token,confirmation_email_sent_at,confirmation_email_send_count,created_at,updated_at";
-const RSVP_COLUMNS = "guest_id,status,submitted_at,guest_name,guest_email,guest_phone,ticket_token";
+const RSVP_COLUMNS = "guest_id,status,submitted_at,guest_name,guest_email,guest_phone,confirmation_token,ticket_token";
 
 export async function onRequestGet({ request, env }) {
   return listInvites(request, env);
@@ -65,8 +65,8 @@ async function listInvites(request, env) {
 }
 
 function publicInvite(requestUrl, row, rsvp) {
-  const origin = new URL(requestUrl).origin;
   const ticketToken = row.ticket_token || rsvp?.ticket_token || "";
+  const confirmationToken = rsvp?.confirmation_token || "";
   return {
     id: row.id,
     name: row.name,
@@ -75,7 +75,8 @@ function publicInvite(requestUrl, row, rsvp) {
     ticketToken,
     confirmationEmailSentAt: row.confirmation_email_sent_at || null,
     confirmationEmailSendCount: Number(row.confirmation_email_send_count || 0),
-    confirmationLink: `${origin}/hi/${encodeURIComponent(row.id)}`,
+    inviteLink: buildInviteUrl(requestUrl, row.id),
+    confirmationLink: confirmationToken ? buildConfirmationUrl(requestUrl, confirmationToken) : "",
     ticketLink: ticketToken ? buildTicketUrl(requestUrl, ticketToken) : "",
     status: rsvp?.status || "not_responded",
     rsvpName: rsvp?.guest_name || "",

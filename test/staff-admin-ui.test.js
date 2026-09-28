@@ -18,6 +18,7 @@ test("staff admin includes an invite registry tab", () => {
   assert.match(staffPage, /id="inviteForm"/);
   assert.match(staffPage, /id="inviteSearch"/);
   assert.match(staffPage, /\/api\/staff\/invites/);
+  assert.match(staffPage, /inviteLink/);
   assert.match(staffPage, /confirmationLink/);
   assert.match(staffPage, /ticketLink/);
   assert.match(staffPage, /confirmationEmailSentAt/);
@@ -29,6 +30,8 @@ test("staff admin includes an invite registry tab", () => {
   assert.match(staffPage, /function inviteStatusLabel\(status\)/);
   assert.match(staffPage, /Not responded/);
   assert.match(staffPage, /function filteredInvites\(\)/);
+  assert.match(staffPage, /<th>Invite<\/th><th>Confirmation<\/th><th>Ticket<\/th>/);
+  assert.match(staffPage, /i\.inviteLink,i\.confirmationLink,i\.ticketLink/);
 });
 
 test("members and invite tables paginate at twenty rows per page", () => {

@@ -31,12 +31,12 @@ export async function onRequestPost({ request, env }) {
   const config = emailConfigFromEnv(env);
   if (config.error) return json({ error: config.error }, 500);
 
-  const confirmationLink = `${new URL(request.url).origin}/hi/${encodeURIComponent(invite.id)}`;
+  const inviteLink = `${new URL(request.url).origin}/invite/${encodeURIComponent(invite.id)}`;
   try {
     const email = buildInviteEmail({
       to: invite.email,
       name: invite.name,
-      confirmationLink,
+      inviteLink,
       config,
     });
     await retryAsync(() => sendSmtpMail(config, email), { attempts: 2, delayMs: 350 });

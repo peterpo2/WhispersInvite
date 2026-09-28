@@ -18,9 +18,9 @@ export function emailConfigFromEnv(env) {
   return { smtpHost, smtpPort, smtpUser, smtpPass, from, replyTo, contactPhone };
 }
 
-export function buildInviteEmail({ to, name, confirmationLink, config }) {
+export function buildInviteEmail({ to, name, inviteLink, confirmationLink, config }) {
   const safeName = String(name || "").trim() || "Guest";
-  const link = String(confirmationLink || "").trim();
+  const link = String(inviteLink || confirmationLink || "").trim();
   const contact = config.replyTo;
   const phone = config.contactPhone;
   const subject = "Your WHISPERS invitation";
@@ -77,7 +77,7 @@ export function buildInviteEmail({ to, name, confirmationLink, config }) {
   };
 }
 
-export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName, plusOneEmail, wantsTableReservation, config }) {
+export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName, plusOneEmail, confirmationLink, plusOneConfirmationLink, wantsTableReservation, config }) {
   const emails = [];
   const contact = config.replyTo;
   const phone = config.contactPhone;
@@ -95,6 +95,7 @@ export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName
         safePlus ? `Registered with ${safePlus}.` : "Registered for one.",
         wantsTableReservation ? "Table reservation requested." : "",
         "Your private ticket and the confirmed location will be released on 09.10 at 18:00.",
+        confirmationLink ? `Your confirmation link: ${confirmationLink}` : "",
       ].filter(Boolean),
       contact,
       phone,
@@ -109,6 +110,7 @@ export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName
       title: `You are registered as ${safeGuest}'s guest.`,
       lines: [
         "Your private ticket and the confirmed location will be released on 09.10 at 18:00.",
+        plusOneConfirmationLink ? `Your confirmation link: ${plusOneConfirmationLink}` : "",
       ],
       contact,
       phone,

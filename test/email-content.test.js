@@ -19,7 +19,7 @@ test("invite email uses noreply sender, guestlist reply-to and contact details",
   const email = buildInviteEmail({
     to: "guest@example.com",
     name: "Georgi Petrov",
-    confirmationLink: "https://whisperssociety.com/hi/abc123",
+    inviteLink: "https://whisperssociety.com/invite/abc123",
     config,
   });
 
@@ -28,7 +28,8 @@ test("invite email uses noreply sender, guestlist reply-to and contact details",
   assert.match(email.text, /Georgi Petrov/);
   assert.match(email.text, /You have been invited to WHISPERS/);
   assert.doesNotMatch(email.text, /private invitation is waiting/i);
-  assert.match(email.text, /https:\/\/whisperssociety\.com\/hi\/abc123/);
+  assert.match(email.text, /https:\/\/whisperssociety\.com\/invite\/abc123/);
+  assert.doesNotMatch(email.text, /https:\/\/whisperssociety\.com\/hi\/abc123/);
   assert.match(email.text, /guestlist@whisperssociety\.com/);
   assert.match(email.text, /\+359 888 012 380/);
   assert.match(email.html, /guestlist@whisperssociety\.com/);
@@ -56,6 +57,8 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
     guestEmail: "peter@example.com",
     plusOneName: "Michelle G",
     plusOneEmail: "michaella@example.com",
+    confirmationLink: "https://whisperssociety.com/hi/primaryconfirm",
+    plusOneConfirmationLink: "https://whisperssociety.com/hi/plusconfirm",
     wantsTableReservation: true,
     config,
   });
@@ -65,10 +68,12 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
   assert.equal(emails[1].to, "michaella@example.com");
   assert.equal(emails[0].subject, "WHISPERS RSVP confirmed");
   assert.match(emails[0].text, /Your registration is confirmed/);
+  assert.match(emails[0].text, /https:\/\/whisperssociety\.com\/hi\/primaryconfirm/);
   assert.match(emails[0].text, /Michelle G/);
   assert.match(emails[0].text, /Table reservation requested/);
   assert.match(emails[0].text, /09\.10 at 18:00/);
   assert.match(emails[1].text, /You are registered as Peter Popov's guest/);
+  assert.match(emails[1].text, /https:\/\/whisperssociety\.com\/hi\/plusconfirm/);
   assert.match(emails[1].html, /guestlist@whisperssociety\.com/);
   assert.match(emails[1].html, /\+359 888 012 380/);
 });

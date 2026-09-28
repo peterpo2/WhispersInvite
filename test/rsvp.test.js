@@ -8,9 +8,11 @@ import {
   TICKET_RELEASE_AT,
   addedGuestLimitReached,
   applyInviteToRsvpRow,
+  buildConfirmationUrl,
   isDuplicatePlusOneEmail,
   isDuplicateSealCode,
   buildCheckInUrl,
+  buildInviteUrl,
   buildInviteRow,
   buildCompanionRow,
   checkInRedirectPath,
@@ -66,7 +68,7 @@ test("builds contact and reservation fields for the primary RSVP", () => {
       wantsTableReservation: true,
       plusOne: { name: "Simona Ivanova", email: "simona@example.com", phone: "+359 88 765 4321" },
     },
-    ids(TOKEN, PLUS_TOKEN),
+    ids("confirm0000000000000000000000000", TOKEN, "plusconfirm00000000000000000000", PLUS_TOKEN),
     FIXED_NOW,
     seals("WSP·10·TEST", "WSP·10·PLUS")
   );
@@ -101,6 +103,36 @@ test("builds an invite row with separate confirmation and ticket tokens", () => 
     created_at: "2026-09-24T21:00:00.000Z",
     updated_at: "2026-09-24T21:00:00.000Z",
   });
+});
+
+test("RSVP rows get separate confirmation and ticket tokens", () => {
+  const row = buildRsvpRow(
+    { name: "ignore me", guestName: "Peter Popov", guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567", status: "attending" },
+    ids("confirm0000000000000000000000000", TOKEN),
+    FIXED_NOW,
+    FIXED_SEAL
+  );
+  assert.equal(row.confirmation_token, "confirm0000000000000000000000000");
+  assert.equal(row.ticket_token, TOKEN);
+  assert.notEqual(row.confirmation_token, row.ticket_token);
+});
+
+test("RSVP rows get separate companion confirmation and ticket tokens", () => {
+  const row = buildRsvpRow(
+    {
+      guestName: "Peter Popov",
+      guestEmail: "peter@example.com",
+      guestPhone: "+359 88 123 4567",
+      status: "attending",
+      plusOne: { name: "Simona Ivanova", email: "simona@example.com" },
+    },
+    ids("confirm0000000000000000000000000", TOKEN, "plusconfirm00000000000000000000", PLUS_TOKEN),
+    FIXED_NOW,
+    seals("WSPВ·10В·TEST", "WSPВ·10В·PLUS")
+  );
+  assert.equal(row.plus_one_confirmation_token, "plusconfirm00000000000000000000");
+  assert.equal(row.plus_one_ticket_token, PLUS_TOKEN);
+  assert.notEqual(row.plus_one_confirmation_token, row.plus_one_ticket_token);
 });
 
 test("builds a name-only invite row without contact details", () => {
@@ -148,7 +180,7 @@ test("builds companion row with optional phone", () => {
       status: "attending",
       plusOne: { name: "Simona Ivanova", email: "simona@example.com" },
     },
-    ids(TOKEN, PLUS_TOKEN),
+    ids("confirm0000000000000000000000000", TOKEN, "plusconfirm00000000000000000000", PLUS_TOKEN),
     FIXED_NOW,
     seals("WSP·10·TEST", "WSP·10·PLUS")
   );
@@ -158,6 +190,7 @@ test("builds companion row with optional phone", () => {
     email: "simona@example.com",
     email_is_fallback: false,
     phone: "",
+    confirmation_token: "plusconfirm00000000000000000000",
     ticket_token: PLUS_TOKEN,
     seal_code: "WSP·10·PLUS",
   });
@@ -306,7 +339,7 @@ test("builds normalized RSVP row for Supabase", () => {
       status: "attending",
       plusOne: { name: " Simona Ivanova ", email: "  Simona@Example.COM ", phone: "+359 88 765 4321" },
     },
-    ids(TOKEN, PLUS_TOKEN),
+    ids("confirm0000000000000000000000000", TOKEN, "plusconfirm00000000000000000000", PLUS_TOKEN),
     FIXED_NOW,
     seals("WSP·10·TEST", "WSP·10·PLUS")
   );
@@ -324,7 +357,9 @@ test("builds normalized RSVP row for Supabase", () => {
     plus_one_phone: "+359 88 765 4321",
     wants_table_reservation: false,
     seal_code: "WSP·10·TEST",
+    confirmation_token: "confirm0000000000000000000000000",
     ticket_token: TOKEN,
+    plus_one_confirmation_token: "plusconfirm00000000000000000000",
     plus_one_ticket_token: PLUS_TOKEN,
     plus_one_seal_code: "WSP·10·PLUS",
     submitted_at: "2026-09-24T21:00:00.000Z",
@@ -416,6 +451,8 @@ test("builds private ticket and check-in URLs from a URL-safe token", () => {
   const token = makeTicketToken(() => "123e4567-e89b-12d3-a456-426614174000");
 
   assert.equal(token, TOKEN);
+  assert.equal(buildInviteUrl("https://whispers-invite.pages.dev/path", token), `https://whispers-invite.pages.dev/invite/${TOKEN}`);
+  assert.equal(buildConfirmationUrl("https://whispers-invite.pages.dev/path", token), `https://whispers-invite.pages.dev/hi/${TOKEN}`);
   assert.equal(buildTicketUrl("https://whispers-invite.pages.dev/path", token), `https://whispers-invite.pages.dev/ticket/${TOKEN}`);
   assert.equal(buildCheckInUrl("https://whispers-invite.pages.dev/path", token), `https://whispers-invite.pages.dev/api/checkin?token=${TOKEN}`);
 });
@@ -533,7 +570,7 @@ test("repeat RSVP decline clears the plus-one and keeps the seal code", () => {
 test("a plus-one gets their own ticket token and seal code", () => {
   const row = buildRsvpRow(
     { guestName: "Peter Popov", status: "attending", plusOne: { name: "Simona Ivanova", email: "simona@example.com" } },
-    ids(TOKEN, PLUS_TOKEN),
+    ids("confirm0000000000000000000000000", TOKEN, "plusconfirm00000000000000000000", PLUS_TOKEN),
     FIXED_NOW,
     seals("WSP·10·AAAA", "WSP·10·BBBB")
   );
@@ -551,7 +588,7 @@ test("a guest on their own has no plus-one ticket", () => {
 test("repeat RSVP with a different plus-one issues them a new ticket", () => {
   const row = buildRsvpRow(
     { guestId: "g1", guestName: "Peter Popov", status: "attending", plusOne: { name: "Maria Nikolova", email: "maria@example.com" } },
-    ids("newguest0000000000000000000000000", "newplus00000000000000000000000000"),
+    ids("newconfirm0000000000000000000000", "newguest0000000000000000000000000", "newplusconfirm000000000000000000", "newplus00000000000000000000000000"),
     FIXED_NOW,
     seals("WSP·10·NEWG", "WSP·10·NEWP")
   );
@@ -589,7 +626,7 @@ test("confirming again without a plus-one keeps the existing plus-one and their 
 test("a plus-one with the same email but a different name gets a new ticket", () => {
   const row = buildRsvpRow(
     { guestId: "g1", guestName: "Peter Popov", status: "attending", plusOne: { name: "Maria Nikolova", email: "simona@example.com" } },
-    ids(TOKEN, "newplus00000000000000000000000000"),
+    ids("confirm0000000000000000000000000", TOKEN, "newplusconfirm000000000000000000", "newplus00000000000000000000000000"),
     FIXED_NOW,
     seals("WSP·10·NEWG", "WSP·10·NEWP")
   );

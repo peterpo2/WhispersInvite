@@ -74,7 +74,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 <form class="invite-form" id="inviteForm"><input id="inviteName" maxlength="120" placeholder="Full name" autocomplete="name"/><input id="inviteEmail" maxlength="254" placeholder="Email optional" autocomplete="email" inputmode="email"/><input id="invitePhone" maxlength="40" placeholder="Phone optional" autocomplete="tel" inputmode="tel"/><button class="primary" type="submit">Create Invite</button></form>
 <p class="invite-state" id="inviteState" aria-live="polite"></p>
 <div class="toolbar"><input id="inviteSearch" placeholder="Search invites" autocomplete="off"/><button id="reloadInvites">Reload</button></div>
-<div class="grid"><table id="invitesTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Send</th><th>Confirmation</th><th>Ticket</th><th>Created</th></tr></thead><tbody></tbody></table></div><div class="pager" id="invitesPager"></div>
+<div class="grid"><table id="invitesTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Send</th><th>Invite</th><th>Confirmation</th><th>Ticket</th><th>Created</th></tr></thead><tbody></tbody></table></div><div class="pager" id="invitesPager"></div>
 </section>
 </div>
 </main>
@@ -299,17 +299,17 @@ function groupCard(g,currentId,tables,asAdd){
 function tableSelect(g,tables){return '<select aria-label="Move group" data-rsvp-id="'+esc(g.rsvpId)+'"><option value="">Unassigned</option>'+tables.map(t=>'<option value="'+esc(t.id)+'" '+(g.tableId===t.id?'selected':'')+'>'+esc(t.label)+'</option>').join('')+'</select>';}
 async function assignTable(rsvpId,tableId){await fetch('/api/staff/table-assignment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),tableId})});await loadTables();await loadMembers();}
 async function loadInvites(){
-  const body=document.querySelector('#invitesTable tbody');body.innerHTML='<tr><td colspan="8">Loading...</td></tr>';
-  let res,data;try{res=await fetch('/api/staff/invites',{headers:{'Accept':'application/json'}});data=await res.json();}catch(e){body.innerHTML='<tr><td colspan="8">No connection.</td></tr>';return;}
-  if(!res.ok){body.innerHTML='<tr><td colspan="8">'+esc(data.error||'Could not load invites')+'</td></tr>';return;}
+  const body=document.querySelector('#invitesTable tbody');body.innerHTML='<tr><td colspan="9">Loading...</td></tr>';
+  let res,data;try{res=await fetch('/api/staff/invites',{headers:{'Accept':'application/json'}});data=await res.json();}catch(e){body.innerHTML='<tr><td colspan="9">No connection.</td></tr>';return;}
+  if(!res.ok){body.innerHTML='<tr><td colspan="9">'+esc(data.error||'Could not load invites')+'</td></tr>';return;}
   invites=data.invites||[];renderInvites();
 }
 function inviteStatusLabel(status){return status==='attending'?'Attending':status==='declined'?'Declined':'Not responded';}
-function filteredInvites(){const q=document.getElementById('inviteSearch').value.trim().toLowerCase();return invites.filter(i=>!q||[i.name,i.email,i.phone,i.status,inviteStatusLabel(i.status),i.confirmationEmailSentAt?'sent':'not sent',i.confirmationLink,i.ticketLink].some(v=>String(v||'').toLowerCase().includes(q)));}
+function filteredInvites(){const q=document.getElementById('inviteSearch').value.trim().toLowerCase();return invites.filter(i=>!q||[i.name,i.email,i.phone,i.status,inviteStatusLabel(i.status),i.confirmationEmailSentAt?'sent':'not sent',i.inviteLink,i.confirmationLink,i.ticketLink].some(v=>String(v||'').toLowerCase().includes(q)));}
 function renderInvites(){
   const body=document.querySelector('#invitesTable tbody'),rows=filteredInvites();
   const visible=pageRows(rows,invitesPage);
-  body.innerHTML=visible.map(i=>'<tr><td>'+esc(i.name)+'</td><td>'+esc(i.email)+'</td><td>'+esc(i.phone)+'</td><td>'+esc(inviteStatusLabel(i.status))+(i.submittedAt?'<br><span class="pill">'+esc(new Date(i.submittedAt).toLocaleString())+'</span>':'')+'</td><td>'+sendInviteCell(i)+'</td><td><div class="link-cell">'+esc(i.confirmationLink)+'</div><button class="copy-btn" data-copy="'+esc(i.confirmationLink)+'">Copy</button></td><td><div class="link-cell">'+esc(i.ticketLink)+'</div><button class="copy-btn" data-copy="'+esc(i.ticketLink)+'" '+(i.ticketLink?'':'disabled')+'>Copy</button></td><td>'+esc(i.createdAt?new Date(i.createdAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="8">No invites.</td></tr>';
+  body.innerHTML=visible.map(i=>'<tr><td>'+esc(i.name)+'</td><td>'+esc(i.email)+'</td><td>'+esc(i.phone)+'</td><td>'+esc(inviteStatusLabel(i.status))+(i.submittedAt?'<br><span class="pill">'+esc(new Date(i.submittedAt).toLocaleString())+'</span>':'')+'</td><td>'+sendInviteCell(i)+'</td><td><div class="link-cell">'+esc(i.inviteLink)+'</div><button class="copy-btn" data-copy="'+esc(i.inviteLink)+'">Copy</button></td><td><div class="link-cell">'+esc(i.confirmationLink)+'</div><button class="copy-btn" data-copy="'+esc(i.confirmationLink)+'" '+(i.confirmationLink?'':'disabled')+'>Copy</button></td><td><div class="link-cell">'+esc(i.ticketLink)+'</div><button class="copy-btn" data-copy="'+esc(i.ticketLink)+'" '+(i.ticketLink?'':'disabled')+'>Copy</button></td><td>'+esc(i.createdAt?new Date(i.createdAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="9">No invites.</td></tr>';
   renderPager('invitesPager',rows,invitesPage,p=>{invitesPage=p;renderInvites();});
   body.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy,b));
   body.querySelectorAll('[data-send-invite]').forEach(b=>b.onclick=()=>sendInvite(b.dataset.sendInvite,b));

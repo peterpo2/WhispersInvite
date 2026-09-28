@@ -140,6 +140,7 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
   const status = String(body.status).trim();
   const attending = status === "attending";
   const plusOne = attending ? body.plusOne || null : null;
+  const confirmationToken = makeId();
   const ticketToken = makeId();
   const sealCode = attending ? makeSeal() : null;
   const guestEmail = attending ? normalizeEmail(body.guestEmail) : null;
@@ -158,7 +159,9 @@ export function buildRsvpRow(body, makeId = makeTicketToken, now = () => new Dat
     plus_one_phone: plusOne ? normalizePhone(plusOne.phone) : null,
     wants_table_reservation: attending ? body.wantsTableReservation === true : false,
     seal_code: sealCode,
+    confirmation_token: confirmationToken,
     ticket_token: ticketToken,
+    plus_one_confirmation_token: plusOne ? makeId() : null,
     plus_one_ticket_token: plusOne ? makeId() : null,
     plus_one_seal_code: plusOne ? makeSeal() : null,
     submitted_at: now().toISOString(),
@@ -207,6 +210,7 @@ export function buildCompanionRow(row, rsvpId) {
     email: row.plus_one_email,
     email_is_fallback: row.plus_one_email_is_fallback === true,
     phone: row.plus_one_phone,
+    confirmation_token: row.plus_one_confirmation_token,
     ticket_token: row.plus_one_ticket_token,
     seal_code: row.plus_one_seal_code,
   };
@@ -394,6 +398,14 @@ export function siteOriginFromRequestUrl(requestUrl) {
 
 export function buildTicketUrl(requestUrl, token) {
   return `${siteOriginFromRequestUrl(requestUrl)}/ticket/${encodeURIComponent(token)}`;
+}
+
+export function buildInviteUrl(requestUrl, token) {
+  return `${siteOriginFromRequestUrl(requestUrl)}/invite/${encodeURIComponent(token)}`;
+}
+
+export function buildConfirmationUrl(requestUrl, token) {
+  return `${siteOriginFromRequestUrl(requestUrl)}/hi/${encodeURIComponent(token)}`;
 }
 
 export function buildCheckInUrl(requestUrl, token) {

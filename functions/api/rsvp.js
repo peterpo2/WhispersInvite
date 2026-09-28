@@ -1,7 +1,7 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
 import { buildRsvpConfirmationEmails, emailConfigFromEnv } from "../_shared/email-content.js";
 import { retryAsync } from "../_shared/retry.js";
-import { addedGuestLimitReached, applyInviteToRsvpRow, buildCompanionRow, buildRsvpRow, buildTicketUrl, isDuplicateSealCode, isRsvpClosed, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
+import { addedGuestLimitReached, applyInviteToRsvpRow, buildCompanionRow, buildConfirmationUrl, buildRsvpRow, buildTicketUrl, isDuplicateSealCode, isRsvpClosed, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
 import { sendSmtpMail } from "../_shared/smtp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
@@ -17,6 +17,7 @@ const LOOKUP_COLUMNS = [
   "guest_email",
   "guest_phone",
   "status",
+  "confirmation_token",
   "ticket_token",
   "seal_code",
   "checked_in_at",
@@ -68,7 +69,7 @@ export async function onRequestPost({ request, env }) {
         const insertedCompanion = await insertCompanion(env, inserted.id, row);
         if (insertedCompanion.error) return insertedCompanion.error;
       }
-      const emailDelivery = await sendRsvpConfirmation(env, row);
+      const emailDelivery = await sendRsvpConfirmation(env, request.url, row);
       return confirmationResponse(request.url, row, emailDelivery);
     }
 
@@ -126,6 +127,7 @@ async function updateExistingRsvp(env, requestUrl, row, existing) {
     submitted_at: row.submitted_at,
   };
 
+  if (!existing.confirmation_token) patch.confirmation_token = row.confirmation_token;
   if (row.status === "attending" && !existing.seal_code) patch.seal_code = row.seal_code;
   if (row.status === "declined") {
     patch.plus_one_name = null;
@@ -154,6 +156,7 @@ async function updateExistingRsvp(env, requestUrl, row, existing) {
   if (row.plus_one_name) {
     const duplicate = await findDuplicateCompanion(env, existing.id, row);
     if (duplicate.error) return duplicate.error;
+    if (duplicate.found?.confirmation_token) row.plus_one_confirmation_token = duplicate.found.confirmation_token;
     if (!duplicate.found && sameAddedGuest(existing, row)) duplicate.found = true;
     if (!duplicate.found) {
       const companionCount = await countCompanions(env, existing.id);
@@ -164,20 +167,20 @@ async function updateExistingRsvp(env, requestUrl, row, existing) {
     }
   }
 
-  const responseRow = { ...row, ticket_token: rows[0].ticket_token || existing.ticket_token };
-  const emailDelivery = await sendRsvpConfirmation(env, responseRow);
+  const responseRow = { ...row, confirmation_token: rows[0].confirmation_token || existing.confirmation_token || row.confirmation_token, ticket_token: rows[0].ticket_token || existing.ticket_token };
+  const emailDelivery = await sendRsvpConfirmation(env, requestUrl, responseRow);
   return confirmationResponse(requestUrl, responseRow, emailDelivery);
 }
 
 async function findDuplicateCompanion(env, rsvpId, row) {
   const path = row.plus_one_email_is_fallback
-    ? `/rest/v1/rsvp_companions?select=id&rsvp_id=eq.${encodeURIComponent(rsvpId)}&guest_name=eq.${encodeURIComponent(row.plus_one_name)}&phone=eq.${encodeURIComponent(row.plus_one_phone)}&limit=1`
-    : `/rest/v1/rsvp_companions?select=id&rsvp_id=eq.${encodeURIComponent(rsvpId)}&email=eq.${encodeURIComponent(normalizeEmail(row.plus_one_email))}&email_is_fallback=eq.false&limit=1`;
+    ? `/rest/v1/rsvp_companions?select=id,confirmation_token&rsvp_id=eq.${encodeURIComponent(rsvpId)}&guest_name=eq.${encodeURIComponent(row.plus_one_name)}&phone=eq.${encodeURIComponent(row.plus_one_phone)}&limit=1`
+    : `/rest/v1/rsvp_companions?select=id,confirmation_token&rsvp_id=eq.${encodeURIComponent(rsvpId)}&email=eq.${encodeURIComponent(normalizeEmail(row.plus_one_email))}&email_is_fallback=eq.false&limit=1`;
   const result = await supabaseFetch(env, path);
   if (result.error) return { error: result.error };
   if (!result.response.ok) return { error: json({ error: "Could not save RSVP" }, 502) };
   const rows = await result.response.json();
-  if (rows.length > 0) return { found: true };
+  if (rows.length > 0) return { found: rows[0] };
 
   const byName = await supabaseFetch(
     env,
@@ -215,7 +218,7 @@ async function insertCompanion(env, rsvpId, row) {
   return { ok: true };
 }
 
-async function sendRsvpConfirmation(env, row) {
+async function sendRsvpConfirmation(env, requestUrl, row) {
   if (row.status !== "attending") return { attempted: false, sent: 0 };
   const config = emailConfigFromEnv(env);
   if (config.error) return { attempted: false, sent: 0, error: config.error };
@@ -224,6 +227,8 @@ async function sendRsvpConfirmation(env, row) {
     guestEmail: row.guest_email,
     plusOneName: row.plus_one_name,
     plusOneEmail: row.plus_one_email,
+    confirmationLink: row.confirmation_token ? buildConfirmationUrl(requestUrl, row.confirmation_token) : "",
+    plusOneConfirmationLink: row.plus_one_confirmation_token ? buildConfirmationUrl(requestUrl, row.plus_one_confirmation_token) : "",
     wantsTableReservation: row.wants_table_reservation === true,
     config,
   });
@@ -248,6 +253,8 @@ function confirmationResponse(requestUrl, row, emailDelivery = { attempted: fals
     plusOneName: attending ? row.plus_one_name || null : null,
     addedGuestNames: attending && row.plus_one_name ? [row.plus_one_name] : [],
     wantsTableReservation: attending ? row.wants_table_reservation === true : false,
+    confirmationToken: attending ? row.confirmation_token : null,
+    confirmationUrl: attending && row.confirmation_token ? buildConfirmationUrl(requestUrl, row.confirmation_token) : null,
     ticketToken: attending ? row.ticket_token : null,
     ticketUrl: attending && row.ticket_token ? buildTicketUrl(requestUrl, row.ticket_token) : null,
     plusOneTicketToken: attending ? row.plus_one_ticket_token || null : null,
@@ -264,6 +271,7 @@ function primaryRsvpRow(row) {
     plus_one_email: null,
     plus_one_phone: null,
     plus_one_email_is_fallback: false,
+    plus_one_confirmation_token: undefined,
     plus_one_ticket_token: null,
     plus_one_seal_code: null,
   };

@@ -25,6 +25,7 @@ create table if not exists rsvps (
   wants_table_reservation boolean not null default false,
   reservation_confirmed boolean not null default false,
   seal_code text,
+  confirmation_token text,
   ticket_token text,
   checked_in_at timestamptz,
   plus_one_ticket_token text,
@@ -48,6 +49,9 @@ create unique index if not exists rsvps_event_seal_code_unique
 create unique index if not exists rsvps_ticket_token_unique
   on rsvps (ticket_token)
   where ticket_token is not null;
+create unique index if not exists rsvps_confirmation_token_unique
+  on rsvps (confirmation_token)
+  where confirmation_token is not null;
 create index if not exists rsvps_checked_in_at_idx on rsvps (checked_in_at);
 create index if not exists rsvps_contact_lookup_idx
   on rsvps (event_key, guest_email, guest_phone)
@@ -69,6 +73,7 @@ create table if not exists rsvp_companions (
   email text,
   email_is_fallback boolean not null default false,
   phone text not null,
+  confirmation_token text,
   ticket_token text,
   seal_code text,
   checked_in_at timestamptz,
@@ -79,6 +84,9 @@ create table if not exists rsvp_companions (
 create unique index if not exists rsvp_companions_ticket_token_unique
   on rsvp_companions (ticket_token)
   where ticket_token is not null;
+create unique index if not exists rsvp_companions_confirmation_token_unique
+  on rsvp_companions (confirmation_token)
+  where confirmation_token is not null;
 create unique index if not exists rsvp_companions_seal_code_unique
   on rsvp_companions (seal_code)
   where seal_code is not null;

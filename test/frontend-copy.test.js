@@ -90,10 +90,11 @@ test("ticket and staff pages share the WHISPERS rose atmosphere", () => {
   }
 });
 
-test("successful RSVP moves the browser to the private ticket link", () => {
-  assert.match(rsvpApi, /ticketUrl: attending && row\.ticket_token \? buildTicketUrl\(requestUrl, row\.ticket_token\) : null/);
-  assert.match(html, /state\.ticketUrl=result\.data\?\.ticketUrl\|\|null/);
-  assert.match(html, /history\.replaceState\(null,'',state\.ticketUrl\)/);
+test("successful RSVP moves the browser to the confirmation link", () => {
+  assert.match(rsvpApi, /confirmationUrl: attending && row\.confirmation_token \? buildConfirmationUrl\(requestUrl, row\.confirmation_token\) : null/);
+  assert.match(html, /state\.confirmationUrl=result\.data\?\.confirmationUrl\|\|null/);
+  assert.match(html, /history\.replaceState\(null,'',state\.confirmationUrl\)/);
+  assert.doesNotMatch(html, /history\.replaceState\(null,'',state\.ticketUrl\)/);
 });
 
 test("start over returns to the invitation entry point, not the replaced ticket URL", () => {

@@ -416,7 +416,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 (function(){
   const $ = (s) => document.querySelector(s);
   const SUBMIT_URL = '/api/rsvp';
-  const state = { guestName:null, guestEmail:null, guestPhone:null, guestId:null, attending:null, plusOne:null, wantsTableReservation:false, sealCode:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null };
+  const state = { guestName:null, guestEmail:null, guestPhone:null, guestId:null, attending:null, plusOne:null, wantsTableReservation:false, sealCode:null, confirmationUrl:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null };
 
   // ── Token personalisation ──────────────────────────
   const urlToken = new URLSearchParams(window.location.search).get('token') || null;
@@ -539,8 +539,8 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
     $('#pstate').textContent='';
     const plusName=result.data?.plusOneName||plusOne?.name||null;
     state.plusOne=plusName?{name:plusName}:null;state.wantsTableReservation=result.data?.wantsTableReservation===true;
-    state.ticketUrl=result.data?.ticketUrl||null;state.plusTicketUrl=result.data?.plusOneTicketUrl||null;
-    if(state.ticketUrl){try{history.replaceState(null,'',state.ticketUrl)}catch(_){}}
+    state.confirmationUrl=result.data?.confirmationUrl||null;state.ticketUrl=result.data?.ticketUrl||null;state.plusTicketUrl=result.data?.plusOneTicketUrl||null;
+    if(state.confirmationUrl){try{history.replaceState(null,'',state.confirmationUrl)}catch(_){}}
     $('#passname').textContent=state.guestName;$('#passcode').textContent='09.10 · 18:00';
     $('#bringingLine').innerHTML=state.plusOne?'Registered with <b>'+escapeHtml(state.plusOne.name)+'</b>':'Registered for one';
     if(state.wantsTableReservation)$('#bringingLine').innerHTML+='<br/><b>Table reservation requested.</b>';
