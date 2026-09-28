@@ -72,7 +72,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
 /* ── screens: full viewport, safe-area aware, scroll inside ── */
 .screen{position:fixed;top:0;left:0;right:0;height:100vh;height:100dvh;z-index:10;display:none;flex-direction:column;
   overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;text-align:center;
-  padding:calc(24px + env(safe-area-inset-top)) var(--side) calc(var(--partner-clearance) + env(safe-area-inset-bottom))}
+  padding:calc(24px + env(safe-area-inset-top)) var(--side) calc(24px + env(safe-area-inset-bottom))}
 .screen.on{display:flex;animation:sceneIn 1.15s var(--ease) both}
 .screen.out{display:flex;z-index:9;pointer-events:none;animation:sceneOut .7s ease both}
 @keyframes sceneIn{from{opacity:0;filter:blur(10px);transform:translateY(14px) scale(1.012)}to{opacity:1;filter:blur(0);transform:none}}
@@ -208,7 +208,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 .bringing{display:block;margin-top:10px;padding-top:10px;border-top:1px solid rgba(217,174,120,.14)}
 #saveTickets{margin-top:24px}
 .save-state{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--mute);margin:10px 0 0;min-height:1em}
-.partner-bar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:65;width:min(430px,calc(100vw - 28px));display:flex;align-items:center;justify-content:center;gap:14px;padding:0;pointer-events:none;filter:drop-shadow(0 10px 22px rgba(0,0,0,.75))}
+.screen > .partner-bar{position:relative;z-index:65;width:min(430px,calc(100vw - 28px));display:flex;align-items:center;justify-content:center;gap:14px;margin:22px auto 0;padding:0 0 max(8px,env(safe-area-inset-bottom));pointer-events:none;filter:drop-shadow(0 10px 22px rgba(0,0,0,.75));flex:0 0 auto}
 .partner-bar span{font:300 10px/1 var(--sans);letter-spacing:.26em;text-transform:uppercase;color:rgba(237,230,218,.62);white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,.8)}
 .partner-logos{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0}
 .partner-logo{display:flex;align-items:center;justify-content:center;overflow:visible}
@@ -237,7 +237,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   :root{--side:max(14px,env(safe-area-inset-left),env(safe-area-inset-right));--partner-clearance:96px;--partner-action-clearance:70px}
   .row{grid-template-columns:4.4em 1fr;gap:10px}.row dt{font-size:11px;letter-spacing:.16em}.row dd{font-size:21px}
   .btn.caps{font-size:14px;letter-spacing:.24em}.wordmark{font-size:23px}
-  .partner-bar{width:calc(100vw - 18px);gap:9px;bottom:calc(10px + env(safe-area-inset-bottom))}
+  .screen > .partner-bar{width:calc(100vw - 18px);gap:9px;padding-bottom:max(6px,env(safe-area-inset-bottom))}
   .partner-bar span{font-size:8px;letter-spacing:.18em}
   .partner-logos{gap:8px}.partner-logo.beluga{width:86px;height:32px}.partner-logo.rothschild{width:100px;height:38px}
 }
@@ -255,8 +255,6 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <body data-scene="seal">
 <div aria-hidden="true" class="atmos"><div class="a-glow"></div><div class="a-beam"></div><div class="a-rose"></div><div class="a-haze"></div></div>
 <div class="grain"></div>
-<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
-
 <!-- ══ 1. SEAL ══ -->
 <section class="screen on" id="s-seal">
 <div class="inner">
@@ -268,6 +266,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <div class="rule"></div>
 <p class="issued generic-issued">Private invitation · Saturday 10 October</p>
 </div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
 </section>
 <button class="skip" id="skipseal">Enter ›</button>
 
@@ -285,6 +284,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <p class="d">10 . 10  ·  22:00</p>
 </div>
 </div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
 </section>
 <button class="skip" id="skipfilm" style="display:none">Skip ›</button>
 
@@ -301,6 +301,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <p class="note st">This invitation only grants access to the event. What happens beneath the rose stays beneath the rose.</p>
 <button class="btn primary caps st" id="toRsvp">Respond</button>
 </div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
 </section>
 
 <!-- ══ 3b. NAME (only when the link has no personal token) ══ -->
@@ -316,6 +317,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <button class="btn primary caps st" disabled="" id="continueGuest">Continue</button>
 <button class="btn caps st" id="backLetter">Back</button>
 </div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
 </section>
 
 <!-- ══ 4. RESPOND ══ -->
@@ -330,6 +332,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <p class="err" id="rerr" role="alert"></p>
 <p aria-live="polite" class="submit-state" id="rstate"></p>
 </div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
 </section>
 
 <!-- ══ 5. PLUS ONE ══ -->
@@ -358,6 +361,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <button class="btn primary caps st" id="confirm">Confirm my place</button>
 <button class="btn caps st" id="backRsvp">Back</button>
 </div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
 </section>
 
 <!-- ══ 6. CONFIRMED ══ -->
@@ -379,6 +383,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <button class="btn caps st" id="reset" style="margin-top:14px">Start over</button>
 <button class="btn caps small st" id="cancelAttendance" style="margin-top:12px">Cancel attendance</button>
 </div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
 </section>
 
 <!-- ══ 7. DECLINED ══ -->
@@ -390,6 +395,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <div class="rule st"></div>
 <button class="btn caps st" id="reset2">Start over</button>
 </div>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>

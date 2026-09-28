@@ -83,12 +83,15 @@ test("start over returns to the invitation entry point, not the replaced ticket 
   assert.doesNotMatch(html, /function reset\(\)\{location\.reload\(\)\}/);
 });
 
-test("public invitation shells use the fixed partner bar with real logo assets", () => {
+test("public invitation shells use in-flow partner bars with real logo assets", () => {
   assert.match(html, /class="partner-bar"/);
   assert.match(html, /\/assets\/partner-beluga\.png/);
   assert.match(html, /\/assets\/partner-rothschild\.png/);
   assert.match(html, /partner-logo rothschild[\s\S]*partner-logo beluga/);
   assert.match(ticketPage, /partner-logo rothschild[\s\S]*partner-logo beluga/);
+  assert.match(html, /\.screen > \.partner-bar\{position:relative/);
+  assert.match(html, /<section class="screen" id="s-letter">[\s\S]*<aside aria-label="Event partners" class="partner-bar">/);
+  assert.doesNotMatch(html, /<body data-scene="seal">[\s\S]*<aside aria-label="Event partners" class="partner-bar">[\s\S]*<section class="screen on" id="s-seal">/);
   assert.match(html, /\.partner-logos\{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0\}/);
   assert.match(html, /\.partner-logo\.rothschild\{width:118px;height:45px\}/);
   assert.match(ticketPage, /\.partner-logo\.rothschild\{width:118px;height:45px\}/);
@@ -100,6 +103,7 @@ test("public invitation shells use the fixed partner bar with real logo assets",
   assert.match(ticketPage, /class="partner-bar"/);
   assert.match(ticketPage, /\/assets\/partner-beluga\.png/);
   assert.match(ticketPage, /\/assets\/partner-rothschild\.png/);
+  assert.match(ticketPage, /\.ticket \+ \.partner-bar\{position:relative/);
   assert.doesNotMatch(ticketPage, /\/assets\/partner-beluga-bv\.png/);
   assert.doesNotMatch(ticketPage, /\/assets\/partner-beluga\.jpg/);
   assert.doesNotMatch(ticketPage, /\/assets\/partner-rothschild\.jpg/);
@@ -108,7 +112,7 @@ test("public invitation shells use the fixed partner bar with real logo assets",
 test("public floating actions sit above the partner bar", () => {
   assert.match(html, /--partner-clearance:104px/);
   assert.match(html, /--partner-action-clearance:78px/);
-  assert.match(html, /\.screen\{[\s\S]*padding:[^}]*calc\(var\(--partner-clearance\) \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(html, /\.screen\{[\s\S]*padding:[^}]*calc\(24px \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(html, /\.skip\{[\s\S]*bottom:calc\(var\(--partner-action-clearance\) \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(html, /\.skip\{[\s\S]*z-index:70/);
 });
