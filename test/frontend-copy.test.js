@@ -101,3 +101,11 @@ test("public invitation shells use the fixed partner bar with real logo assets",
   assert.doesNotMatch(ticketPage, /\/assets\/partner-beluga\.jpg/);
   assert.doesNotMatch(ticketPage, /\/assets\/partner-rothschild\.jpg/);
 });
+
+test("public floating actions sit above the partner bar", () => {
+  assert.match(html, /--partner-clearance:104px/);
+  assert.match(html, /--partner-action-clearance:78px/);
+  assert.match(html, /\.screen\{[\s\S]*padding:[^}]*calc\(var\(--partner-clearance\) \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(html, /\.skip\{[\s\S]*bottom:calc\(var\(--partner-action-clearance\) \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(html, /\.skip\{[\s\S]*z-index:70/);
+});
