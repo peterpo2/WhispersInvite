@@ -1,4 +1,4 @@
-import { isPublicPath, isSiteLocked } from "./_shared/access.js";
+import { isPublicHost, isPublicPath, isSiteLocked } from "./_shared/access.js";
 import { SECURITY_HEADERS } from "./_shared/security.js";
 
 function withSecurityHeaders(response) {
@@ -20,13 +20,17 @@ function plainText(body, status) {
 }
 
 export async function onRequest({ request, env, next }) {
-  const { pathname } = new URL(request.url);
+  const { host, pathname } = new URL(request.url);
 
   if (pathname === "/robots.txt") {
     return withSecurityHeaders(plainText("User-agent: *\nDisallow: /\n", 200));
   }
 
   if (isSiteLocked(env)) {
+    return withSecurityHeaders(plainText("Not found.", 404));
+  }
+
+  if (!isPublicHost(host)) {
     return withSecurityHeaders(plainText("Not found.", 404));
   }
 

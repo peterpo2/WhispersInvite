@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isPublicPath, isSiteLocked } from "../functions/_shared/access.js";
+import { isPublicHost, isPublicPath, isSiteLocked } from "../functions/_shared/access.js";
 
 test("allows the invitation, API routes, ticket pages and the staff scanner", () => {
   for (const path of [
@@ -90,4 +90,30 @@ test("site lock is enabled only by an explicit production flag", () => {
   assert.equal(isSiteLocked({ SITE_LOCKED: "0" }), false);
   assert.equal(isSiteLocked({}), false);
   assert.equal(isSiteLocked(null), false);
+});
+
+test("only custom domains and local development hosts can serve public pages", () => {
+  for (const host of [
+    "whisperssociety.com",
+    "www.whisperssociety.com",
+    "localhost",
+    "localhost:8788",
+    "127.0.0.1",
+    "127.0.0.1:8788",
+    "[::1]:8788",
+  ]) {
+    assert.equal(isPublicHost(host), true, host);
+  }
+
+  for (const host of [
+    "whispers-invite.pages.dev",
+    "23058b1c.whispers-invite.pages.dev",
+    "evil-whisperssociety.com",
+    "whisperssociety.com.evil.example",
+    "",
+    undefined,
+    null,
+  ]) {
+    assert.equal(isPublicHost(host), false, String(host));
+  }
 });
