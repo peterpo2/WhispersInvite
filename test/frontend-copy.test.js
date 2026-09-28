@@ -62,6 +62,11 @@ test("ticket page forwards the local release preview flag to the ticket API", ()
   assert.match(ticketPage, /\/api\/ticket\?token=\$\{encodeURIComponent\(token\)\}\$\{preview\}/);
 });
 
+test("released ticket fallback does not mention the old address release copy", () => {
+  assert.doesNotMatch(ticketPage, /Address released on/);
+  assert.match(ticketPage, /Sofia · private location in central Sofia\./);
+});
+
 test("locked registered ticket shows event time before the release note", () => {
   assert.match(ticketPage, /<div class="code" id="code">WSP[\s\S]*<p class="ticket-type" id="ticketType">Ticket<\/p>[\s\S]*<div class="qr" id="qr"><\/div>\s*<p class="state" id="state"><\/p>\s*<p class="meta" id="ticketMeta">/);
   assert.match(ticketPage, /\.qr\[hidden\]\{display:none\}/);

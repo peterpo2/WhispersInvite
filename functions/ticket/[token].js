@@ -81,7 +81,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <p class="ticket-type" id="ticketType">Ticket</p>
 <div class="qr" id="qr"></div>
 <p class="state" id="state"></p>
-<p class="meta" id="ticketMeta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia. Address released on <b>09.10 at 18:00</b>.</span><span id="bringing"></span></p>
+<p class="meta" id="ticketMeta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia.</span><span id="bringing"></span></p>
 <p class="small" id="ticketNote"></p>
 <button class="save" hidden id="save" type="button">Private ticket</button>
 <p aria-live="polite" class="saved" id="saved"></p>
@@ -134,7 +134,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   $('ticketType').style.display='none';
   $('code').textContent=t.seal_code||'WSP · 10';
   $('bringing').innerHTML=t.bringing?'Bringing <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'':'Coming on your own');
-  const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia · private location in central Sofia. Address released on 09.10 at 18:00.';
+  const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia · private location in central Sofia.';
   if(v)$('venue').innerHTML=v.mapUrl?'<a href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+escapeHtml(venueText)+'</a>':escapeHtml(venueText);
   if(t.table_reserved)$('bringing').innerHTML += '<br/><b>Your table is confirmed.</b>';
   $('ticketNote').textContent='Show this seal at the door. The QR confirms your place in the WHISPERS list.';
