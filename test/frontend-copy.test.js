@@ -93,7 +93,7 @@ test("ticket and staff pages share the WHISPERS rose atmosphere", () => {
 test("successful RSVP moves the browser to the confirmation link", () => {
   assert.match(rsvpApi, /confirmationUrl: attending && row\.confirmation_token \? buildConfirmationUrl\(requestUrl, row\.confirmation_token\) : null/);
   assert.match(html, /state\.confirmationUrl=result\.data\?\.confirmationUrl\|\|null/);
-  assert.match(html, /history\.replaceState\(null,'',state\.confirmationUrl\)/);
+  assert.match(html, /window\.location\.assign\(state\.confirmationUrl\);return/);
   assert.doesNotMatch(html, /history\.replaceState\(null,'',state\.ticketUrl\)/);
 });
 

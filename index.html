@@ -540,7 +540,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
     const plusName=result.data?.plusOneName||plusOne?.name||null;
     state.plusOne=plusName?{name:plusName}:null;state.wantsTableReservation=result.data?.wantsTableReservation===true;
     state.confirmationUrl=result.data?.confirmationUrl||null;state.ticketUrl=result.data?.ticketUrl||null;state.plusTicketUrl=result.data?.plusOneTicketUrl||null;
-    if(state.confirmationUrl){try{history.replaceState(null,'',state.confirmationUrl)}catch(_){}}
+    if(state.confirmationUrl){window.location.assign(state.confirmationUrl);return;}
     $('#passname').textContent=state.guestName;$('#passcode').textContent='09.10 · 18:00';
     $('#bringingLine').innerHTML=state.plusOne?'Registered with <b>'+escapeHtml(state.plusOne.name)+'</b>':'Registered for one';
     if(state.wantsTableReservation)$('#bringingLine').innerHTML+='<br/><b>Table reservation requested.</b>';
