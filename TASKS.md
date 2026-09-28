@@ -26,7 +26,8 @@ All SQL you may need: [`sql/useful-queries.sql`](sql/useful-queries.sql)
 - [ ] Cap at 150 people.
 - [x] Enforce RSVP deadline: 07.10.2026 at 18:00 Europe/Sofia.
 - [x] Confirm no cancellation/decline changes after deadline/release.
-- [ ] Wire email delivery for registration confirmation and 09.10 ticket release.
+- [x] Wire SMTP delivery for admin invitation emails.
+- [ ] Wire the 09.10 ticket-release email blast.
 - [ ] Add staff auth after domain/email are ready: username/password + email confirmation code.
 - [x] Add a separate staff/admin reservation-confirmed toggle; table assignment alone is internal.
 - [ ] Replace temporary 10-table model with final venue table scheme.

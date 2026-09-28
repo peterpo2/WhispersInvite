@@ -65,8 +65,11 @@ attendance. Plus-one ticket links are generated later during RSVP.
 
 Invite shows all invited primary guests, including people who have not answered yet. Members shows
 only people with an RSVP response. Invite statuses are `Not responded`, `Attending` and `Declined`.
-If an invite has an email, staff can press **Send** to record that the confirmation link was sent.
-After the first press, the action becomes **Send again** and updates the sent timestamp/count.
+If an invite has an email, staff can press **Send** to email the personal confirmation link.
+After the first successful send, the action becomes **Send again** and updates the sent
+timestamp/count. Automatic emails are sent from `noreply@whisperssociety.com`, use
+`guestlist@whisperssociety.com` as the reply-to address, and include the guest-list email plus
+`+359 888 012 380` as contact details.
 
 ## Door Flow
 
@@ -154,5 +157,5 @@ docs/project-spec.md             Current product and technical spec
 ## What Is Still Open
 
 See [`TASKS.md`](TASKS.md). The short version: test the whole flow on real iPhone Safari and
-modern Android Chrome, replace test guests with the real guest list, add the final intro video,
-wire email delivery, add the final intro video, replace test guests, and finalize the table model.
+modern Android Chrome, replace test guests with the real guest list, wire the 09.10 ticket-release
+email blast, add the final intro video, and finalize the table model.

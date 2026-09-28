@@ -127,8 +127,10 @@ they are optional; when missing, the guest enters them during the personal RSVP 
 The Invite admin view lists every invited primary guest. Members lists only RSVP rows. Invite
 statuses are shown as `Not responded`, `Attending` or `Declined`.
 If an invite has an email, the Invite view shows `Send` until the first send is recorded, then
-`Send again`. The current implementation records send state for the future email flow; SMTP
-delivery will be wired after the final mailbox/provider details are available.
+`Send again`. The send action emails the personal `/hi/<id>` confirmation link through the
+SuperHosting SMTP mailbox `noreply@whisperssociety.com`. Automatic emails use
+`Reply-To: guestlist@whisperssociety.com` and include `guestlist@whisperssociety.com` plus
+`+359 888 012 380` as the guest contact details.
 
 ### `rsvps`
 
@@ -209,5 +211,5 @@ unlisted API paths.
 - Real iPhone/Safari and Android/Samsung Chrome end-to-end test before sending invitations.
 - Replace test guests with the real list.
 - Decide and implement 150-person cap enforcement, or document that it stays manual.
-- Wire registration confirmation and ticket-release emails after domain/email provider are ready.
-- Add the SuperHosting SMTP-backed email sender once the final mailbox credentials are ready.
+- Wire the 09.10 ticket-release email blast.
+- Add final inbox tests for Gmail, Outlook and iCloud before sending the guest list.

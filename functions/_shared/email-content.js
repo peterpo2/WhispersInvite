@@ -1,0 +1,86 @@
+const DEFAULT_FROM = "WHISPERS <noreply@whisperssociety.com>";
+const DEFAULT_REPLY_TO = "guestlist@whisperssociety.com";
+const DEFAULT_PHONE = "+359 888 012 380";
+
+export function emailConfigFromEnv(env) {
+  const smtpHost = String(env.SMTP_HOST || "").trim();
+  const smtpPort = Number(env.SMTP_PORT || 465);
+  const smtpUser = String(env.SMTP_USER || "").trim();
+  const smtpPass = String(env.SMTP_PASS || "");
+  const from = String(env.EMAIL_FROM || DEFAULT_FROM).trim();
+  const replyTo = String(env.EMAIL_REPLY_TO || DEFAULT_REPLY_TO).trim();
+  const contactPhone = String(env.EMAIL_CONTACT_PHONE || DEFAULT_PHONE).trim();
+
+  if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !from || !replyTo) {
+    return { error: "Email is not configured" };
+  }
+
+  return { smtpHost, smtpPort, smtpUser, smtpPass, from, replyTo, contactPhone };
+}
+
+export function buildInviteEmail({ to, name, confirmationLink, config }) {
+  const safeName = String(name || "").trim() || "Guest";
+  const link = String(confirmationLink || "").trim();
+  const contact = config.replyTo;
+  const phone = config.contactPhone;
+  const subject = "WHISPERS Door";
+  const text = [
+    "WHISPERS",
+    "",
+    `${safeName},`,
+    "",
+    "Your private invitation is waiting.",
+    "Open your personal link and complete the RSVP steps:",
+    "",
+    link,
+    "",
+    "For questions:",
+    contact,
+    phone,
+  ].join("\n");
+  const html = `<!doctype html>
+<html>
+<body style="margin:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0B0908;color:#EDE6DA;">
+    <tr>
+      <td align="center" style="padding:40px 18px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;">
+          <tr><td style="font-family:Arial,sans-serif;letter-spacing:0.34em;text-transform:uppercase;color:#D9AE78;font-size:13px;text-align:center;">WHISPERS</td></tr>
+          <tr><td style="height:28px;"></td></tr>
+          <tr><td style="font-size:28px;line-height:1.2;text-align:center;color:#F6EFE4;">${escapeHtml(safeName)}</td></tr>
+          <tr><td style="height:18px;"></td></tr>
+          <tr><td style="font-size:20px;line-height:1.5;text-align:center;color:#EDE6DA;">Your private invitation is waiting.</td></tr>
+          <tr><td style="height:26px;"></td></tr>
+          <tr>
+            <td align="center">
+              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #D9AE78;color:#0B0908;background:#D9AE78;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;padding:16px 24px;">Respond</a>
+            </td>
+          </tr>
+          <tr><td style="height:30px;"></td></tr>
+          <tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">For questions:<br><a href="mailto:${escapeHtml(contact)}" style="color:#D9AE78;">${escapeHtml(contact)}</a><br>${escapeHtml(phone)}</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return {
+    from: config.from,
+    replyTo: config.replyTo,
+    to,
+    subject,
+    text,
+    html,
+  };
+}
+
+export function escapeHtml(value) {
+  return String(value || "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  })[char]);
+}
