@@ -1,3 +1,5 @@
+import { isLocalTicketReleasePreview } from "../_shared/rsvp.js";
+
 function escapeHtml(value) {
   return String(value || "").replace(/[&<>'"]/g, (char) => ({
     "&": "&amp;",
@@ -11,7 +13,8 @@ function escapeHtml(value) {
 export async function onRequestGet({ params, request }) {
   const token = params.token;
   const origin = new URL(request.url).origin;
-  const apiUrl = `${origin}/api/ticket?token=${encodeURIComponent(token)}`;
+  const preview = isLocalTicketReleasePreview(request.url) ? "&preview=released" : "";
+  const apiUrl = `${origin}/api/ticket?token=${encodeURIComponent(token)}${preview}`;
   const ticketUrl = `${origin}/ticket/${encodeURIComponent(token)}`;
 
   return new Response(`<!doctype html>

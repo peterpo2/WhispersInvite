@@ -17,7 +17,9 @@ import {
   buildRsvpRow,
   buildRsvpUpdate,
   isRsvpClosed,
+  isLocalTicketReleasePreview,
   isTicketReleased,
+  isTicketReleasedForRequest,
   normalizePhone,
   doorScans,
   pendingInviteTicket,
@@ -165,6 +167,22 @@ test("ticket release gate opens exactly at 09.10 18:00 Sofia time", () => {
   assert.equal(TICKET_RELEASE_AT, "2026-10-09T18:00:00+03:00");
   assert.equal(isTicketReleased(new Date("2026-10-09T14:59:59.000Z")), false);
   assert.equal(isTicketReleased(new Date("2026-10-09T15:00:00.000Z")), true);
+});
+
+test("ticket release preview works only on local development hosts", () => {
+  assert.equal(isLocalTicketReleasePreview("http://127.0.0.1:8788/ticket/abc?preview=released"), true);
+  assert.equal(isLocalTicketReleasePreview("http://localhost:8788/ticket/abc?preview=released"), true);
+  assert.equal(isLocalTicketReleasePreview("http://[::1]:8788/ticket/abc?preview=released"), true);
+  assert.equal(isLocalTicketReleasePreview("https://whisperssociety.com/ticket/abc?preview=released"), false);
+  assert.equal(isLocalTicketReleasePreview("http://127.0.0.1:8788/ticket/abc?preview=locked"), false);
+  assert.equal(isLocalTicketReleasePreview("not a url"), false);
+});
+
+test("ticket request release helper keeps production locked before release", () => {
+  const before = new Date("2026-10-09T14:59:59.000Z");
+  assert.equal(isTicketReleasedForRequest("https://whisperssociety.com/ticket/abc?preview=released", before), false);
+  assert.equal(isTicketReleasedForRequest("http://127.0.0.1:8788/ticket/abc?preview=released", before), true);
+  assert.equal(isTicketReleasedForRequest("https://whisperssociety.com/ticket/abc", new Date("2026-10-09T15:00:00.000Z")), true);
 });
 
 test("RSVP closes at 07.10 18:00 Sofia time", () => {

@@ -4,6 +4,7 @@ const MAX_NAME = 120;
 const MAX_EMAIL = 254;
 const MAX_PHONE = 40;
 const REDIRECT_TOKEN_RE = /^[A-Za-z0-9_-]{1,64}$/;
+const LOCAL_PREVIEW_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
 export const EVENT_KEY = "whispers-2026-10-10";
 export const TICKET_RELEASE_AT = "2026-10-09T18:00:00+03:00";
@@ -42,6 +43,19 @@ function validPhone(value) {
 
 export function isTicketReleased(now = new Date()) {
   return now >= new Date(TICKET_RELEASE_AT);
+}
+
+export function isLocalTicketReleasePreview(requestUrl) {
+  try {
+    const url = new URL(requestUrl);
+    return url.searchParams.get("preview") === "released" && LOCAL_PREVIEW_HOSTS.has(url.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+export function isTicketReleasedForRequest(requestUrl, now = new Date()) {
+  return isTicketReleased(now) || isLocalTicketReleasePreview(requestUrl);
 }
 
 export function isRsvpClosed(now = new Date()) {
