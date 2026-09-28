@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 
 const html = readFileSync("index.html", "utf8");
 const ticketPage = readFileSync("functions/ticket/[token].js", "utf8");
+const confirmationPage = readFileSync("functions/hi/[token].js", "utf8");
 const staffPage = readFileSync("functions/staff/rose-door-10.js", "utf8");
 const rsvpApi = readFileSync("functions/api/rsvp.js", "utf8");
 
@@ -52,8 +53,18 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
   assert.match(ticketPage, /darkQr\('This ticket link is invalid\.'\)/);
   assert.match(ticketPage, /darkQr\('Your ticket could not be loaded\. Please refresh to try again\.'\)/);
   assert.match(ticketPage, /id="ticketNote"><\/p>/);
+  assert.match(ticketPage, /id="pendingInvite"/);
+  assert.match(ticketPage, /Use your invite link to RSVP/);
+  assert.match(ticketPage, /if\(data\.inviteUrl\)\{\$\('pendingInvite'\)\.href=data\.inviteUrl;\$\('pendingInvite'\)\.hidden=false;\}/);
+  assert.doesNotMatch(ticketPage, /Use your confirmation link to RSVP/);
   assert.match(ticketPage, /\$\('ticketNote'\)\.textContent=''/);
   assert.match(ticketPage, /\$\('ticketNote'\)\.textContent='Show this seal at the door\. The QR confirms your place in the WHISPERS list\.'/);
+});
+
+test("old confirmation links that contain an invite token redirect to the invite", () => {
+  assert.match(confirmationPage, /guest_list\?select=id&id=eq\./);
+  assert.match(confirmationPage, /Response\.redirect\(`\$\{origin\}\/invite\/\$\{encodeURIComponent\(token\)\}`/);
+  assert.doesNotMatch(confirmationPage, /!\/\^\[A-Za-z0-9\]\{32,40\}\$\/\.test\(token\)/);
 });
 
 test("ticket page forwards the local release preview flag to the ticket API", () => {

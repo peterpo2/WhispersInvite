@@ -1,5 +1,5 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { EVENT_KEY, TICKET_RELEASE_AT, buildCheckInUrl, buildTicketUrl, companionTicketForToken, isTicketReleasedForRequest, pendingInviteTicket, publicVenue, ticketForToken, tokenFromValue } from "../_shared/rsvp.js";
+import { EVENT_KEY, TICKET_RELEASE_AT, buildCheckInUrl, buildInviteUrl, buildTicketUrl, companionTicketForToken, isTicketReleasedForRequest, pendingInviteTicket, publicVenue, ticketForToken, tokenFromValue } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const PRIMARY_COLUMNS = "id,guest_name,seal_code,ticket_token,checked_in_at,status,plus_one_name,plus_one_seal_code,plus_one_ticket_token,plus_one_checked_in_at,reservation_confirmed";
@@ -49,6 +49,7 @@ export async function onRequestGet({ request, env }) {
     ticket,
     venue,
     ticketUrl: buildTicketUrl(request.url, token),
+    inviteUrl: ticket.pending === true && ticket.invite_id ? buildInviteUrl(request.url, ticket.invite_id) : null,
     checkInUrl: buildCheckInUrl(request.url, token),
   });
 }
@@ -56,7 +57,7 @@ export async function onRequestGet({ request, env }) {
 async function findPendingInviteTicket(env, token) {
   const lookup = await supabaseFetch(
     env,
-    `/rest/v1/guest_list?select=name,ticket_token&ticket_token=eq.${token}&limit=1`
+    `/rest/v1/guest_list?select=id,name,ticket_token&ticket_token=eq.${token}&limit=1`
   );
   if (lookup.error) return { error: lookup.error };
   if (!lookup.response.ok) return { error: json({ error: "Could not load ticket" }, 502) };

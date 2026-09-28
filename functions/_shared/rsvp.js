@@ -258,6 +258,7 @@ export function pendingInviteTicket(row, token) {
   if (!row || !token || row.ticket_token !== token) return null;
   return {
     holder: "invite",
+    invite_id: row.id || null,
     guest_name: row.name,
     seal_code: null,
     checked_in_at: null,

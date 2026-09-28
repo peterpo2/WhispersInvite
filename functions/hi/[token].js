@@ -9,12 +9,10 @@ export async function onRequestGet({ params, request, env }) {
   const token = safeToken(params.token || "");
   if (!token) return Response.redirect(origin + "/", 302);
 
-  if (!/^[A-Za-z0-9]{32,40}$/.test(token)) {
-    const legacy = await supabaseFetch(env, `/rest/v1/guest_list?select=id&id=eq.${encodeURIComponent(token)}&limit=1`);
-    if (!legacy.error && legacy.response.ok) {
-      const [row] = await legacy.response.json().catch(() => []);
-      if (row) return Response.redirect(`${origin}/invite/${encodeURIComponent(token)}`, 302);
-    }
+  const legacy = await supabaseFetch(env, `/rest/v1/guest_list?select=id&id=eq.${encodeURIComponent(token)}&limit=1`);
+  if (!legacy.error && legacy.response.ok) {
+    const [row] = await legacy.response.json().catch(() => []);
+    if (row) return Response.redirect(`${origin}/invite/${encodeURIComponent(token)}`, 302);
   }
 
   const apiUrl = `${origin}/api/confirmation?token=${encodeURIComponent(token)}`;

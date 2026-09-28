@@ -59,8 +59,8 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 .state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
 .ticket-type + .qr[hidden] + .state{margin-top:8px}
 .meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
-.save{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:400 15px/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6)}
-.save[hidden]{display:none}.save:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
+.save,.pending-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:400 15px/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6);text-decoration:none}
+.save[hidden],.pending-link[hidden]{display:none}.save:focus-visible,.pending-link:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
 .saved{font-style:italic;font-size:18px;color:var(--mute);margin:10px 0 0;min-height:1em}
 .ticket + .partner-bar{position:relative;z-index:5;width:min(430px,calc(100vw - 28px));display:flex;align-items:center;justify-content:center;gap:14px;margin:22px auto 0;padding:0 0 max(8px,env(safe-area-inset-bottom));pointer-events:none;filter:drop-shadow(0 10px 22px rgba(0,0,0,.75));flex:0 0 auto}
 .partner-bar span{font:300 10px/1 var(--sans);letter-spacing:.26em;text-transform:uppercase;color:rgba(237,230,218,.62);white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,.8)}
@@ -83,6 +83,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <p class="state" id="state"></p>
 <p class="meta" id="ticketMeta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia.</span><span id="bringing"></span></p>
 <p class="small" id="ticketNote"></p>
+<a class="pending-link" hidden id="pendingInvite" href="#">Respond</a>
 <button class="save" hidden id="save" type="button">Private ticket</button>
 <p aria-live="polite" class="saved" id="saved"></p>
 </main>
@@ -110,10 +111,11 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
       $('code').textContent='RSVP FIRST';
       $('qr').classList.add('fallback');
       $('qr').textContent='Please confirm your attendance first. Your private ticket will appear here after RSVP and ticket release.';
-      $('venue').innerHTML='Use your confirmation link to RSVP. Location remains sealed until 09.10 at 18:00.';
+      $('venue').innerHTML='Use your invite link to RSVP. Location remains sealed until 09.10 at 18:00.';
       $('bringing').innerHTML='';
       $('ticketNote').textContent='';
       $('state').textContent='Waiting for RSVP';
+      if(data.inviteUrl){$('pendingInvite').href=data.inviteUrl;$('pendingInvite').hidden=false;}
       reveal();
       return;
     }

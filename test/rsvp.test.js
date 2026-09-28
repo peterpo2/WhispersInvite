@@ -156,8 +156,9 @@ test("a personal invite can provide the primary RSVP ticket token", () => {
 });
 
 test("pending invite tickets are locked until the guest RSVPs", () => {
-  assert.deepEqual(pendingInviteTicket({ name: "Peter Popov", ticket_token: TOKEN }, TOKEN), {
+  assert.deepEqual(pendingInviteTicket({ id: "invite00000000000000000000000000", name: "Peter Popov", ticket_token: TOKEN }, TOKEN), {
     holder: "invite",
+    invite_id: "invite00000000000000000000000000",
     guest_name: "Peter Popov",
     seal_code: null,
     checked_in_at: null,
