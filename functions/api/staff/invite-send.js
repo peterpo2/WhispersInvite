@@ -1,5 +1,6 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { buildInviteEmail, emailConfigFromEnv } from "../../_shared/email-content.js";
+import { retryAsync } from "../../_shared/retry.js";
 import { sendSmtpMail } from "../../_shared/smtp.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
@@ -32,12 +33,13 @@ export async function onRequestPost({ request, env }) {
 
   const confirmationLink = `${new URL(request.url).origin}/hi/${encodeURIComponent(invite.id)}`;
   try {
-    await sendSmtpMail(config, buildInviteEmail({
+    const email = buildInviteEmail({
       to: invite.email,
       name: invite.name,
       confirmationLink,
       config,
-    }));
+    });
+    await retryAsync(() => sendSmtpMail(config, email), { attempts: 2, delayMs: 350 });
   } catch {
     return json({ error: "Could not send invite email" }, 502);
   }
