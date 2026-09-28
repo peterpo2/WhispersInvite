@@ -73,8 +73,25 @@ async function findPrimaryTicket(env, token, released) {
   if (lookup.error) return { error: lookup.error };
   if (!lookup.response.ok) return { error: json({ error: "Could not load ticket" }, 502) };
   const [row] = await lookup.response.json();
-  const ticket = ticketForToken(row, token, { released });
+  let ticket = ticketForToken(row, token, { released });
+  if (ticket?.holder === "guest" && !ticket.bringing) {
+    const companions = await findCompanions(env, row.id);
+    if (companions.error) return { error: companions.error };
+    const firstCompanion = companions.rows[0] || null;
+    if (firstCompanion) ticket = { ...ticket, bringing: firstCompanion.guest_name || null };
+  }
   return { ticket };
+}
+
+async function findCompanions(env, rsvpId) {
+  const lookup = await supabaseFetch(
+    env,
+    `/rest/v1/rsvp_companions?select=id,guest_name&rsvp_id=eq.${encodeURIComponent(rsvpId)}&limit=2`
+  );
+  if (lookup.error) return { error: lookup.error };
+  if (!lookup.response.ok) return { error: json({ error: "Could not load ticket" }, 502) };
+  const rows = await lookup.response.json();
+  return { rows: Array.isArray(rows) ? rows : [] };
 }
 
 async function findCompanionTicket(env, token, released) {
