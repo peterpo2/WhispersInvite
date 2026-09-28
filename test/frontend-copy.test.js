@@ -180,3 +180,17 @@ test("letter respond CTA stays in flow without covering the closing copy", () =>
   assert.match(html, /#s-letter\.on #toRsvp\.st\{animation:respondGlow 3\.6s ease-in-out infinite;transform:none\}/);
   assert.match(html, /#s-letter \.row dd\{font-size:21px;line-height:1\.24\}/);
 });
+
+test("seal intro keeps heavy glow effects off the logo image", () => {
+  assert.match(html, /<link as="image" fetchpriority="high" href="\/assets\/whispers-seal\.png" rel="preload"\/>/);
+  assert.match(html, /class="sealimg" decoding="async" draggable="false" fetchpriority="high"/);
+  assert.match(html, /\.sealwrap\{[^}]*isolation:isolate;contain:layout paint;transform:translateZ\(0\)/);
+  assert.match(html, /\.sealwrap::before,\.sealwrap::after\{[^}]*z-index:0/);
+  assert.match(html, /\.sealimg\{[^}]*z-index:1/);
+  assert.match(html, /#s-seal\.cracking \.sealwrap::before,#s-seal\.cracking \.sealwrap::after\{opacity:0;animation:none/);
+  assert.match(html, /@keyframes sealBreathe\{0%,100%\{transform:translateZ\(0\) scale\(\.992\)\}50%\{transform:translateZ\(0\) scale\(1\.012\)\}\}/);
+  assert.match(html, /@keyframes crack\{0%\{transform:translateZ\(0\) scale\(\.975\);opacity:1\}30%\{transform:translateZ\(0\) scale\(1\.045\);opacity:1\}100%\{transform:translateZ\(0\) scale\(1\.16\);opacity:0\}\}/);
+  assert.doesNotMatch(html, /@keyframes sealBreathe\{[^}]*filter:/);
+  assert.doesNotMatch(html, /#s-seal\.pressing \.sealimg\{[^}]*filter:/);
+  assert.doesNotMatch(html, /@keyframes crack\{[^\n\r]*blur\(/);
+});
