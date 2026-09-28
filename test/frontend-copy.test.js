@@ -56,6 +56,15 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
   assert.match(ticketPage, /\$\('ticketNote'\)\.textContent='Show this seal at the door\. The QR confirms your place in the WHISPERS list\.'/);
 });
 
+test("locked registered ticket shows event time before the release note", () => {
+  assert.match(ticketPage, /<p class="state" id="state"><\/p>\s*<p class="small" id="ticketNote"><\/p>/);
+  assert.match(ticketPage, /\$\('code'\)\.textContent='10\.10 · 22:00'/);
+  assert.match(ticketPage, /\$\('qr'\)\.hidden=true/);
+  assert.match(ticketPage, /\$\('state'\)\.textContent='Locked until release';\s*\$\('ticketNote'\)\.textContent='Your ticket will be released on 09\.10 at 18:00\.'/);
+  assert.doesNotMatch(ticketPage, /\$\('code'\)\.textContent='09\.10 · 18:00'/);
+  assert.doesNotMatch(ticketPage, /\$\('qr'\)\.textContent='Your ticket will be released on 09\.10 at 18:00\.'/);
+});
+
 test("all public HTML shells use the WHISPERS tab icon", () => {
   for (const source of [html, ticketPage, staffPage]) {
     assert.match(source, /<link href="\/assets\/whispers-favicon\.png" rel="icon" type="image\/png"\/>/);

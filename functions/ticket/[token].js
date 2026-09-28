@@ -74,8 +74,8 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <div class="code" id="code">WSP · 10</div>
 <div class="qr" id="qr"></div>
 <p class="meta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia. Address released on <b>09.10 at 18:00</b>.</span><span id="bringing"></span></p>
-<p class="small" id="ticketNote"></p>
 <p class="state" id="state"></p>
+<p class="small" id="ticketNote"></p>
 <button class="save" hidden id="save" type="button">Private ticket</button>
 <p aria-live="polite" class="saved" id="saved"></p>
 </main>
@@ -112,13 +112,12 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
     }
     $('guest').textContent=t.guest_name||'Your ticket';
     document.querySelector('.role').textContent='Registered guest';
-    $('code').textContent='09.10 · 18:00';
-    $('qr').classList.add('fallback');
-    $('qr').textContent='Your ticket will be released on 09.10 at 18:00.';
+    $('code').textContent='10.10 · 22:00';
+    $('qr').hidden=true;
     $('venue').innerHTML='Location remains sealed until 09.10 at 18:00.';
     $('bringing').innerHTML=t.bringing?'Registered with <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'Guest of '+escapeHtml(t.brought_by):'');
-    $('ticketNote').textContent='';
     $('state').textContent='Locked until release';
+    $('ticketNote').textContent='Your ticket will be released on 09.10 at 18:00.';
     reveal();
     return;
   }

@@ -316,10 +316,10 @@ Role:
 
 Main text:
 
-- 09.10 · 18:00
-- Your ticket will be released on 09.10 at 18:00.
+- 10.10 · 22:00
 - Location remains sealed until 09.10 at 18:00.
 - Locked until release
+- Your ticket will be released on 09.10 at 18:00.
 
 Dynamic relationship text:
 
