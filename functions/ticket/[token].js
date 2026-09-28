@@ -58,14 +58,14 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 .saved{font-style:italic;font-size:18px;color:var(--mute);margin:10px 0 0;min-height:1em}
 .partner-bar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:5;width:min(430px,calc(100vw - 28px));display:flex;align-items:center;justify-content:center;gap:14px;padding:0;pointer-events:none;filter:drop-shadow(0 10px 22px rgba(0,0,0,.75))}
 .partner-bar span{font:300 10px/1 var(--sans);letter-spacing:.26em;text-transform:uppercase;color:rgba(237,230,218,.62);white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,.8)}
-.partner-logos{display:flex;align-items:center;justify-content:center;gap:18px;min-width:0}
-.partner-logo{display:flex;align-items:center;justify-content:center;overflow:visible}.partner-logo.beluga{width:92px;height:34px}.partner-logo.rothschild{width:108px;height:41px}.partner-logo img{display:block;width:100%;height:100%;object-fit:contain;opacity:.92}
-@media (max-width:360px){.partner-bar{width:calc(100vw - 18px);gap:9px;bottom:calc(10px + env(safe-area-inset-bottom))}.partner-bar span{font-size:8px;letter-spacing:.18em}.partner-logos{gap:10px}.partner-logo.beluga{width:78px;height:29px}.partner-logo.rothschild{width:92px;height:35px}}
+.partner-logos{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0}
+.partner-logo{display:flex;align-items:center;justify-content:center;overflow:visible}.partner-logo.beluga{width:100px;height:37px}.partner-logo.rothschild{width:118px;height:45px}.partner-logo img{display:block;width:100%;height:100%;object-fit:contain;opacity:.92}
+@media (max-width:360px){.partner-bar{width:calc(100vw - 18px);gap:9px;bottom:calc(10px + env(safe-area-inset-bottom))}.partner-bar span{font-size:8px;letter-spacing:.18em}.partner-logos{gap:8px}.partner-logo.beluga{width:86px;height:32px}.partner-logo.rothschild{width:100px;height:38px}}
 </style>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
-<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div></div></aside>
+<aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
 <main class="ticket loading">
 <img class="mark" src="/assets/whispers-mark.png" alt=""/>
 <div class="rose">WHISPERS</div>

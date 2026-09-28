@@ -87,8 +87,11 @@ test("public invitation shells use the fixed partner bar with real logo assets",
   assert.match(html, /class="partner-bar"/);
   assert.match(html, /\/assets\/partner-beluga\.png/);
   assert.match(html, /\/assets\/partner-rothschild\.png/);
-  assert.match(html, /\.partner-logo\.rothschild\{width:108px;height:41px\}/);
-  assert.match(ticketPage, /\.partner-logo\.rothschild\{width:108px;height:41px\}/);
+  assert.match(html, /partner-logo rothschild[\s\S]*partner-logo beluga/);
+  assert.match(ticketPage, /partner-logo rothschild[\s\S]*partner-logo beluga/);
+  assert.match(html, /\.partner-logos\{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0\}/);
+  assert.match(html, /\.partner-logo\.rothschild\{width:118px;height:45px\}/);
+  assert.match(ticketPage, /\.partner-logo\.rothschild\{width:118px;height:45px\}/);
   assert.doesNotMatch(html, /\/assets\/partner-beluga-bv\.png/);
   assert.doesNotMatch(html, /\/assets\/partner-beluga\.jpg/);
   assert.doesNotMatch(html, /\/assets\/partner-rothschild\.jpg/);
