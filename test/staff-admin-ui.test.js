@@ -79,6 +79,19 @@ test("members table edits request, confirmation and check-in through confirmed c
   assert.match(staffPage, /toggleMember\(cb,cb\.dataset\.checkinId,cb\.checked\)/);
 });
 
+test("members table groups table and door status columns", () => {
+  assert.match(staffPage, /<tr class="member-groups">/);
+  assert.match(staffPage, /<th class="member-group" colspan="3">Table<\/th>/);
+  assert.match(staffPage, /<th class="member-group" colspan="2">Door<\/th>/);
+  assert.match(staffPage, /<th class="group-start" data-sort="wantsTableReservation">Request<\/th>/);
+  assert.match(staffPage, /<th class="group-end" data-sort="table">Table<\/th>/);
+  assert.match(staffPage, /<th class="group-start" data-sort="checkedIn">In<\/th>/);
+  assert.match(staffPage, /<th class="group-end" data-sort="checkedInAt">Scanned<\/th>/);
+  assert.match(staffPage, /document\.querySelectorAll\('#membersTable th\[data-sort\]'\)/);
+  assert.match(staffPage, /\.member-group\{/);
+  assert.match(staffPage, /td\.group-start,th\.group-start/);
+});
+
 test("reservation-state endpoint can update request and confirmed separately", () => {
   assert.match(reservationStateApi, /wantsTableReservation/);
   assert.match(reservationStateApi, /wants_table_reservation/);
