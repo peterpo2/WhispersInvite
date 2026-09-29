@@ -1,6 +1,5 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { buildInviteEmail, buildRsvpConfirmationEmails, buildTicketEmail, emailConfigFromEnv } from "../../_shared/email-content.js";
-import { retryAsync } from "../../_shared/retry.js";
 import { EVENT_KEY, buildConfirmationUrl, buildInviteUrl, buildTicketUrl } from "../../_shared/rsvp.js";
 import { sendSmtpMail } from "../../_shared/smtp.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
@@ -8,6 +7,7 @@ import { supabaseFetch } from "../../_shared/supabase.js";
 const COLUMNS = "id,name,email,confirmation_email_send_count";
 const RSVP_COLUMNS = "id,guest_id,guest_name,guest_email,status,confirmation_token,ticket_token,wants_table_reservation";
 const COMPANION_COLUMNS = "id,rsvp_id,guest_name,email,confirmation_token,ticket_token";
+const EVENT_DETAILS_COLUMNS = "venue_name,venue_address";
 const SEND_TYPES = new Set(["invite", "confirmation", "ticket"]);
 
 export async function onRequestPost({ request, env }) {
@@ -42,7 +42,7 @@ export async function onRequestPost({ request, env }) {
 
   try {
     for (const email of built.emails) {
-      await retryAsync(() => sendSmtpMail(config, email), { attempts: 2, delayMs: 350 });
+      await sendSmtpMail(config, email);
     }
   } catch {
     return json({ error: `Could not send ${type} email` }, 502);
@@ -123,11 +123,17 @@ async function buildEmailsForType({ env, requestUrl, invite, type, config }) {
   }
 
   const emails = [];
+  const venue = await loadTicketEmailVenue(env);
+  if (venue.error instanceof Response) return { error: venue.error };
+  if (venue.error) return { error: venue.error, status: 502 };
+  const firstCompanionName = companions.find((item) => item.guest_name)?.guest_name || "";
   if (rsvp.guest_email && rsvp.ticket_token) {
     emails.push(buildTicketEmail({
       to: rsvp.guest_email,
       name: rsvp.guest_name,
+      bringing: firstCompanionName,
       ticketLink: buildTicketUrl(requestUrl, rsvp.ticket_token),
+      venue: venue.value,
       config,
     }));
   }
@@ -138,11 +144,26 @@ async function buildEmailsForType({ env, requestUrl, invite, type, config }) {
       name: companion.guest_name,
       guestOf: rsvp.guest_name,
       ticketLink: buildTicketUrl(requestUrl, companion.ticket_token),
+      venue: venue.value,
       config,
     }));
   }
   if (!emails.length) return { error: "No ticket email available", status: 400 };
   return { emails };
+}
+
+async function loadTicketEmailVenue(env) {
+  const found = await supabaseFetch(
+    env,
+    `/rest/v1/event_details?select=${EVENT_DETAILS_COLUMNS}&event_key=eq.${encodeURIComponent(EVENT_KEY)}&limit=1`
+  );
+  if (found.error) return { error: found.error };
+  if (!found.response.ok) return { error: "Could not load event details" };
+
+  const [details] = await found.response.json();
+  const name = String(details?.venue_name || "").trim();
+  const address = String(details?.venue_address || "").trim();
+  return { value: name || address ? { name, address } : null };
 }
 
 export async function onRequest() {

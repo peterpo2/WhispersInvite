@@ -1,31 +1,10 @@
-# WHISPERS Invite - Current Site Text Inventory
+# WHISPERS - Final Texts
 
 Date: 2026-09-29
 
-This file lists the visible copy currently used in the WHISPERS site, staff pages and email templates. Dynamic values are shown in square brackets.
+## Main
 
-Note: this inventory reflects the current implementation only. It does not apply or merge copy changes from the organizer PDF.
-
-## Global
-
-### Partner Bar
-
-- Powered by
-- Barons de Rothschild
-- Beluga
-
-### Blocked Routes
-
-- Not found.
-
-### Robots
-
-```text
-User-agent: *
-Disallow: /
-```
-
-## Public RSVP Flow
+## Public Invitation Page
 
 Path: `/`
 
@@ -44,11 +23,11 @@ Actions:
 
 - Enter ›
 
-Dynamic hold text:
+Dynamic text:
 
 - Hold…
 
-Personal invite text:
+Personal invitation text:
 
 - This invitation belongs to:
 - [guest name]
@@ -76,7 +55,7 @@ Actions:
 
 - Skip ›
 
-### Event Details Screen
+### Letter / Event Details Screen
 
 Brand:
 
@@ -87,34 +66,42 @@ Details:
 - When
 - Saturday 10 October · Doors open at 22:00
 - until 03:00
+
 - Where
 - A private address in central Sofia
 - Released on 09.10 at 18:00
+
 - Who
 - You, and one guest of your choosing
+
 - Sound
 - Sammer · Lucia · Atia
+
 - Rules
 - No photos in the room
+
 - Access
 - This invitation grants free access. Drinks are charged separately. Tables upon request.
+
 - Dress code
 - Elegant
-
-Note:
 
 Action:
 
 - Respond
 
-### Identify Screen
+### Identify / Guest Details Screen
+
+Brand:
+
+- WHISPERS
 
 Default helper:
 
 - Your name goes on the door.
 - Your ticket is issued in this name and reaches you by email on 09.10 at 18:00.
 
-Personal invite heading:
+Personal invite title and helper:
 
 - Confirm your details.
 - Your name is already on the list. Please leave your email and phone so we can send you your ticket.
@@ -141,7 +128,7 @@ Validation:
 
 ### RSVP Screen
 
-Heading:
+Main text:
 
 - Will you be there?
 - Saturday 10 October · Doors open at 22:00
@@ -151,23 +138,27 @@ Actions:
 - I'll be there
 - Not this time
 
-State:
+Dynamic state:
 
 - Sealing…
 
-### Plus One And Table Screen
+### Add Guest / Reservation Screen
 
-Heading:
+Brand:
+
+- WHISPERS
+
+Main text:
 
 - One person. Choose well.
 - Their name goes on the door beside yours.
 
-Plus one option:
+Plus-one option:
 
 - I've chosen.
 - You can confirm or update this before ticket release.
 
-Plus one fields:
+Plus-one fields:
 
 - Full name
 - First and last name
@@ -178,7 +169,7 @@ Privacy note:
 
 - We use their details only for this invitation, event communication and door-list access.
 
-Table option:
+Table reservation option:
 
 - Would you like us to reserve a table for you?
 - Our team will contact you with the reservation details.
@@ -189,65 +180,67 @@ Actions:
 - Confirm both places
 - Back
 
-Validation:
+Validation and errors:
 
 - Please give their full name.
 - Please give their email.
 - Please give a valid email.
-
-Submit errors:
-
 - We could not save your RSVP. Please try again.
 - The invitation could not reach us. Please try again.
 - We could not update your RSVP. Please try again.
+
+Dynamic state:
+
+- Sealing…
 
 Cancel confirmation:
 
 - This releases your place. You can register again until 09.10 at 18:00.
 
-### Local Confirmation Fallback Screen
+### Registration Confirmed Screen
 
-This screen is only used if the RSVP response does not include a confirmation URL. In the normal flow, the guest is redirected to `/hi/[confirmation_token]`.
-
-Brand and ticket release:
+Brand:
 
 - WHISPERS
+
+Ticket card text:
+
 - [guest name]
 - Invited guest
 - 10.10 · 22:00
 - Ticket
 - Saturday 10 October · Doors 22:00
-
-Registration state:
-
 - Coming on your own
-- Registered for one
-- Registered with [plus one name]
-- Table reservation requested.
 
-Release note:
+Registration note:
 
 - On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.
 - On 09.10 at 18:00, you and your registered guest will each receive an email with the confirmed location and your private ticket.
+
+Dynamic relationship/status:
+
+- Registered for one
+- Registered with [guest name]
+- Table reservation requested.
 
 Actions:
 
 - Save your ticket
 - I can no longer come
 
-Save state:
+Save ticket messages:
 
 - Your ticket could not be prepared. Please try again.
 - Your ticket is saved to this device.
 - Both tickets are saved to this device.
 
-### Declined Screen
+### Declined RSVP Screen
 
 Brand:
 
 - WHISPERS
 
-Message:
+Main text:
 
 - Understood.
 - Your place on the list stays where it is.
@@ -261,14 +254,12 @@ Action:
 
 Path: `/invite/[token]`
 
-This route does not render its own page. It redirects to:
+Use:
 
-- `/?token=[token]` when the invite token is valid.
-- `/` when the token is missing or invalid.
+- Starts or edits the RSVP journey.
+- If the guest has already RSVP'd, it can lead them toward their confirmation/status page.
 
-The rendered text after redirect is the public RSVP flow above.
-
-## Confirmation Page
+## Confirmation / Status Page
 
 Path: `/hi/[confirmation_token]`
 
@@ -276,18 +267,14 @@ Path: `/hi/[confirmation_token]`
 
 - WHISPERS Confirmation
 
-### Loading State
+### Main State
+
+Brand:
 
 - WHISPERS
-- ...
-- Invited guest
-- 10.10 · 22:00
-- Location remains sealed until 09.10 at 18:00.
-- Your ticket will be sent to you on 09.10 at 18:00.
 
-### Registered Guest State
+Main text:
 
-- WHISPERS
 - [guest name]
 - Invited guest
 - Guest of [main guest name]
@@ -295,7 +282,7 @@ Path: `/hi/[confirmation_token]`
 - Location remains sealed until 09.10 at 18:00.
 - Your ticket will be sent to you on 09.10 at 18:00.
 
-Optional lines:
+Optional status lines:
 
 - Registered with [plus one name].
 - Table reservation requested.
@@ -319,7 +306,7 @@ Path: `/ticket/[ticket_token]`
 
 - Your WHISPERS Ticket
 
-### Initial Loading State
+### Loading State
 
 - WHISPERS
 - …
@@ -327,72 +314,84 @@ Path: `/ticket/[ticket_token]`
 - [seal code]
 - Saturday 10 October · Doors 22:00
 
-### Pending RSVP Ticket State
+### Pending RSVP Ticket
 
-Shown when the ticket link belongs to an invite that has not RSVP'd yet.
+Role:
 
-- WHISPERS
-- [guest name]
 - Invited guest
+
+Main text:
+
 - Not yet answered
 - Your ticket appears here once you've responded and tickets are released on 09.10 at 18:00.
-- Waiting for RSVP
-- Saturday 10 October · Doors 22:00
 - Use your invitation link to respond and reserve your spot.
+- Waiting for RSVP
+
+Action:
+
 - Respond
 
-### Locked Registered Ticket State
+### Locked Registered Ticket
 
-Shown before ticket release.
+Role:
 
-- WHISPERS
-- [guest name]
 - Invited guest
 - Guest of [main guest name]
+
+Main text:
+
 - 10.10 · 22:00
 - Location remains sealed until 09.10 at 18:00.
 - Your ticket will be sent to you on 09.10 at 18:00.
 
-### Released Ticket State
+### Released Ticket
 
-Shown after ticket release.
+Role:
 
-- WHISPERS
-- [guest name]
 - Invited guest
 - Guest of [main guest name]
-- [seal code]
-- Ready for the door
-- Already checked in
-- Saturday 10 October · Doors 22:00
+
+Dynamic relationship:
+
+- Bringing [guest name]
+- Coming on your own
+
+Location:
+
 - Sofia · private location in central Sofia. (fallback only if the released venue is not set)
 - [venue name] · [venue address]
-- Coming on your own
-- Bringing [plus one name]
-- Your table is confirmed.
-- Show this seal at the door. The QR code confirms your place in the WHISPERS list.
-- Save your ticket
 
-Save state:
+Table status:
+
+- Your table is confirmed.
+
+Door helper:
+
+- Show this seal at the door. The QR code confirms your place in the WHISPERS list.
+
+Door state:
+
+- Ready for the door
+- Already checked in
+
+Save messages:
 
 - Your ticket could not be prepared. Please try again.
 - Your ticket is saved to this device.
 
-### Ticket Error State
+### Ticket Error States
 
-- Ticket not found
-- Private guest
-- [seal code]
-- This ticket link is invalid.
-- Invalid seal
-- Saturday 10 October · Doors 22:00
-- Sofia · private location in central Sofia. (fallback only if the released venue is not set)
-
-Load error:
+Load failure:
 
 - We could not load your seal.
 - Your ticket could not be loaded. Please refresh to try again.
 - Refresh to try again.
+
+Invalid ticket:
+
+- Ticket not found
+- This ticket link is invalid.
+- Invalid seal
 
 ## Staff Door Page
 
@@ -404,8 +403,13 @@ Path: `/staff/rose-door-10`
 
 ### Header
 
+Brand:
+
 - WHISPERS
 - Door
+
+Action:
+
 - Refresh
 
 Tabs:
@@ -424,16 +428,17 @@ Actions:
 - Stop
 - Check
 
-Input:
+Manual check:
 
 - Paste QR value or token
+- Check
 
 Initial result:
 
 - Ready.
 - Scan a guest ticket.
 
-Scan state:
+Checking state:
 
 - Checking…
 - Reading the seal.
@@ -441,44 +446,35 @@ Scan state:
 Success:
 
 - Confirmed.
-- [guest name]
-- Guest of [main guest name]
-- [seal code]
 
 Already checked in:
 
 - Already inside.
-- [guest name]
-- Guest of [main guest name]
 - First checked in at [time].
-- [seal code]
 
 Invalid:
 
 - Invalid.
 - This ticket could not be confirmed.
 
-Recent list:
+Relationship text:
+
+- Guest of [main guest name]
+- Bringing [guest name]
+
+Recent scans:
 
 - Scanned tonight
 - No scans yet.
 
-Camera/system messages:
-
-- Camera unavailable.
-- Camera not found.
-- Camera permission was blocked.
-- Could not open camera.
-- Scanner unavailable.
-
 ### Members Tab
 
-Search and export:
+Search / export:
 
 - Search members
 - Export CSV
 
-Table headers:
+Table columns:
 
 - Name
 - Type
@@ -494,24 +490,22 @@ Table headers:
 - Scanned
 - Registered
 
-Member type values:
-
-- Guest
-- Added guest
-
-Inline badges and empty states:
+Inline labels:
 
 - fallback
+
+Loading / empty / error states:
+
 - No members.
 
-Confirm prompts:
+Confirmation prompts:
 
 - Mark this guest as inside?
 - Mark this guest as not inside?
 - Confirm this table reservation?
 - Remove table reservation confirmation?
 
-CSV headers:
+CSV columns:
 
 - Name
 - Type
@@ -527,59 +521,62 @@ CSV headers:
 
 ### Tables Tab
 
-States:
+Default table group:
+
+- Unassigned
+- Attending groups waiting for a table
+- Assigned reservation groups
+
+Capacity / count:
+
+- [used] / [capacity] seats
+- [number] waiting
+
+Assignment controls and labels:
+
+- Add to [table label]
+- Search all guests
+- Add
+- Remove
+- Confirmed
+- requested table
+- confirmed
+- Unassigned
+
+Empty states:
+
+- No groups here.
+- No matching reservation groups.
+- No other reservation groups.
+
+Loading / error states:
 
 - Loading...
 - No connection.
 - Could not load tables
 
-Table list:
-
-- Unassigned
-- [number] waiting
-- [used] / [capacity] seats
-
-Detail headings:
-
-- Assigned reservation groups
-- Attending groups waiting for a table
-- No groups here.
-- Add to [table label]
-- Search all guests
-- No matching reservation groups.
-- No other reservation groups.
-
-Group badges and actions:
-
-- requested table
-- confirmed
-- Confirmed
-- Add
-- Remove
-- Unassigned
-
 ### Invite Tab
 
-Form:
+Create invite form:
 
 - Full name
 - Email optional
 - Phone optional
 - Create Invite
 
-State:
+State messages:
 
 - Creating invite...
 - Invite created.
 - No connection.
 - Could not create invite
 
-Search and reload:
+Search / reload:
 
 - Search invites
 - Reload
 
-Table headers:
+Table columns:
 
 - Name
 - Email
@@ -590,7 +587,7 @@ Table headers:
 - Ticket
 - Created
 
-Status values:
+Status labels:
 
 - Attending
 - Declined
@@ -602,60 +599,48 @@ Link actions:
 - Send
 - Sending
 - Copied
-
-Empty and error states:
-
-- Loading...
-- No invites.
-- Could not load invites
-- Could not send [type]
 - Copy link
 
-## API Error Messages Shown To Users
+Loading / empty / error states:
 
-RSVP and invite errors:
+- Loading...
+- Could not load invites
+- No invites.
+- Could not send [type]
 
-- Missing RSVP
-- Invalid RSVP
-- Please give your full name.
-- Please give a valid email.
-- Please give your phone.
-- This invitation already has a registered guest.
-- This invitation has already been used at the door.
-- Could not save RSVP
-- Could not send invite
-- Could not send confirmation email
-- Could not send ticket email
+## Ticket Image / Saved Pass
 
-Confirmation API:
+Used by the public RSVP completion flow and the ticket page when generating PNG ticket images.
 
-- Missing confirmation
-- Confirmation not found
-- Could not load confirmation
+Brand:
 
-Ticket API:
+- WHISPERS
 
-- Missing ticket
-- Ticket not found
-- Could not load ticket
+Default file title:
 
-Door API:
+- WHISPERS ticket
 
-- Missing ticket
-- Ticket not found
-- Already inside.
-- Confirmed.
-- Could not confirm ticket
+Default note:
 
-## Email Templates
+- Show this at the door.
 
-Default sender details:
+Image details:
 
-- WHISPERS <noreply@whisperssociety.com>
-- guestlist@whisperssociety.com
-- +359 888 012 380
+- [guest name]
+- [role]
+- [seal code]
+- Saturday 10 October · Doors 22:00
+- [venue]
+- Bringing [guest name]
+- Your table is confirmed.
 
-### Invite Email
+Share sheet title:
+
+- WHISPERS
+
+## Invite Email
+
+Sent from `noreply@whisperssociety.com`, with replies going to `guestlist@whisperssociety.com`.
 
 Subject:
 
@@ -678,7 +663,7 @@ guestlist@whisperssociety.com
 +359 888 012 380
 ```
 
-HTML text:
+HTML email visible text:
 
 - WHISPERS
 - [guest name]
@@ -689,7 +674,7 @@ HTML text:
 - guestlist@whisperssociety.com
 - +359 888 012 380
 
-### RSVP Confirmation Email
+## RSVP Confirmation Email
 
 Subject:
 
@@ -724,7 +709,7 @@ Companion text:
 - guestlist@whisperssociety.com
 - +359 888 012 380
 
-### Ticket Release Email
+## Ticket Release Email
 
 Subject:
 
@@ -767,23 +752,10 @@ Plus-one text:
 - guestlist@whisperssociety.com
 - +359 888 012 380
 
-## Generated Ticket Image
-
-Used when saving/sharing a ticket image from the site.
-
-Visible text:
-
-- WHISPERS
-- [guest name]
-- [role]
-- [seal code]
-- Saturday 10 October · Doors 22:00
-- Sofia · private location in central Sofia. (fallback only if the released venue is not set)
-- Show this at the door.
-
 ## Notes
 
-- `/invite/[token]` is the RSVP entry link and currently redirects into the public RSVP page.
+- Public-facing guest text is English.
+- `/invite/[token]` is the RSVP entry link.
 - `/hi/[confirmation_token]` is the confirmation/status page.
-- `/ticket/[ticket_token]` is the ticket page. It shows locked or pending states before release, and the QR ticket after release.
-- The ticket link itself is created earlier, but the release email is sent separately when tickets are released.
+- `/ticket/[ticket_token]` is the ticket page.
+- Location remains hidden until the release time unless `event_details` exposes a venue.

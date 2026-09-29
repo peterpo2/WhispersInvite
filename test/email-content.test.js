@@ -24,10 +24,13 @@ test("invite email uses noreply sender, guestlist reply-to and contact details",
   });
 
   assert.equal(email.to, "guest@example.com");
-  assert.equal(email.subject, "Your WHISPERS invitation");
+  assert.equal(email.subject, "Your WHISPERS invitation - Georgi Petrov");
   assert.match(email.text, /Georgi Petrov/);
-  assert.match(email.text, /You have been invited to WHISPERS/);
-  assert.doesNotMatch(email.text, /private invitation is waiting/i);
+  assert.match(email.text, /Your invitation is waiting/);
+  assert.match(email.text, /Open it below/);
+  assert.doesNotMatch(email.text, /Your private invitation is waiting/);
+  assert.doesNotMatch(email.text, /Open your personal RSVP link and complete the steps/);
+  assert.doesNotMatch(email.text, /confirmation link/i);
   assert.match(email.text, /https:\/\/whisperssociety\.com\/invite\/abc123/);
   assert.doesNotMatch(email.text, /https:\/\/whisperssociety\.com\/hi\/abc123/);
   assert.match(email.text, /guestlist@whisperssociety\.com/);
@@ -35,6 +38,8 @@ test("invite email uses noreply sender, guestlist reply-to and contact details",
   assert.match(email.html, /guestlist@whisperssociety\.com/);
   assert.match(email.html, /\+359 888 012 380/);
   assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/whispers-mark\.png/);
+  assert.match(email.html, /radial-gradient/);
+  assert.doesNotMatch(email.html, />WHISPERS<\/td>/);
 });
 
 test("email config reports missing required sender settings", () => {
@@ -73,11 +78,51 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
   assert.match(emails[0].text, /Michelle G/);
   assert.match(emails[0].text, /Table reservation requested/);
   assert.match(emails[0].text, /09\.10 at 18:00/);
+  assert.match(emails[0].text, /Your confirmation is saved here:/);
+  assert.match(emails[0].text, /Open confirmation:\nhttps:\/\/whisperssociety\.com\/hi\/primaryconfirm/);
+  assert.doesNotMatch(emails[0].text, /You can confirm or update this before ticket release/);
   assert.match(emails[1].text, /You are registered as Peter Popov's guest/);
   assert.match(emails[1].text, /https:\/\/whisperssociety\.com\/hi\/plusconfirm/);
+  assert.match(emails[1].text, /Your confirmation is saved here:/);
+  assert.match(emails[0].html, /href="https:\/\/whisperssociety\.com\/hi\/primaryconfirm"/);
+  assert.match(emails[0].html, />Open confirmation<\/a>/);
+  assert.doesNotMatch(emails[0].html, />https:\/\/whisperssociety\.com\/hi\/primaryconfirm</);
+  assert.doesNotMatch(emails[0].html, /font-size:32px/);
+  assert.doesNotMatch(emails[0].html, /font-size:22px/);
   assert.match(emails[1].html, /guestlist@whisperssociety\.com/);
   assert.match(emails[1].html, /\+359 888 012 380/);
   assert.match(emails[0].html, /https:\/\/whisperssociety\.com\/assets\/whispers-mark\.png/);
+  assert.match(emails[0].html, /radial-gradient/);
+  assert.doesNotMatch(emails[0].html, />WHISPERS<\/td>/);
+});
+
+test("RSVP confirmation email offers updates only when no guest is already added", () => {
+  const config = emailConfigFromEnv({
+    SMTP_HOST: "mail.whisperssociety.com",
+    SMTP_PORT: "465",
+    SMTP_USER: "noreply@whisperssociety.com",
+    SMTP_PASS: "secret",
+    EMAIL_FROM: "WHISPERS <noreply@whisperssociety.com>",
+    EMAIL_REPLY_TO: "guestlist@whisperssociety.com",
+    EMAIL_CONTACT_PHONE: "+359 888 012 380",
+  });
+
+  const emails = buildRsvpConfirmationEmails({
+    guestName: "Peter Popov",
+    guestEmail: "peter@example.com",
+    plusOneName: "",
+    plusOneEmail: "",
+    confirmationLink: "https://whisperssociety.com/hi/primaryconfirm",
+    plusOneConfirmationLink: "",
+    wantsTableReservation: false,
+    config,
+  });
+
+  assert.equal(emails.length, 1);
+  assert.match(emails[0].text, /You can confirm or update this before ticket release\./);
+  assert.match(emails[0].text, /Update details:\nhttps:\/\/whisperssociety\.com\/hi\/primaryconfirm/);
+  assert.match(emails[0].html, />Update details<\/a>/);
+  assert.doesNotMatch(emails[0].text, /Your confirmation is saved here:/);
 });
 
 test("ticket release email uses the ticket link and polished WHISPERS copy", () => {
@@ -98,11 +143,60 @@ test("ticket release email uses the ticket link and polished WHISPERS copy", () 
     config,
   });
 
-  assert.equal(email.subject, "WHISPERS Ticket");
+  assert.equal(email.subject, "Your WHISPERS Ticket");
   assert.match(email.text, /Your private ticket is ready/);
+  assert.match(email.text, /Coming on your own\./);
+  assert.doesNotMatch(email.text, /Bringing/);
+  assert.doesNotMatch(email.text, /Guest of/);
   assert.match(email.text, /https:\/\/whisperssociety\.com\/ticket\/tickettoken/);
   assert.doesNotMatch(email.text, /https:\/\/whisperssociety\.com\/hi\//);
-  assert.match(email.html, /WHISPERS/);
   assert.match(email.html, /Open Ticket/);
   assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/whispers-mark\.png/);
+  assert.match(email.html, /radial-gradient/);
+  assert.doesNotMatch(email.html, />WHISPERS<\/td>/);
+});
+
+test("ticket release email distinguishes primary and plus-one relationships and shows revealed venue", () => {
+  const config = emailConfigFromEnv({
+    SMTP_HOST: "mail.whisperssociety.com",
+    SMTP_PORT: "465",
+    SMTP_USER: "noreply@whisperssociety.com",
+    SMTP_PASS: "secret",
+    EMAIL_FROM: "WHISPERS <noreply@whisperssociety.com>",
+    EMAIL_REPLY_TO: "guestlist@whisperssociety.com",
+    EMAIL_CONTACT_PHONE: "+359 888 012 380",
+  });
+  const venue = {
+    name: "Junó Hotel Sofia",
+    address: "Sofia Center, ul. \"Ivan Denkoglu\" 40",
+  };
+
+  const primary = buildTicketEmail({
+    to: "primary@example.com",
+    name: "Berta Gacheva",
+    bringing: "Peter Popov",
+    ticketLink: "https://whisperssociety.com/ticket/primarytoken",
+    venue,
+    config,
+  });
+  const plusOne = buildTicketEmail({
+    to: "plus@example.com",
+    name: "Peter Popov",
+    guestOf: "Berta Gacheva",
+    ticketLink: "https://whisperssociety.com/ticket/plustoken",
+    venue,
+    config,
+  });
+
+  assert.match(primary.text, /Bringing Peter Popov\./);
+  assert.doesNotMatch(primary.text, /Guest of/);
+  assert.match(primary.text, /The address is now revealed:\nJunó Hotel Sofia\nSofia Center, ul\. "Ivan Denkoglu" 40/);
+  assert.match(primary.html, /Bringing Peter Popov\./);
+  assert.match(primary.html, /The address is now revealed:/);
+  assert.match(primary.html, /Junó Hotel Sofia/);
+  assert.match(primary.html, /Sofia Center, ul\. &quot;Ivan Denkoglu&quot; 40/);
+
+  assert.match(plusOne.text, /Guest of Berta Gacheva\./);
+  assert.doesNotMatch(plusOne.text, /Bringing/);
+  assert.match(plusOne.text, /The address is now revealed:\nJunó Hotel Sofia\nSofia Center, ul\. "Ivan Denkoglu" 40/);
 });

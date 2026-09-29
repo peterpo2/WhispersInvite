@@ -6,6 +6,7 @@ const LOGO_URL = "https://whisperssociety.com/assets/whispers-mark.png";
 export function emailConfigFromEnv(env) {
   const smtpHost = String(env.SMTP_HOST || "").trim();
   const smtpPort = Number(env.SMTP_PORT || 465);
+  const smtpSecure = String(env.SMTP_SECURE || "").trim().toLowerCase();
   const smtpUser = String(env.SMTP_USER || "").trim();
   const smtpPass = String(env.SMTP_PASS || "");
   const from = String(env.EMAIL_FROM || DEFAULT_FROM).trim();
@@ -16,7 +17,7 @@ export function emailConfigFromEnv(env) {
     return { error: "Email is not configured" };
   }
 
-  return { smtpHost, smtpPort, smtpUser, smtpPass, from, replyTo, contactPhone };
+  return { smtpHost, smtpPort, smtpSecure, smtpUser, smtpPass, from, replyTo, contactPhone };
 }
 
 export function buildInviteEmail({ to, name, inviteLink, confirmationLink, config }) {
@@ -24,14 +25,14 @@ export function buildInviteEmail({ to, name, inviteLink, confirmationLink, confi
   const link = String(inviteLink || confirmationLink || "").trim();
   const contact = config.replyTo;
   const phone = config.contactPhone;
-  const subject = "Your WHISPERS invitation";
+  const subject = `Your WHISPERS invitation - ${safeName}`;
   const text = [
     "WHISPERS",
     "",
     `${safeName},`,
     "",
-    "You have been invited to WHISPERS.",
-    "Please confirm your attendance using your private RSVP link:",
+    "Your invitation is waiting.",
+    "Open it below:",
     "",
     link,
     "",
@@ -40,27 +41,28 @@ export function buildInviteEmail({ to, name, inviteLink, confirmationLink, confi
     phone,
   ].join("\n");
   const html = `<!doctype html>
-<html>
-<body style="margin:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0B0908;color:#EDE6DA;">
+<html style="margin:0;padding:0;background:#0B0908;">
+<head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head>
+<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;border:0;outline:0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0B0908" style="width:100%;background:#0B0908;color:#EDE6DA;border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
-      <td align="center" style="padding:40px 18px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;">
+      <td align="center" bgcolor="#0B0908" style="padding:0;background:#0B0908;border:0;outline:0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="${emailShellStyle()}">
           ${brandHeader()}
           <tr><td style="height:28px;"></td></tr>
-          <tr><td style="font-size:28px;line-height:1.2;text-align:center;color:#F6EFE4;">${escapeHtml(safeName)}</td></tr>
+          <tr><td style="font-size:32px;line-height:1.18;text-align:center;color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;font-weight:700;text-shadow:0 1px 0 #000000;"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(safeName)}</span></font></td></tr>
           <tr><td style="height:18px;"></td></tr>
-          <tr><td style="font-size:20px;line-height:1.5;text-align:center;color:#EDE6DA;">You have been invited to WHISPERS.</td></tr>
+          <tr><td style="font-size:22px;line-height:1.42;text-align:center;color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;font-weight:700;text-shadow:0 1px 0 #000000;"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">Your invitation is waiting.</span></font></td></tr>
           <tr><td style="height:10px;"></td></tr>
-          <tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">Please confirm your attendance using your private RSVP link.</td></tr>
+          <tr><td style="font-size:17px;line-height:1.55;text-align:center;color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;font-weight:600;text-shadow:0 1px 0 #000000;"><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">Open it below.</span></font></td></tr>
           <tr><td style="height:26px;"></td></tr>
           <tr>
             <td align="center">
-              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #D9AE78;color:#0B0908;background:#D9AE78;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;padding:16px 24px;">Respond</a>
+              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;font-weight:bold;padding:17px 30px;">Respond</a>
             </td>
           </tr>
           <tr><td style="height:30px;"></td></tr>
-          <tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">For questions:<br><a href="mailto:${escapeHtml(contact)}" style="color:#D9AE78;">${escapeHtml(contact)}</a><br>${escapeHtml(phone)}</td></tr>
+          <tr><td style="font-size:17px;line-height:1.55;text-align:center;color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;font-weight:600;text-shadow:0 1px 0 #000000;"><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">For questions:</span></font><br><a href="mailto:${escapeHtml(contact)}" style="color:#F6C987!important;-webkit-text-fill-color:#F6C987;">${escapeHtml(contact)}</a><br><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">${escapeHtml(phone)}</span></font></td></tr>
         </table>
       </td>
     </tr>
@@ -86,6 +88,7 @@ export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName
   const companion = normalizeEmailForSend(plusOneEmail);
   const safeGuest = String(guestName || "").trim() || "Guest";
   const safePlus = String(plusOneName || "").trim();
+  const hasCompanion = Boolean(safePlus || companion);
 
   if (primary) {
     emails.push(rsvpEmail({
@@ -96,8 +99,10 @@ export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName
         safePlus ? `Registered with ${safePlus}.` : "Registered for one.",
         wantsTableReservation ? "Table reservation requested." : "",
         "Your private ticket and the confirmed location will be released on 09.10 at 18:00.",
-        confirmationLink ? `Your confirmation link: ${confirmationLink}` : "",
+        confirmationLink ? (hasCompanion ? "Your confirmation is saved here:" : "You can confirm or update this before ticket release.") : "",
       ].filter(Boolean),
+      actionLink: confirmationLink,
+      actionLabel: hasCompanion ? "Open confirmation" : "Update details",
       contact,
       phone,
       config,
@@ -111,8 +116,10 @@ export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName
       title: `You are registered as ${safeGuest}'s guest.`,
       lines: [
         "Your private ticket and the confirmed location will be released on 09.10 at 18:00.",
-        plusOneConfirmationLink ? `Your confirmation link: ${plusOneConfirmationLink}` : "",
-      ],
+        plusOneConfirmationLink ? "Your confirmation is saved here:" : "",
+      ].filter(Boolean),
+      actionLink: plusOneConfirmationLink,
+      actionLabel: "Open confirmation",
       contact,
       phone,
       config,
@@ -122,16 +129,23 @@ export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName
   return emails;
 }
 
-export function buildTicketEmail({ to, name, ticketLink, guestOf, config }) {
+export function buildTicketEmail({ to, name, ticketLink, guestOf, bringing, venue, config }) {
   const safeName = String(name || "").trim() || "Guest";
   const link = String(ticketLink || "").trim();
-  const subject = "WHISPERS Ticket";
+  const subject = "Your WHISPERS Ticket";
   const contact = config.replyTo;
   const phone = config.contactPhone;
   const title = "Your private ticket is ready.";
+  const safeVenueName = String(venue?.name || "").trim();
+  const safeVenueAddress = String(venue?.address || "").trim();
   const lines = [
     guestOf ? `Guest of ${guestOf}.` : "",
+    !guestOf && bringing ? `Bringing ${bringing}.` : "",
+    !guestOf && !bringing ? "Coming on your own." : "",
     "Saturday 10 October · Doors 22:00",
+    safeVenueName || safeVenueAddress ? "The address is now revealed:" : "",
+    safeVenueName,
+    safeVenueAddress,
     "Show this ticket at the door.",
   ].filter(Boolean);
   const text = [
@@ -149,29 +163,30 @@ export function buildTicketEmail({ to, name, ticketLink, guestOf, config }) {
     contact,
     phone,
   ].join("\n");
-  const htmlLines = lines.map((line) => `<tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">${escapeHtml(line)}</td></tr>`).join("");
+  const htmlLines = lines.map((line) => `<tr><td style="font-size:17px;line-height:1.55;text-align:center;color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;font-weight:600;text-shadow:0 1px 0 #000000;"><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">${escapeHtml(line)}</span></font></td></tr>`).join("");
   const html = `<!doctype html>
-<html>
-<body style="margin:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0B0908;color:#EDE6DA;">
+<html style="margin:0;padding:0;background:#0B0908;">
+<head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head>
+<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;border:0;outline:0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0B0908" style="width:100%;background:#0B0908;color:#EDE6DA;border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
-      <td align="center" style="padding:40px 18px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;">
+      <td align="center" bgcolor="#0B0908" style="padding:0;background:#0B0908;border:0;outline:0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="${emailShellStyle()}">
           ${brandHeader()}
           <tr><td style="height:28px;"></td></tr>
-          <tr><td style="font-size:28px;line-height:1.2;text-align:center;color:#F6EFE4;">${escapeHtml(safeName)}</td></tr>
+          <tr><td style="font-size:32px;line-height:1.18;text-align:center;color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;font-weight:700;text-shadow:0 1px 0 #000000;"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(safeName)}</span></font></td></tr>
           <tr><td style="height:18px;"></td></tr>
-          <tr><td style="font-size:20px;line-height:1.5;text-align:center;color:#EDE6DA;">${escapeHtml(title)}</td></tr>
+          <tr><td style="font-size:22px;line-height:1.42;text-align:center;color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;font-weight:700;text-shadow:0 1px 0 #000000;"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(title)}</span></font></td></tr>
           <tr><td style="height:12px;"></td></tr>
           ${htmlLines}
           <tr><td style="height:26px;"></td></tr>
           <tr>
             <td align="center">
-              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #D9AE78;color:#0B0908;background:#D9AE78;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;padding:16px 24px;">Open Ticket</a>
+              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;font-weight:bold;padding:17px 30px;">Open Ticket</a>
             </td>
           </tr>
           <tr><td style="height:30px;"></td></tr>
-          <tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">For questions:<br><a href="mailto:${escapeHtml(contact)}" style="color:#D9AE78;">${escapeHtml(contact)}</a><br>${escapeHtml(phone)}</td></tr>
+          <tr><td style="font-size:17px;line-height:1.55;text-align:center;color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;font-weight:600;text-shadow:0 1px 0 #000000;"><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">For questions:</span></font><br><a href="mailto:${escapeHtml(contact)}" style="color:#F6C987!important;-webkit-text-fill-color:#F6C987;">${escapeHtml(contact)}</a><br><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">${escapeHtml(phone)}</span></font></td></tr>
         </table>
       </td>
     </tr>
@@ -189,7 +204,7 @@ export function buildTicketEmail({ to, name, ticketLink, guestOf, config }) {
   };
 }
 
-function rsvpEmail({ to, name, title, lines, contact, phone, config }) {
+function rsvpEmail({ to, name, title, lines, actionLink, actionLabel, contact, phone, config }) {
   const subject = "WHISPERS RSVP confirmed";
   const text = [
     "WHISPERS",
@@ -199,27 +214,40 @@ function rsvpEmail({ to, name, title, lines, contact, phone, config }) {
     title,
     ...lines,
     "",
+    actionLink ? `${actionLabel}:` : "",
+    actionLink || "",
+    "",
     "For questions:",
     contact,
     phone,
   ].join("\n");
-  const htmlLines = lines.map((line) => `<tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">${escapeHtml(line)}</td></tr>`).join("");
+  const safeActionLink = String(actionLink || "").trim();
+  const safeActionLabel = String(actionLabel || "Open confirmation").trim();
+  const htmlLines = lines.map((line) => `<tr><td style="font-size:15px;line-height:1.48;text-align:center;color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;font-weight:500;text-shadow:0 1px 0 #000000;"><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">${escapeHtml(line)}</span></font></td></tr>`).join("");
+  const actionHtml = safeActionLink ? `<tr><td style="height:22px;"></td></tr>
+          <tr>
+            <td align="center">
+              <a href="${escapeHtml(safeActionLink)}" style="display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.18em;text-transform:uppercase;font-size:12px;font-weight:bold;padding:15px 24px;">${escapeHtml(safeActionLabel)}</a>
+            </td>
+          </tr>` : "";
   const html = `<!doctype html>
-<html>
-<body style="margin:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0B0908;color:#EDE6DA;">
+<html style="margin:0;padding:0;background:#0B0908;">
+<head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head>
+<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;border:0;outline:0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0B0908" style="width:100%;background:#0B0908;color:#EDE6DA;border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
-      <td align="center" style="padding:40px 18px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;">
+      <td align="center" bgcolor="#0B0908" style="padding:0;background:#0B0908;border:0;outline:0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="${emailShellStyle()}">
           ${brandHeader()}
-          <tr><td style="height:28px;"></td></tr>
-          <tr><td style="font-size:28px;line-height:1.2;text-align:center;color:#F6EFE4;">${escapeHtml(name)}</td></tr>
-          <tr><td style="height:18px;"></td></tr>
-          <tr><td style="font-size:20px;line-height:1.5;text-align:center;color:#EDE6DA;">${escapeHtml(title)}</td></tr>
+          <tr><td style="height:24px;"></td></tr>
+          <tr><td style="font-size:28px;line-height:1.16;text-align:center;color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;font-weight:600;text-shadow:0 1px 0 #000000;"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(name)}</span></font></td></tr>
+          <tr><td style="height:16px;"></td></tr>
+          <tr><td style="font-size:19px;line-height:1.34;text-align:center;color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;font-weight:600;text-shadow:0 1px 0 #000000;"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(title)}</span></font></td></tr>
           <tr><td style="height:12px;"></td></tr>
           ${htmlLines}
-          <tr><td style="height:30px;"></td></tr>
-          <tr><td style="font-size:15px;line-height:1.6;text-align:center;color:#B4A99D;">For questions:<br><a href="mailto:${escapeHtml(contact)}" style="color:#D9AE78;">${escapeHtml(contact)}</a><br>${escapeHtml(phone)}</td></tr>
+          ${actionHtml}
+          <tr><td style="height:28px;"></td></tr>
+          <tr><td style="font-size:15px;line-height:1.5;text-align:center;color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;font-weight:500;text-shadow:0 1px 0 #000000;"><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">For questions:</span></font><br><a href="mailto:${escapeHtml(contact)}" style="color:#F6C987!important;-webkit-text-fill-color:#F6C987;">${escapeHtml(contact)}</a><br><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">${escapeHtml(phone)}</span></font></td></tr>
         </table>
       </td>
     </tr>
@@ -238,7 +266,18 @@ function rsvpEmail({ to, name, title, lines, contact, phone, config }) {
 }
 
 function brandHeader() {
-  return `<tr><td align="center" style="padding:0 0 14px;"><img alt="WHISPERS" src="${LOGO_URL}" width="72" height="72" style="display:block;width:72px;height:72px;margin:0 auto;border:0;outline:none;text-decoration:none;"/></td></tr><tr><td style="font-family:Arial,sans-serif;letter-spacing:0.34em;text-transform:uppercase;color:#D9AE78;font-size:13px;text-align:center;">WHISPERS</td></tr>`;
+  return `<tr><td align="center" style="padding:4px 0 20px;"><img alt="WHISPERS seal" src="${LOGO_URL}" width="118" height="118" style="display:block;width:118px;height:118px;margin:0 auto;border:0;outline:none;text-decoration:none;"/></td></tr>
+  <tr><td align="center" style="padding:4px 0 0;"><table role="presentation" width="78" cellspacing="0" cellpadding="0"><tr><td style="height:1px;background:#8B6F4C;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>`;
+}
+
+function emailShellStyle() {
+  return [
+    "max-width:560px",
+    "background:#0B0908",
+    "background-image:radial-gradient(circle at center 110px, #241611 0, #120D0B 34%, #0B0908 72%)",
+    "border:0",
+    "box-shadow:none",
+  ].join(";");
 }
 
 function normalizeEmailForSend(value) {

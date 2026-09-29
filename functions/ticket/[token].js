@@ -77,14 +77,14 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <h1 id="guest">…</h1>
 <p class="role">Private guest</p>
 <div class="rule"></div>
-<div class="code" id="code">WSP · 10</div>
+<div class="code" id="code">—</div>
 <p class="ticket-type" id="ticketType">Ticket</p>
 <div class="qr" id="qr"></div>
 <p class="state" id="state"></p>
 <p class="meta" id="ticketMeta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia.</span><span id="bringing"></span></p>
 <p class="small" id="ticketNote"></p>
 <a class="pending-link" hidden id="pendingInvite" href="#">Respond</a>
-<button class="save" hidden id="save" type="button">Private ticket</button>
+<button class="save" hidden id="save" type="button">Save your ticket</button>
 <p aria-live="polite" class="saved" id="saved"></p>
 </main>
 <aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
@@ -108,10 +108,10 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
     if(t.pending){
       $('guest').textContent=t.guest_name||'Your ticket';
       document.querySelector('.role').textContent='Invited guest';
-      $('code').textContent='RSVP FIRST';
+      $('code').textContent='Not yet answered';
       $('qr').classList.add('fallback');
-      $('qr').textContent='Please confirm your attendance first. Your private ticket will appear here after RSVP and ticket release.';
-      $('venue').innerHTML='Use your invite link to RSVP. Location remains sealed until 09.10 at 18:00.';
+      $('qr').textContent="Your ticket appears here once you've responded and tickets are released on 09.10 at 18:00.";
+      $('venue').innerHTML='Use your invitation link to respond and reserve your spot.';
       $('bringing').innerHTML='';
       $('ticketNote').textContent='';
       $('state').textContent='Waiting for RSVP';
@@ -120,26 +120,26 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
       return;
     }
     $('guest').textContent=t.guest_name||'Your ticket';
-    document.querySelector('.role').textContent='Registered guest';
+    document.querySelector('.role').textContent='Invited guest';
     $('code').textContent='10.10 · 22:00';
-    $('ticketType').style.display='block';
+    $('ticketType').style.display='none';
     $('qr').hidden=true;
-    $('state').textContent='Locked until release';
+    $('state').textContent='';
     $('ticketMeta').innerHTML='Location remains sealed until 09.10 at 18:00.';
     $('ticketNote').textContent='Your ticket will be sent to you on 09.10 at 18:00.';
     reveal();
     return;
   }
-  const role=t.brought_by?'Guest of '+t.brought_by:'Founding guest';
+  const role=t.brought_by?'Guest of '+t.brought_by:'Invited guest';
   $('guest').textContent=t.guest_name;
   document.querySelector('.role').textContent=role;
   $('ticketType').style.display='none';
-  $('code').textContent=t.seal_code||'WSP · 10';
+  $('code').textContent=t.seal_code||'—';
   $('bringing').innerHTML=t.bringing?'Bringing <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'':'Coming on your own');
   const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia · private location in central Sofia.';
   if(v)$('venue').innerHTML=v.mapUrl?'<a href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+escapeHtml(venueText)+'</a>':escapeHtml(venueText);
   if(t.table_reserved)$('bringing').innerHTML += '<br/><b>Your table is confirmed.</b>';
-  $('ticketNote').textContent='Show this seal at the door. The QR confirms your place in the WHISPERS list.';
+  $('ticketNote').textContent='Show this seal at the door. The QR code confirms your place in the WHISPERS list.';
   $('state').textContent=t.checked_in_at?'Already checked in':'Ready for the door';
   if(window.WhispersTickets){
     const lines=['Saturday 10 October · Doors 22:00',venueText];

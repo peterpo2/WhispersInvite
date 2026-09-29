@@ -43,7 +43,7 @@ main{position:relative;z-index:1;width:100%;max-width:480px}.mark{display:block;
 <img class="mark" src="/assets/whispers-mark.png" alt=""/>
 <div class="brand">WHISPERS</div>
 <h1 id="guest">...</h1>
-<p class="role" id="role">Registered guest</p>
+<p class="role" id="role">Invited guest</p>
 <div class="rule"></div>
 <div class="code">10.10 · 22:00</div>
 <p class="type">Ticket</p>
@@ -61,7 +61,7 @@ main{position:relative;z-index:1;width:100%;max-width:480px}.mark{display:block;
     if(!res.ok)throw new Error('bad');
     const data=await res.json(),t=data.ticket||{};
     $('guest').textContent=t.guest_name||'Your confirmation';
-    $('role').textContent=t.brought_by?'Guest of '+t.brought_by:'Registered guest';
+    $('role').textContent=t.brought_by?'Guest of '+t.brought_by:'Invited guest';
     const extras=[];
     if(t.bringing)extras.push('Registered with '+t.bringing+'.');
     if(t.table_requested)extras.push('Table reservation requested.');

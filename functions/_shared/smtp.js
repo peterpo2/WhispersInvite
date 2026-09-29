@@ -4,21 +4,23 @@ import { buildSmtpMimeMessage } from "./smtp-message.js";
 const CRLF = "\r\n";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
-const SMTP_READ_TIMEOUT_MS = 8000;
-const SMTP_SESSION_TIMEOUT_MS = 7000;
+const SMTP_READ_TIMEOUT_MS = 3500;
+const SMTP_SESSION_TIMEOUT_MS = 4500;
 
 export async function sendSmtpMail(config, message) {
-  const socket = connect(
+  const secureTransport = smtpTransportMode(config);
+  let socket = connect(
     { hostname: config.smtpHost, port: config.smtpPort },
-    { secureTransport: "on" }
+    { secureTransport }
   );
-  const reader = socket.readable.getReader();
-  const writer = socket.writable.getWriter();
+  let activeSocket = socket;
+  let reader = socket.readable.getReader();
+  let writer = socket.writable.getWriter();
   let timedOut = false;
   const sessionTimeout = setTimeout(() => {
     timedOut = true;
     try {
-      socket.close();
+      activeSocket.close();
     } catch {
       // Closing a timed-out socket is best effort.
     }
@@ -27,6 +29,16 @@ export async function sendSmtpMail(config, message) {
   try {
     await readResponse(reader, 220);
     await command(writer, reader, `EHLO whisperssociety.com`, 250);
+    if (secureTransport === "starttls") {
+      await command(writer, reader, "STARTTLS", 220);
+      writer.releaseLock();
+      reader.releaseLock();
+      socket = socket.startTls();
+      activeSocket = socket;
+      reader = socket.readable.getReader();
+      writer = socket.writable.getWriter();
+      await command(writer, reader, `EHLO whisperssociety.com`, 250);
+    }
     await command(writer, reader, `AUTH PLAIN ${base64Auth(config.smtpUser, config.smtpPass)}`, 235);
     await command(writer, reader, `MAIL FROM:<${mailbox(config.from)}>`, 250);
     await command(writer, reader, `RCPT TO:<${mailbox(message.to)}>`, [250, 251]);
@@ -44,11 +56,19 @@ export async function sendSmtpMail(config, message) {
       // The Workers socket may already be closed after QUIT or a failed SMTP command.
     }
     try {
-      socket.close();
+      activeSocket.close();
     } catch {
       // Best effort close.
     }
   }
+}
+
+function smtpTransportMode(config) {
+  const secure = String(config.smtpSecure || "").toLowerCase();
+  if (secure === "starttls") return "starttls";
+  if (secure === "off") return "off";
+  if (secure === "on" || secure === "tls") return "on";
+  return Number(config.smtpPort) === 587 ? "starttls" : "on";
 }
 
 async function command(writer, reader, line, expected) {

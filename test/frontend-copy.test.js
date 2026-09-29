@@ -8,11 +8,12 @@ const confirmationPage = readFileSync("functions/hi/[token].js", "utf8");
 const staffPage = readFileSync("functions/staff/rose-door-10.js", "utf8");
 const rsvpApi = readFileSync("functions/api/rsvp.js", "utf8");
 
-test("pre-release confirmation does not expose the private ticket action", () => {
+test("pre-release confirmation uses the approved save ticket action", () => {
   assert.match(html, /\[hidden\]\{display:none!important\}/);
   assert.match(html, /<button[^>]*hidden[^>]*id="saveTickets"/);
   assert.match(html, /\$\('#saveTickets'\)\.hidden=true/);
-  assert.match(html, /Private ticket/);
+  assert.match(html, />Save your ticket<\/button>/);
+  assert.doesNotMatch(html, />Private ticket<\/button>/);
 });
 
 test("pre-release confirmation message is not styled as a white QR card", () => {
@@ -21,9 +22,10 @@ test("pre-release confirmation message is not styled as a white QR card", () => 
   assert.match(html, /\$\('#doneCopy'\)\.textContent=''/);
 });
 
-test("cancel attendance asks for confirmation before submitting", () => {
-  assert.match(html, /confirm\('Are you sure you want to cancel your attendance\?'\)/);
-  assert.match(html, /id="reset"[\s\S]*id="cancelAttendance"/);
+test("confirmed RSVP offers only a clear cancellation action", () => {
+  assert.match(html, /confirm\('This releases your place\. You can register again until 09\.10 at 18:00\.'\)/);
+  assert.doesNotMatch(html, /id="reset"[^>]*>Start over<\/button>/);
+  assert.match(html, /id="cancelAttendance"[^>]*>I can no longer come<\/button>/);
   assert.match(html, /class="btn caps small st"[^>]*id="cancelAttendance"/);
   assert.match(html, /\.btn\.small\{[^}]*min-height:44px/);
 });
@@ -36,8 +38,20 @@ test("pre-release confirmation avoids repeated location release copy", () => {
 test("personal invite contact step does not keep the shared name prompt", () => {
   assert.match(html, /id="identifyTitle"/);
   assert.match(html, /id="identifySub"/);
+  assert.match(html, /<h2 class="lede st" hidden id="identifyTitle"><\/h2>/);
+  assert.doesNotMatch(html, />Write your name\.<\/h2>/);
   assert.match(html, /Confirm your details\./);
-  assert.match(html, /Your name is already on the list\. Please leave your email and phone so we can reach you\./);
+  assert.match(html, /\$\('#identifyTitle'\)\.hidden = false/);
+  assert.match(html, /Your name is already on the list\. Please leave your email and phone so we can send you your ticket\./);
+});
+
+test("public invitation uses the approved access and update copy", () => {
+  assert.match(html, /This invitation grants free access\. Drinks are charged separately\. Tables upon request\./);
+  assert.match(html, /You can confirm or update this before ticket release\./);
+  assert.doesNotMatch(html, /This invitation only grants access to the event/);
+  assert.doesNotMatch(html, /What happens beneath the rose stays beneath the rose/);
+  assert.doesNotMatch(html, /This invitation grants you only entry\./);
+  assert.doesNotMatch(html, /You can name them any time before your ticket is issued\./);
 });
 
 test("ticket fallback and pending states are dark, not paper-white QR cards", () => {
@@ -54,11 +68,16 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
   assert.match(ticketPage, /darkQr\('Your ticket could not be loaded\. Please refresh to try again\.'\)/);
   assert.match(ticketPage, /id="ticketNote"><\/p>/);
   assert.match(ticketPage, /id="pendingInvite"/);
-  assert.match(ticketPage, /Use your invite link to RSVP/);
+  assert.match(ticketPage, /Not yet answered/);
+  assert.match(ticketPage, /Use your invitation link to respond and reserve your spot/);
+  assert.match(ticketPage, /Your ticket appears here once you've responded and tickets are released on 09\.10 at 18:00/);
+  assert.doesNotMatch(ticketPage, /RSVP FIRST/);
   assert.match(ticketPage, /if\(data\.inviteUrl\)\{\$\('pendingInvite'\)\.href=data\.inviteUrl;\$\('pendingInvite'\)\.hidden=false;\}/);
+  assert.match(ticketPage, />Save your ticket<\/button>/);
+  assert.doesNotMatch(ticketPage, />Private ticket<\/button>/);
   assert.doesNotMatch(ticketPage, /Use your confirmation link to RSVP/);
   assert.match(ticketPage, /\$\('ticketNote'\)\.textContent=''/);
-  assert.match(ticketPage, /\$\('ticketNote'\)\.textContent='Show this seal at the door\. The QR confirms your place in the WHISPERS list\.'/);
+  assert.match(ticketPage, /\$\('ticketNote'\)\.textContent='Show this seal at the door\. The QR code confirms your place in the WHISPERS list\.'/);
 });
 
 test("old confirmation links that contain an invite token redirect to the invite", () => {
@@ -78,15 +97,16 @@ test("released ticket fallback does not mention the old address release copy", (
   assert.match(ticketPage, /Sofia · private location in central Sofia\./);
 });
 
-test("locked registered ticket shows event time before the release note", () => {
-  assert.match(ticketPage, /<div class="code" id="code">WSP[\s\S]*<p class="ticket-type" id="ticketType">Ticket<\/p>[\s\S]*<div class="qr" id="qr"><\/div>\s*<p class="state" id="state"><\/p>\s*<p class="meta" id="ticketMeta">/);
+test("locked registered ticket avoids redundant ticket status labels", () => {
+  assert.match(ticketPage, /<div class="code" id="code">—<\/div>[\s\S]*<p class="ticket-type" id="ticketType">Ticket<\/p>[\s\S]*<div class="qr" id="qr"><\/div>\s*<p class="state" id="state"><\/p>\s*<p class="meta" id="ticketMeta">/);
   assert.match(ticketPage, /\.qr\[hidden\]\{display:none\}/);
   assert.match(ticketPage, /\.ticket-type\{display:none;font-size:13px;letter-spacing:\.3em;color:var\(--gold\);margin:34px 0 0;min-height:16px\}/);
   assert.match(ticketPage, /\.ticket-type \+ \.qr\[hidden\] \+ \.state\{margin-top:8px\}/);
   assert.match(ticketPage, /\$\('code'\)\.textContent='10\.10 · 22:00'/);
-  assert.match(ticketPage, /\$\('ticketType'\)\.style\.display='block'/);
+  assert.match(ticketPage, /\$\('ticketType'\)\.style\.display='none'/);
   assert.match(ticketPage, /\$\('qr'\)\.hidden=true/);
-  assert.match(ticketPage, /\$\('state'\)\.textContent='Locked until release';\s*\$\('ticketMeta'\)\.innerHTML='Location remains sealed until 09\.10 at 18:00\.';\s*\$\('ticketNote'\)\.textContent='Your ticket will be sent to you on 09\.10 at 18:00\.'/);
+  assert.match(ticketPage, /\$\('state'\)\.textContent='';\s*\$\('ticketMeta'\)\.innerHTML='Location remains sealed until 09\.10 at 18:00\.';\s*\$\('ticketNote'\)\.textContent='Your ticket will be sent to you on 09\.10 at 18:00\.'/);
+  assert.doesNotMatch(ticketPage, /\$\('state'\)\.textContent='Locked until release'/);
   assert.doesNotMatch(ticketPage, /\$\('code'\)\.textContent='09\.10 · 18:00'/);
   assert.doesNotMatch(ticketPage, /\$\('qr'\)\.textContent='Your ticket will be released on 09\.10 at 18:00\.'/);
 });
@@ -132,6 +152,8 @@ test("confirmation page shows update details only when the API allows it", () =>
 test("start over returns to the invitation entry point, not the replaced ticket URL", () => {
   assert.match(html, /const startUrl = urlToken \? '\/\?token=' \+ encodeURIComponent\(urlToken\) : '\/'/);
   assert.match(html, /function reset\(\)\{window\.location\.assign\(startUrl\)\}/);
+  assert.match(html, /id="reset2">Register again<\/button>/);
+  assert.doesNotMatch(html, /\$\('#reset'\)\.addEventListener/);
   assert.doesNotMatch(html, /function reset\(\)\{location\.reload\(\)\}/);
 });
 
