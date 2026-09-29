@@ -208,7 +208,6 @@ Ticket card text:
 - [guest name]
 - Invited guest
 - 10.10 · 22:00
-- Ticket
 - Saturday 10 October · Doors 22:00
 - Coming on your own
 
@@ -358,7 +357,6 @@ Dynamic relationship:
 
 Location:
 
-- Sofia · private location in central Sofia. (fallback only if the released venue is not set)
 - [venue name] · [venue address]
 
 Table status:
@@ -584,7 +582,6 @@ Table columns:
 - Status
 - Invite
 - Confirmation
-- Ticket
 - Created
 
 Status labels:

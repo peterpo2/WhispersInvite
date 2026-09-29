@@ -1,12 +1,11 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
 import { buildRsvpConfirmationEmails, emailConfigFromEnv } from "../_shared/email-content.js";
 import { retryAsync } from "../_shared/retry.js";
-import { addedGuestLimitReached, applyInviteToRsvpRow, buildCompanionRow, buildConfirmationUrl, buildRsvpRow, buildTicketUrl, isDuplicateSealCode, isRsvpClosed, isTicketReleased, normalizeEmail, nameKey, sameAddedGuest, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
+import { applyInviteToRsvpRow, buildCompanionRow, buildConfirmationUrl, buildRsvpRow, buildTicketUrl, companionMatchesRsvp, isDuplicateSealCode, isRsvpClosed, isTicketReleased, tableReservationForUpdate, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
 import { sendSmtpMail } from "../_shared/smtp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const ALREADY_INSIDE = "This invitation has already been used at the door.";
-const PLUS_ONE_LIMIT = "This invitation already has a registered guest.";
 const MAX_SEAL_CODE_RETRIES = 3;
 
 const LOOKUP_COLUMNS = [
@@ -29,6 +28,7 @@ const LOOKUP_COLUMNS = [
   "plus_one_seal_code",
   "plus_one_checked_in_at",
   "wants_table_reservation",
+  "reservation_confirmed",
 ].join(",");
 
 export async function onRequestPost({ request, env }) {
@@ -124,21 +124,19 @@ async function updateExistingRsvp(env, requestUrl, row, existing) {
     guest_email: row.guest_email,
     guest_phone: row.guest_phone,
     status: row.status,
-    wants_table_reservation: row.wants_table_reservation,
+    wants_table_reservation: tableReservationForUpdate(row, existing),
+    plus_one_name: null,
+    plus_one_email: null,
+    plus_one_phone: null,
+    plus_one_email_is_fallback: false,
+    plus_one_ticket_token: null,
+    plus_one_seal_code: null,
+    plus_one_checked_in_at: null,
     submitted_at: row.submitted_at,
   };
 
   if (!existing.confirmation_token) patch.confirmation_token = row.confirmation_token;
   if (row.status === "attending" && !existing.seal_code) patch.seal_code = row.seal_code;
-  if (row.status === "declined") {
-    patch.plus_one_name = null;
-    patch.plus_one_email = null;
-    patch.plus_one_phone = null;
-    patch.plus_one_email_is_fallback = false;
-    patch.plus_one_ticket_token = null;
-    patch.plus_one_seal_code = null;
-    patch.plus_one_checked_in_at = null;
-  }
 
   const updated = await supabaseFetch(env, `/rest/v1/rsvps?id=eq.${encodeURIComponent(existing.id)}&checked_in_at=is.null`, {
     method: "PATCH",
@@ -154,54 +152,78 @@ async function updateExistingRsvp(env, requestUrl, row, existing) {
   const rows = await updated.response.json();
   if (!rows.length) return json({ error: ALREADY_INSIDE }, 409);
 
-  if (row.plus_one_name) {
-    const duplicate = await findDuplicateCompanion(env, existing.id, row);
-    if (duplicate.error) return duplicate.error;
-    if (duplicate.found?.confirmation_token) row.plus_one_confirmation_token = duplicate.found.confirmation_token;
-    if (!duplicate.found && sameAddedGuest(existing, row)) duplicate.found = true;
-    if (!duplicate.found) {
-      const companionCount = await countCompanions(env, existing.id);
-      if (companionCount.error) return companionCount.error;
-      if (addedGuestLimitReached(existing, companionCount.count)) return json({ error: PLUS_ONE_LIMIT }, 409);
-      const inserted = await insertCompanion(env, existing.id, row);
-      if (inserted.error) return inserted.error;
-    }
-  }
+  const companions = await findCompanions(env, existing.id);
+  if (companions.error) return companions.error;
+  const synced = await syncCompanion(env, existing.id, row, companions.rows);
+  if (synced.error) return synced.error;
 
-  const responseRow = { ...row, confirmation_token: rows[0].confirmation_token || existing.confirmation_token || row.confirmation_token, ticket_token: rows[0].ticket_token || existing.ticket_token };
+  const responseRow = {
+    ...row,
+    wants_table_reservation: rows[0].wants_table_reservation === true,
+    confirmation_token: rows[0].confirmation_token || existing.confirmation_token || row.confirmation_token,
+    ticket_token: rows[0].ticket_token || existing.ticket_token,
+  };
   const emailDelivery = await sendRsvpConfirmation(env, requestUrl, responseRow);
   return confirmationResponse(requestUrl, responseRow, emailDelivery);
 }
 
-async function findDuplicateCompanion(env, rsvpId, row) {
-  const path = row.plus_one_email_is_fallback
-    ? `/rest/v1/rsvp_companions?select=id,confirmation_token&rsvp_id=eq.${encodeURIComponent(rsvpId)}&guest_name=eq.${encodeURIComponent(row.plus_one_name)}&phone=eq.${encodeURIComponent(row.plus_one_phone)}&limit=1`
-    : `/rest/v1/rsvp_companions?select=id,confirmation_token&rsvp_id=eq.${encodeURIComponent(rsvpId)}&email=eq.${encodeURIComponent(normalizeEmail(row.plus_one_email))}&email_is_fallback=eq.false&limit=1`;
-  const result = await supabaseFetch(env, path);
-  if (result.error) return { error: result.error };
-  if (!result.response.ok) return { error: json({ error: "Could not save RSVP" }, 502) };
-  const rows = await result.response.json();
-  if (rows.length > 0) return { found: rows[0] };
-
-  const byName = await supabaseFetch(
-    env,
-    `/rest/v1/rsvp_companions?select=id,guest_name,phone&rsvp_id=eq.${encodeURIComponent(rsvpId)}&phone=eq.${encodeURIComponent(row.plus_one_phone)}`
-  );
-  if (byName.error) return { error: byName.error };
-  if (!byName.response.ok) return { error: json({ error: "Could not save RSVP" }, 502) };
-  const samePhoneRows = await byName.response.json();
-  return { found: samePhoneRows.some((item) => nameKey(item.guest_name) === nameKey(row.plus_one_name)) };
-}
-
-async function countCompanions(env, rsvpId) {
+async function findCompanions(env, rsvpId) {
   const result = await supabaseFetch(
     env,
-    `/rest/v1/rsvp_companions?select=id&rsvp_id=eq.${encodeURIComponent(rsvpId)}`
+    `/rest/v1/rsvp_companions?select=id,guest_name,email,email_is_fallback,phone,confirmation_token,ticket_token,seal_code&rsvp_id=eq.${encodeURIComponent(rsvpId)}&order=created_at.desc&limit=10`
   );
   if (result.error) return { error: result.error };
   if (!result.response.ok) return { error: json({ error: "Could not save RSVP" }, 502) };
   const rows = await result.response.json();
-  return { count: Array.isArray(rows) ? rows.length : 0 };
+  return { rows: Array.isArray(rows) ? rows : [] };
+}
+
+async function syncCompanion(env, rsvpId, row, companions) {
+  const latest = companions[0] || null;
+  const stale = companions.slice(1);
+  if (stale.length) {
+    const removed = await deleteCompanions(env, stale.map((item) => item.id));
+    if (removed.error) return removed;
+  }
+
+  if (!row.plus_one_name) {
+    if (!latest) return { ok: true };
+    return deleteCompanions(env, [latest.id]);
+  }
+
+  if (!latest) return insertCompanion(env, rsvpId, row);
+
+  if (companionMatchesRsvp(latest, row)) {
+    row.plus_one_confirmation_token = latest.confirmation_token || row.plus_one_confirmation_token;
+    row.plus_one_ticket_token = latest.ticket_token || row.plus_one_ticket_token;
+    row.plus_one_seal_code = latest.seal_code || row.plus_one_seal_code;
+  }
+
+  const companion = buildCompanionRow(row, rsvpId);
+  const updated = await supabaseFetch(env, `/rest/v1/rsvp_companions?id=eq.${encodeURIComponent(latest.id)}`, {
+    method: "PATCH",
+    headers: {
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ ...companion, checked_in_at: null, updated_at: row.submitted_at }),
+  });
+  if (updated.error) return { error: updated.error };
+  if (!updated.response.ok) return { error: json({ error: "Could not save RSVP" }, 502) };
+  return { ok: true };
+}
+
+async function deleteCompanions(env, ids) {
+  const values = ids.map((id) => String(id).replaceAll(",", "")).filter(Boolean);
+  if (!values.length) return { ok: true };
+  const removed = await supabaseFetch(env, `/rest/v1/rsvp_companions?id=in.(${values.join(",")})`, {
+    method: "DELETE",
+    headers: {
+      Prefer: "return=minimal",
+    },
+  });
+  if (removed.error) return { error: removed.error };
+  if (!removed.response.ok) return { error: json({ error: "Could not save RSVP" }, 502) };
+  return { ok: true };
 }
 
 async function insertCompanion(env, rsvpId, row) {

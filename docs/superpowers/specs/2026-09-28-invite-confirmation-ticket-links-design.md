@@ -46,7 +46,6 @@ It does not restart the invite journey and does not show the RSVP form. It direc
 - `Registered guest`
 - event date/time
 - `Ticket`
-- `Locked until release`
 - sealed location copy
 - ticket release copy
 - table-request context if needed, without staff-only details

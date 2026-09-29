@@ -29,6 +29,8 @@ import {
   pendingInviteTicket,
   publicVenue,
   sameAddedGuest,
+  companionMatchesRsvp,
+  tableReservationForUpdate,
   ticketForToken,
   buildTicketUrl,
   makeSealCode,
@@ -130,7 +132,7 @@ test("RSVP rows get separate companion confirmation and ticket tokens", () => {
     },
     ids("confirm0000000000000000000000000", TOKEN, "plusconfirm00000000000000000000", PLUS_TOKEN),
     FIXED_NOW,
-    seals("WSPВ·10В·TEST", "WSPВ·10В·PLUS")
+    seals("WSP·10·TEST", "WSP·10·PLUS")
   );
   assert.equal(row.plus_one_confirmation_token, "plusconfirm00000000000000000000");
   assert.equal(row.plus_one_ticket_token, PLUS_TOKEN);
@@ -205,9 +207,9 @@ test("ticket release gate opens exactly at 09.10 18:00 Sofia time", () => {
   assert.equal(isTicketReleased(new Date("2026-10-09T15:00:00.000Z")), true);
 });
 
-test("confirmation update is available only before ticket release and without an added guest", () => {
+test("confirmation update is available before ticket release even with an added guest", () => {
   assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T14:59:59.000Z")), true);
-  assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: "Michelle G" }, new Date("2026-10-09T14:59:59.000Z")), false);
+  assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: "Michelle G" }, new Date("2026-10-09T14:59:59.000Z")), true);
   assert.equal(confirmationCanUpdate({ holder: "companion", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T14:59:59.000Z")), false);
   assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T15:00:00.000Z")), false);
 });
@@ -672,6 +674,23 @@ test("legacy added guest matching detects the same +1 before enforcing the limit
   );
   assert.equal(sameAddedGuest(EXISTING_WITH_PLUS, row), true);
   assert.equal(sameAddedGuest({ ...EXISTING_WITH_PLUS, plus_one_name: "Maria Nikolova" }, row), false);
+});
+
+test("companion matching detects the same stored +1 before replacing it", () => {
+  const row = buildRsvpRow(
+    { guestId: "g1", guestName: "Peter Popov", ...CONTACT, status: "attending", plusOne: { name: "  simona   IVANOVA ", email: "Simona@Example.com", phone: "+359 88 765 4321" } },
+    ids(TOKEN, "newplus00000000000000000000000000"),
+    FIXED_NOW,
+    seals("WSP·10·NEWG", "WSP·10·NEWP")
+  );
+  assert.equal(companionMatchesRsvp({ guest_name: "Simona Ivanova", email: "simona@example.com", email_is_fallback: false }, row), true);
+  assert.equal(companionMatchesRsvp({ guest_name: "Maria Nikolova", email: "simona@example.com", email_is_fallback: false }, row), false);
+});
+
+test("confirmed table reservations stay requested during update details", () => {
+  const row = buildRsvpRow({ guestId: "g1", guestName: "Peter Popov", ...CONTACT, status: "attending", wantsTableReservation: false }, () => TOKEN, FIXED_NOW, FIXED_SEAL);
+  assert.equal(tableReservationForUpdate(row, { wants_table_reservation: true, reservation_confirmed: true }), true);
+  assert.equal(tableReservationForUpdate(row, { wants_table_reservation: true, reservation_confirmed: false }), false);
 });
 
 test("declining clears the plus-one and their ticket", () => {

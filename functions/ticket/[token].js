@@ -45,9 +45,8 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 .role{font-style:italic;color:#CDB894;margin:0;font-size:22px}
 .rule{position:relative;width:84px;height:1px;margin:22px auto;background:linear-gradient(90deg,transparent,rgba(217,174,120,.85),transparent)}
 .rule:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;background:var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
-.code,.state,.ticket-type{font-family:var(--sans);font-weight:300;text-transform:uppercase}
+.code,.state{font-family:var(--sans);font-weight:300;text-transform:uppercase}
 .code{font-size:21px;letter-spacing:.24em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,174,120,.4)}
-.ticket-type{display:none;font-size:13px;letter-spacing:.3em;color:var(--gold);margin:34px 0 0;min-height:16px}
 .qr{width:min(62vw,230px);height:min(62vw,230px);margin:22px auto;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);padding:10px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
 .qr[hidden]{display:none}
 .qr.ready{background:var(--paper);border:0}
@@ -57,7 +56,6 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 #bringing{display:block;border-top:1px solid rgba(217,174,120,.14);padding-top:10px;margin-top:10px}#bringing:empty{display:none}
 .small{font-style:italic;font-size:19px;line-height:1.55;color:#CFC3B3;margin:22px auto 0;max-width:360px}.small:empty{display:none}
 .state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
-.ticket-type + .qr[hidden] + .state{margin-top:8px}
 .meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
 .save,.pending-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:400 15px/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6);text-decoration:none}
 .save[hidden],.pending-link[hidden]{display:none}.save:focus-visible,.pending-link:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
@@ -78,10 +76,9 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <p class="role">Private guest</p>
 <div class="rule"></div>
 <div class="code" id="code">—</div>
-<p class="ticket-type" id="ticketType">Ticket</p>
 <div class="qr" id="qr"></div>
 <p class="state" id="state"></p>
-<p class="meta" id="ticketMeta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue">Sofia · private location in central Sofia.</span><span id="bringing"></span></p>
+<p class="meta" id="ticketMeta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue"></span><span id="bringing"></span></p>
 <p class="small" id="ticketNote"></p>
 <a class="pending-link" hidden id="pendingInvite" href="#">Respond</a>
 <button class="save" hidden id="save" type="button">Save your ticket</button>
@@ -122,7 +119,6 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
     $('guest').textContent=t.guest_name||'Your ticket';
     document.querySelector('.role').textContent='Invited guest';
     $('code').textContent='10.10 · 22:00';
-    $('ticketType').style.display='none';
     $('qr').hidden=true;
     $('state').textContent='';
     $('ticketMeta').innerHTML='Location remains sealed until 09.10 at 18:00.';
@@ -133,16 +129,16 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
   const role=t.brought_by?'Guest of '+t.brought_by:'Invited guest';
   $('guest').textContent=t.guest_name;
   document.querySelector('.role').textContent=role;
-  $('ticketType').style.display='none';
   $('code').textContent=t.seal_code||'—';
   $('bringing').innerHTML=t.bringing?'Bringing <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'':'Coming on your own');
-  const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'Sofia · private location in central Sofia.';
+  const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'';
   if(v)$('venue').innerHTML=v.mapUrl?'<a href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+escapeHtml(venueText)+'</a>':escapeHtml(venueText);
   if(t.table_reserved)$('bringing').innerHTML += '<br/><b>Your table is confirmed.</b>';
   $('ticketNote').textContent='Show this seal at the door. The QR code confirms your place in the WHISPERS list.';
   $('state').textContent=t.checked_in_at?'Already checked in':'Ready for the door';
   if(window.WhispersTickets){
-    const lines=['Saturday 10 October · Doors 22:00',venueText];
+    const lines=['Saturday 10 October · Doors 22:00'];
+    if(venueText)lines.push(venueText);
     if(t.bringing)lines.push('Bringing '+t.bringing);
     if(t.table_reserved)lines.push('Your table is confirmed.');
     const spec=[{name:t.guest_name,role,sealCode:t.seal_code,url:ticketUrl,lines,note:'Show this at the door.'}];

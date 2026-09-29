@@ -56,7 +56,6 @@
 - Saturday 10 October
 - Doors at 22:00
 - Where
-- Sofia · private location in central Sofia
 - Address released on 09.10 at 18:00.
 - Who
 - You, and one person of your choosing
@@ -240,7 +239,6 @@
 
 - Private guest
 - Saturday 10 October · Doors 22:00
-- Sofia · private location in central Sofia. Address released on 09.10 at 18:00.
 
 **Buttons**
 
@@ -267,7 +265,6 @@ Shown on the public invitation flow and ticket pages, fixed above the mobile saf
 - 09.10 · 18:00
 - Your ticket will be released on 09.10 at 18:00.
 - Location remains sealed until 09.10 at 18:00.
-- Locked until release
 
 **Important copy rule**
 

@@ -94,21 +94,26 @@ test("ticket page forwards the local release preview flag to the ticket API", ()
 
 test("released ticket fallback does not mention the old address release copy", () => {
   assert.doesNotMatch(ticketPage, /Address released on/);
-  assert.match(ticketPage, /Sofia · private location in central Sofia\./);
+  assert.doesNotMatch(ticketPage, /private location in central Sofia\./);
 });
 
 test("locked registered ticket avoids redundant ticket status labels", () => {
-  assert.match(ticketPage, /<div class="code" id="code">—<\/div>[\s\S]*<p class="ticket-type" id="ticketType">Ticket<\/p>[\s\S]*<div class="qr" id="qr"><\/div>\s*<p class="state" id="state"><\/p>\s*<p class="meta" id="ticketMeta">/);
+  assert.match(ticketPage, /<div class="code" id="code">[^<]+<\/div>\s*<div class="qr" id="qr"><\/div>\s*<p class="state" id="state"><\/p>\s*<p class="meta" id="ticketMeta">/);
   assert.match(ticketPage, /\.qr\[hidden\]\{display:none\}/);
-  assert.match(ticketPage, /\.ticket-type\{display:none;font-size:13px;letter-spacing:\.3em;color:var\(--gold\);margin:34px 0 0;min-height:16px\}/);
-  assert.match(ticketPage, /\.ticket-type \+ \.qr\[hidden\] \+ \.state\{margin-top:8px\}/);
   assert.match(ticketPage, /\$\('code'\)\.textContent='10\.10 · 22:00'/);
-  assert.match(ticketPage, /\$\('ticketType'\)\.style\.display='none'/);
   assert.match(ticketPage, /\$\('qr'\)\.hidden=true/);
   assert.match(ticketPage, /\$\('state'\)\.textContent='';\s*\$\('ticketMeta'\)\.innerHTML='Location remains sealed until 09\.10 at 18:00\.';\s*\$\('ticketNote'\)\.textContent='Your ticket will be sent to you on 09\.10 at 18:00\.'/);
+  assert.doesNotMatch(ticketPage, /id="ticketType"/);
+  assert.doesNotMatch(ticketPage, /\.ticket-type/);
   assert.doesNotMatch(ticketPage, /\$\('state'\)\.textContent='Locked until release'/);
   assert.doesNotMatch(ticketPage, /\$\('code'\)\.textContent='09\.10 · 18:00'/);
   assert.doesNotMatch(ticketPage, /\$\('qr'\)\.textContent='Your ticket will be released on 09\.10 at 18:00\.'/);
+});
+
+test("public ticket surfaces do not show redundant ticket labels", () => {
+  assert.doesNotMatch(html, /<p class="codelabel">Ticket<\/p>/);
+  assert.doesNotMatch(ticketPage, />Ticket<\/p>/);
+  assert.doesNotMatch(ticketPage, /Locked until release/);
 });
 
 test("all public HTML shells use the WHISPERS tab icon", () => {
@@ -147,6 +152,13 @@ test("confirmation page shows update details only when the API allows it", () =>
   assert.match(confirmationPage, /if\(data\.canUpdate&&data\.updateUrl\)/);
   assert.match(confirmationPage, /\$\('updateDetails'\)\.href=data\.updateUrl/);
   assert.match(confirmationPage, /\$\('updateDetails'\)\.hidden=false/);
+});
+
+test("confirmation page avoids redundant ticket status labels", () => {
+  assert.match(confirmationPage, /<div class="code">10\.10 [^<]+ 22:00<\/div>\s*<p class="meta" id="meta">/);
+  assert.doesNotMatch(confirmationPage, /<p class="type">Ticket<\/p>/);
+  assert.doesNotMatch(confirmationPage, /<p class="state">Locked until release<\/p>/);
+  assert.doesNotMatch(confirmationPage, /\.type,.state/);
 });
 
 test("start over returns to the invitation entry point, not the replaced ticket URL", () => {
@@ -201,6 +213,12 @@ test("letter respond CTA stays in flow without covering the closing copy", () =>
   assert.match(html, /#toRsvp::after\{[\s\S]*animation:respondHalo 3\.6s ease-in-out infinite/);
   assert.match(html, /#s-letter\.on #toRsvp\.st\{animation:respondGlow 3\.6s ease-in-out infinite;transform:none\}/);
   assert.match(html, /#s-letter \.row dd\{font-size:21px;line-height:1\.24\}/);
+});
+
+test("letter event time keeps the date and door time on separate stable lines", () => {
+  assert.match(html, /<dd>Saturday 10 October<span class="time-line">Doors open at 22:00 <em class="same-line">until 03:00<\/em><\/span><\/dd>/);
+  assert.match(html, /\.row dd \.time-line\{display:block;white-space:nowrap\}/);
+  assert.match(html, /#s-letter \.row dt\{font-size:9px;letter-spacing:\.15em;padding-top:5px\}/);
 });
 
 test("seal intro keeps heavy glow effects off the logo image", () => {

@@ -47,7 +47,6 @@ This page shows confirmed status:
 - `Registered guest`
 - `10.10 · 22:00`
 - `Ticket`
-- `Locked until release`
 - sealed location copy
 - ticket release copy
 - table request context if applicable

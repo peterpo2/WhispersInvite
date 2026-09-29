@@ -173,9 +173,11 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 /* ── 3. letter / details ── */
 .details{text-align:left;border-top:1px solid var(--line);margin:0}
 .row{display:grid;grid-template-columns:5.2em 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}
-.row dt{font-size:12px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;padding-top:7px}
+.row dt{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;padding-top:7px}
 .row dd{margin:0;font-family:var(--serif);font-size:24px;line-height:1.3;color:#F4EDE2}
 .row dd em{display:block;font-size:20px;color:var(--mute)}
+.row dd .time-line{display:block;white-space:nowrap}
+.row dd em.same-line{display:inline;margin-left:.35em;white-space:nowrap}
 .note{font-family:var(--serif);font-style:italic;font-size:20px;line-height:1.55;color:#CFC3B3;margin:24px auto 4px;max-width:380px}
 #s-letter{padding-bottom:calc(10px + env(safe-area-inset-bottom));scroll-padding-bottom:calc(110px + env(safe-area-inset-bottom))}
 #s-letter .inner{margin-top:auto;margin-bottom:0;padding-bottom:0}
@@ -255,7 +257,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 
 @media (max-width:360px){
   :root{--side:max(14px,env(safe-area-inset-left),env(safe-area-inset-right));--partner-clearance:96px;--partner-action-clearance:70px}
-  .row{grid-template-columns:4.4em 1fr;gap:10px}.row dt{font-size:11px;letter-spacing:.16em}.row dd{font-size:20px}.row dd em{font-size:17px}
+  .row{grid-template-columns:4.4em 1fr;gap:10px}.row dt{font-size:9px;letter-spacing:.15em}.row dd{font-size:20px}.row dd em{font-size:17px}
   .btn.caps{font-size:14px;letter-spacing:.24em}.wordmark{font-size:23px}
   .screen > .partner-bar{width:calc(100vw - 18px);gap:9px;padding-bottom:max(6px,env(safe-area-inset-bottom))}
   .partner-bar span{font-size:8px;letter-spacing:.18em}
@@ -268,9 +270,10 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   #s-letter .wordmark{font-size:24px;letter-spacing:.4em;margin-left:.4em}
   #s-letter .brand::after{margin-top:14px}
   #s-letter .row{grid-template-columns:4.8em 1fr;gap:12px;padding:15px 0}
-  #s-letter .row dt{font-size:11px;letter-spacing:.18em;padding-top:5px}
+  #s-letter .row dt{font-size:9px;letter-spacing:.15em;padding-top:5px}
   #s-letter .row dd{font-size:21px;line-height:1.24}
   #s-letter .row dd em{font-size:18px;line-height:1.25;margin-top:4px}
+  #s-letter .row dd em.same-line{display:inline;margin-left:.35em;margin-top:0;white-space:nowrap}
   #s-letter .note{font-size:18px;line-height:1.42;margin:18px auto 0}
   #toRsvp{min-height:58px;margin-top:18px}
 }
@@ -326,7 +329,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <div class="inner">
 <div class="brand st"><img alt="Whispers" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>
 <dl class="details st">
-<div class="row"><dt>When</dt><dd>Saturday 10 October · Doors open at 22:00<em>until 03:00</em></dd></div>
+<div class="row"><dt>When</dt><dd>Saturday 10 October<span class="time-line">Doors open at 22:00 <em class="same-line">until 03:00</em></span></dd></div>
 <div class="row"><dt>Where</dt><dd>A private address in central Sofia<em>Released on 09.10 at 18:00</em></dd></div>
 <div class="row"><dt>Who</dt><dd>You, and one guest of your choosing</dd></div>
 <div class="row"><dt>Sound</dt><dd>Sammer · Lucia · Atia</dd></div>
@@ -408,7 +411,6 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <p class="rl" id="passrole">Invited guest</p>
 <div class="rule"></div>
 <p class="code" id="passcode">10.10 · 22:00</p>
-<p class="codelabel">Ticket</p>
 <div aria-label="QR code" class="qr" id="qr"></div>
 <p class="passfoot">Saturday <b>10 October</b> · Doors <b>22:00</b><span class="bringing" id="bringingLine">Coming on your own</span></p>
 </div>

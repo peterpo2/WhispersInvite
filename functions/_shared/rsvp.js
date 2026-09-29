@@ -51,7 +51,6 @@ export function confirmationCanUpdate(ticket, now = new Date()) {
     ticket.holder === "guest" &&
     ticket.status === "attending" &&
     ticket.guest_id &&
-    !ticket.bringing &&
     !isTicketReleased(now)
   );
 }
@@ -234,6 +233,20 @@ export function sameAddedGuest(existing, row) {
   return (sameEmail || sameFallback) && nameKey(existing.plus_one_name) === nameKey(row.plus_one_name);
 }
 
+export function companionMatchesRsvp(existing, row) {
+  if (!existing?.guest_name || !row?.plus_one_name) return false;
+  if (nameKey(existing.guest_name) !== nameKey(row.plus_one_name)) return false;
+  if (row.plus_one_email_is_fallback === true) {
+    return existing.email_is_fallback === true && normalizePhone(existing.phone) === normalizePhone(row.plus_one_phone);
+  }
+  return Boolean(normalizeEmail(existing.email)) && normalizeEmail(existing.email) === normalizeEmail(row.plus_one_email);
+}
+
+export function tableReservationForUpdate(row, existing) {
+  if (existing?.reservation_confirmed === true && existing?.wants_table_reservation === true) return true;
+  return row?.wants_table_reservation === true;
+}
+
 export function addedGuestLimitReached(existing, companionCount = 0) {
   return Boolean(existing?.plus_one_name) || Number(companionCount) >= MAX_ADDED_GUESTS;
 }
@@ -255,7 +268,7 @@ export function buildRsvpUpdate(row, existing) {
     plus_one_email: keepPlusOne ? existing.plus_one_email : row.plus_one_email,
     plus_one_phone: keepPlusOne ? existing.plus_one_phone : row.plus_one_phone,
     plus_one_email_is_fallback: keepPlusOne ? existing.plus_one_email_is_fallback === true : row.plus_one_email_is_fallback === true,
-    wants_table_reservation: row.wants_table_reservation,
+    wants_table_reservation: tableReservationForUpdate(row, existing),
     seal_code: existing.seal_code || row.seal_code,
     plus_one_ticket_token: keepPlusOne || samePlusOne ? existing.plus_one_ticket_token : row.plus_one_ticket_token,
     plus_one_seal_code: keepPlusOne || samePlusOne ? existing.plus_one_seal_code || row.plus_one_seal_code : row.plus_one_seal_code,
