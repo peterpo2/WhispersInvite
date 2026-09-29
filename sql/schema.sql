@@ -93,6 +93,7 @@ create unique index if not exists rsvp_companions_seal_code_unique
 create index if not exists rsvp_companions_email_pending_idx
   on rsvp_companions (ticket_email_sent_at)
   where ticket_token is not null;
+alter table rsvp_companions enable row level security;
 
 create table if not exists event_details (
   event_key text primary key,
@@ -115,6 +116,7 @@ create table if not exists staff_tables (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+alter table staff_tables enable row level security;
 
 create table if not exists staff_table_assignments (
   event_key text not null,
@@ -123,6 +125,7 @@ create table if not exists staff_table_assignments (
   assigned_at timestamptz not null default now(),
   primary key (event_key, rsvp_id)
 );
+alter table staff_table_assignments enable row level security;
 
 insert into staff_tables (id, label, capacity, sort_order) values
   ('t1', 'Table 1', 6, 1),

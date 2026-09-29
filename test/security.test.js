@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { CONTENT_SECURITY_POLICY, SECURITY_HEADERS } from "../functions/_shared/security.js";
+
+const schema = readFileSync("sql/schema.sql", "utf8");
+const rlsMigration = readFileSync("sql/2026-09-29-enable-rls-staff-companions.sql", "utf8");
 
 function directives(policy) {
   return Object.fromEntries(policy.split(";").map((d) => d.trim()).filter(Boolean).map((d) => {
@@ -33,4 +37,11 @@ test("fonts, API calls and framing are locked down", () => {
   assert.deepEqual(d["frame-ancestors"], ["'none'"]);
   assert.deepEqual(d["object-src"], ["'none'"]);
   assert.deepEqual(d["base-uri"], ["'none'"]);
+});
+
+test("staff and companion tables have RLS enabled in schema and migration", () => {
+  for (const table of ["rsvp_companions", "staff_tables", "staff_table_assignments"]) {
+    assert.match(schema, new RegExp(`alter table ${table} enable row level security;`));
+    assert.match(rlsMigration, new RegExp(`alter table public\\.${table} enable row level security;`));
+  }
 });
