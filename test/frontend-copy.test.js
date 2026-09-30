@@ -252,6 +252,8 @@ test("public floating actions sit lower on seal and film screens", () => {
   assert.match(html, /\.screen\{[\s\S]*padding:[^}]*calc\(24px \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(html, /\.skip\{[\s\S]*bottom:calc\(var\(--skip-action-clearance\) \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(html, /\.skip\{[\s\S]*z-index:70/);
+  assert.match(html, /body\.named-invite #skipseal\{bottom:calc\(14px \+ env\(safe-area-inset-bottom\)\)\}/);
+  assert.match(html, /document\.body\.classList\.add\('named-invite'\)/);
 });
 
 test("letter respond CTA stays in flow without covering the closing copy", () => {

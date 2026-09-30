@@ -158,6 +158,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 .skip{position:fixed;z-index:70;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--skip-action-clearance) + env(safe-area-inset-bottom));
   min-width:34px;min-height:34px;padding:0 8px;background:rgba(7,6,5,.28);border:1px solid rgba(217,174,120,.22);border-radius:999px;cursor:pointer;
   font:400 11px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);opacity:.78;transition:opacity .3s ease,border-color .3s ease}
+body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 .skip:hover{opacity:1}
 .skip[disabled]{opacity:.34;cursor:default}
 #sealwrap:focus{outline:none}#sealwrap:focus-visible{outline:1px solid var(--gold);outline-offset:22px}
@@ -517,6 +518,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
         // Show name on seal screen
         const el = document.querySelector('.issued.generic-issued');
         if (el) {
+          document.body.classList.add('named-invite');
           el.className = 'issued personalized-issued';
           el.innerHTML = 'This invitation belongs to:<b>' + escapeHtml(data.name) + '</b>';
         }
@@ -540,6 +542,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
         if (phoneInput && state.guestPhone) phoneInput.value=state.guestPhone;
         const el = document.querySelector('.issued.generic-issued');
         if (el && state.guestName) {
+          document.body.classList.add('named-invite');
           el.className = 'issued personalized-issued';
           el.innerHTML = 'This invitation belongs to:<b>' + escapeHtml(state.guestName) + '</b>';
         }
