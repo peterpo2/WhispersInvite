@@ -165,6 +165,7 @@ test("confirmation update mode skips primary contact and goes to plus and table 
 
 test("confirmation page shows update details only when the API allows it", () => {
   assert.match(confirmationPage, /id="updateDetails"/);
+  assert.match(confirmationPage, /\.update-link\{[\s\S]*font:500 clamp\(18px,4\.8vw,22px\)\/1\.2 var\(--sans\)/);
   assert.match(confirmationPage, /if\(data\.canUpdate&&data\.updateUrl\)/);
   assert.match(confirmationPage, /\$\('updateDetails'\)\.href=data\.updateUrl/);
   assert.match(confirmationPage, /\$\('updateDetails'\)\.hidden=false/);
@@ -227,6 +228,8 @@ test("letter respond CTA stays in flow without covering the closing copy", () =>
   assert.match(html, /#toRsvp\{position:relative;z-index:20;width:100%;margin:24px auto 0/);
   assert.doesNotMatch(html, /#toRsvp\{position:sticky/);
   assert.match(html, /#toRsvp\{[\s\S]*animation:respondGlow 3\.6s ease-in-out infinite/);
+  assert.match(html, /#toRsvp\{[\s\S]*font-size:clamp\(18px,4\.8vw,22px\);font-weight:500;letter-spacing:\.32em/);
+  assert.match(html, /#continueGuest,#confirm\{font-size:clamp\(18px,4\.8vw,22px\);font-weight:500;letter-spacing:\.32em/);
   assert.match(html, /#toRsvp::before\{[\s\S]*animation:respondSweep 4\.8s ease-in-out infinite/);
   assert.match(html, /#toRsvp::after\{[\s\S]*animation:respondHalo 3\.6s ease-in-out infinite/);
   assert.match(html, /#s-letter\.on #toRsvp\.st\{animation:respondGlow 3\.6s ease-in-out infinite;transform:none\}/);
