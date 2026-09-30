@@ -55,6 +55,26 @@ test("attending RSVP requires full name, email and phone", () => {
   assert.equal(validateRsvpPayload({ guestName: "Peter Popov", status: "attending", guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567" }).ok, true);
 });
 
+test("normalizes Bulgarian local phone numbers while preserving international numbers", () => {
+  assert.equal(normalizePhone("887925250"), "+359 887925250");
+  assert.equal(normalizePhone("0887925250"), "+359 887925250");
+  assert.equal(normalizePhone(" 887 925 250 "), "+359 887925250");
+  assert.equal(normalizePhone("+44 7700 900123"), "+44 7700 900123");
+  assert.equal(normalizePhone("00359 887 925 250"), "+359 887 925 250");
+});
+
+test("RSVP and invite rows store normalized Bulgarian phone numbers", () => {
+  const rsvp = buildRsvpRow(
+    { guestName: "Peter Popov", guestEmail: "peter@example.com", guestPhone: "887925250", status: "attending" },
+    ids("confirm0000000000000000000000000", TOKEN),
+    FIXED_NOW,
+    seals("WSP-10-TEST")
+  );
+  assert.equal(rsvp.guest_phone, "+359 887925250");
+  const invite = buildInviteRow({ name: "Peter Popov", email: "peter@example.com", phone: "0887925250" }, ids("invite00000000000000000000000000"), FIXED_NOW);
+  assert.equal(invite.phone, "+359 887925250");
+});
+
 test("added guest requires full name and email but phone is optional", () => {
   const base = { guestName: "Peter Popov", guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567", status: "attending" };
   assert.equal(validateRsvpPayload({ ...base, plusOne: { name: "Simona Ivanova", phone: "+359 88 765 4321" } }).error, "Please give their email.");

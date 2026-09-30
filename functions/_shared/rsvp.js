@@ -20,7 +20,14 @@ export function normalizeEmail(value) {
 }
 
 export function normalizePhone(value) {
-  return String(value || "").trim().replace(/\s+/g, " ");
+  const phone = String(value || "").trim().replace(/\s+/g, " ");
+  if (!phone) return "";
+  if (phone.startsWith("+")) return phone;
+  if (/^00\d/.test(phone)) return `+${phone.slice(2).trim()}`;
+  const compact = phone.replace(/[^\d]/g, "");
+  if (/^0[87]\d{8}$/.test(compact)) return `+359 ${compact.slice(1)}`;
+  if (/^[87]\d{8}$/.test(compact)) return `+359 ${compact}`;
+  return phone;
 }
 
 export function nameKey(value) {

@@ -608,10 +608,11 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   $('#toRsvp').addEventListener('click',()=>{if(state.updateMode){show('#s-plus');return;}if(state.alreadyRegistered&&state.confirmationUrl){window.location.assign(state.confirmationUrl);return;}show(state.guestEmail&&state.guestPhone?'#s-rsvp':'#s-identify')});
 
   // Name (shared link only)
-  const nameInput=$('#guestName'),emailInput=$('#guestEmail'),phoneInput=$('#guestPhone'),nameOk=v=>v.split(/\s+/).filter(Boolean).length>=2&&v.length<=120,emailOk=v=>/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v.trim());
+  const nameInput=$('#guestName'),emailInput=$('#guestEmail'),phoneInput=$('#guestPhone'),nameOk=v=>v.split(/\s+/).filter(Boolean).length>=2&&v.length<=120,emailOk=v=>/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v.trim()),phoneNorm=v=>{const p=String(v||'').trim().replace(/\s+/g,' ');if(!p)return'';if(p[0]==='+')return p;if(/^00\d/.test(p))return'+'+p.slice(2).trim();const c=p.replace(/[^\d]/g,'');if(/^0[87]\d{8}$/.test(c))return'+359 '+c.slice(1);if(/^[87]\d{8}$/.test(c))return'+359 '+c;return p;};
   function identifyOk(){return nameOk(nameInput.value.trim())&&emailOk(emailInput.value)&&phoneInput.value.trim();}
   [nameInput,emailInput,phoneInput].forEach(el=>el.addEventListener('input',()=>{$('#continueGuest').disabled=!identifyOk();$('#guestErr').textContent=''}));
-  function continueGuest(){const v=nameInput.value.trim().replace(/\s+/g,' '),m=emailInput.value.trim(),p=phoneInput.value.trim().replace(/\s+/g,' ');if(!nameOk(v)){$('#guestErr').textContent='Please give your full name.';return;}if(!emailOk(m)){$('#guestErr').textContent='Please give a valid email.';return;}if(!p){$('#guestErr').textContent='Please give your phone.';return;}state.guestName=v;state.guestEmail=m;state.guestPhone=p;show('#s-rsvp')}
+  phoneInput.addEventListener('blur',()=>{phoneInput.value=phoneNorm(phoneInput.value)});
+  function continueGuest(){const v=nameInput.value.trim().replace(/\s+/g,' '),m=emailInput.value.trim(),p=phoneNorm(phoneInput.value);phoneInput.value=p;if(!nameOk(v)){$('#guestErr').textContent='Please give your full name.';return;}if(!emailOk(m)){$('#guestErr').textContent='Please give a valid email.';return;}if(!p){$('#guestErr').textContent='Please give your phone.';return;}state.guestName=v;state.guestEmail=m;state.guestPhone=p;show('#s-rsvp')}
   $('#continueGuest').addEventListener('click',continueGuest);
   nameInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();continueGuest()}});
   $('#backLetter').addEventListener('click',()=>show('#s-letter'));

@@ -50,6 +50,14 @@ test("personal invite contact step does not keep the shared name prompt", () => 
   assert.match(html, /Your name is already on the list\. Please leave your email and phone so we can send you your ticket\./);
 });
 
+test("phone input normalizes Bulgarian local numbers but preserves international numbers", () => {
+  assert.match(html, /phoneNorm=v=>/);
+  assert.match(html, /if\(p\[0\]===\'\+\'\)return p/);
+  assert.match(html, /if\(\/\^0\[87\]\\d\{8\}\$\/\.test\(c\)\)return'\+359 '\+c\.slice\(1\)/);
+  assert.match(html, /if\(\/\^\[87\]\\d\{8\}\$\/\.test\(c\)\)return'\+359 '\+c/);
+  assert.match(html, /phoneInput\.addEventListener\('blur',\(\)=>\{phoneInput\.value=phoneNorm\(phoneInput\.value\)\}\)/);
+});
+
 test("public invitation uses the approved access and update copy", () => {
   assert.match(html, /This invitation grants free access\. Drinks are charged separately\. Tables upon request\./);
   assert.match(html, /You can confirm or update this before ticket release\./);
