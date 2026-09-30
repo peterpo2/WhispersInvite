@@ -10,3 +10,8 @@ test("ticket API includes companion rows on the primary guest ticket", () => {
   assert.match(ticketApi, /ticket = \{ \.\.\.ticket, bringing: firstCompanion\.guest_name \|\| null \}/);
   assert.match(ticketApi, /\/rest\/v1\/rsvp_companions\?select=id,guest_name&rsvp_id=eq/);
 });
+
+test("ticket API shows ticket links immediately, without the date release gate", () => {
+  assert.match(ticketApi, /const released = true;/);
+  assert.doesNotMatch(ticketApi, /isTicketReleasedForRequest\(request\.url\)/);
+});

@@ -1,5 +1,5 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
-import { EVENT_KEY, TICKET_RELEASE_AT, buildCheckInUrl, buildInviteUrl, buildTicketUrl, companionTicketForToken, isTicketReleasedForRequest, pendingInviteTicket, publicVenue, ticketForToken, tokenFromValue } from "../_shared/rsvp.js";
+import { EVENT_KEY, TICKET_RELEASE_AT, buildCheckInUrl, buildInviteUrl, buildTicketUrl, companionTicketForToken, pendingInviteTicket, publicVenue, ticketForToken, tokenFromValue } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const PRIMARY_COLUMNS = "id,guest_name,seal_code,ticket_token,checked_in_at,status,plus_one_name,plus_one_seal_code,plus_one_ticket_token,plus_one_checked_in_at,reservation_confirmed";
@@ -11,7 +11,7 @@ export async function onRequestGet({ request, env }) {
   const token = tokenFromValue(raw);
   if (!token) return json({ error: "Ticket not found" }, 404);
 
-  const released = isTicketReleasedForRequest(request.url);
+  const released = true;
   const primary = await findPrimaryTicket(env, token, released);
   if (primary.error) return primary.error;
   let ticket = primary.ticket;

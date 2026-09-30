@@ -9,8 +9,7 @@ export async function onRequestGet() {
 <link href="/assets/whispers-favicon.png" rel="icon" type="image/png"/>
 <link href="/assets/whispers-favicon.png" rel="apple-touch-icon"/>
 <style>
-@font-face{font-family:AvianoContrast;src:url("/assets/aviano-contrast.ttf") format("truetype");font-weight:300 700;font-style:normal;font-display:swap}
-:root{--bg:#070605;--gold:#D9AE78;--gold-hi:#EBCB95;--red:#A31621;--bone:#EDE6DA;--muted:#B4A99D;--line:rgba(217,174,120,.24);--serif:'AvianoContrast',Cambria,Georgia,serif;--sans:'AvianoContrast','Helvetica Neue',Arial,sans-serif;color-scheme:dark}
+:root{--bg:#070605;--gold:#D9AE78;--gold-hi:#EBCB95;--red:#A31621;--bone:#EDE6DA;--muted:#B4A99D;--line:rgba(217,174,120,.24);--serif:'Cormorant Garamond',Cambria,Georgia,serif;--sans:'Jost','Helvetica Neue',Arial,sans-serif;color-scheme:dark}
 *{box-sizing:border-box}html{background:var(--bg)}
 body{margin:0;min-height:100vh;min-height:100dvh;background:radial-gradient(70% 40% at 50% -6%,rgba(217,174,120,.09),transparent 62%),radial-gradient(120% 60% at 50% 112%,rgba(90,11,19,.32),transparent 64%),linear-gradient(180deg,#0A0807,#070605 55%,#060404);color:var(--bone);font-family:var(--sans);font-weight:300;font-size:16px;padding:calc(16px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(20px + env(safe-area-inset-bottom))}
 body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:url("/assets/whispers-rose.png") 84% 36%/min(76vw,760px) auto no-repeat;opacity:.08;filter:blur(1px) saturate(1.05)}
@@ -49,7 +48,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 <body>
 <div class="grain" aria-hidden="true"></div>
 <main>
-<div class="top"><div class="brand"><img src="/assets/whispers-lockup-transparent.png" alt="WHISPERS"/><div><div class="k">WHISPERS</div><h1>Door</h1></div></div><button id="refresh">Refresh</button></div>
+<div class="top"><div class="brand"><img src="/assets/whispers-lockup-transparent.png" alt="WHISPERS"/><div><h1>Door</h1></div></div><button id="refresh">Refresh</button></div>
 <nav class="tabs" aria-label="Staff sections"><button class="tab active" data-view="scanner">Scanner</button><button class="tab" data-view="members">Members</button><button class="tab" data-view="tables">Tables</button><button class="tab" data-view="invite">Invite</button></nav>
 <div class="view active" id="view-scanner">
 <section class="panel camera"><video id="video" playsinline muted></video><div class="scanline"></div></section>
