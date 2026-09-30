@@ -1,7 +1,7 @@
 const DEFAULT_FROM = "WHISPERS <noreply@whisperssociety.com>";
 const DEFAULT_REPLY_TO = "guestlist@whisperssociety.com";
 const DEFAULT_PHONE = "+359 888 012 380";
-const LOGO_URL = "https://whisperssociety.com/assets/whispers-mark.png";
+const LOGO_URL = "https://whisperssociety.com/assets/whispers-lockup-dark.png";
 
 export function emailConfigFromEnv(env) {
   const smtpHost = String(env.SMTP_HOST || "").trim();
@@ -43,7 +43,7 @@ export function buildInviteEmail({ to, name, inviteLink, confirmationLink, confi
   const html = `<!doctype html>
 <html style="margin:0;padding:0;background:#0B0908;">
 <head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head>
-<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;border:0;outline:0;">
+<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:'AvianoContrast',Georgia,serif;border:0;outline:0;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0B0908" style="width:100%;background:#0B0908;color:#EDE6DA;border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
       <td align="center" bgcolor="#0B0908" style="padding:0;background:#0B0908;border:0;outline:0;">
@@ -58,7 +58,7 @@ export function buildInviteEmail({ to, name, inviteLink, confirmationLink, confi
           <tr><td style="height:26px;"></td></tr>
           <tr>
             <td align="center">
-              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;font-weight:bold;padding:17px 30px;">Respond</a>
+              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:'AvianoContrast',Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;font-weight:bold;padding:17px 30px;">Respond</a>
             </td>
           </tr>
           <tr><td style="height:30px;"></td></tr>
@@ -167,7 +167,7 @@ export function buildTicketEmail({ to, name, ticketLink, guestOf, bringing, venu
   const html = `<!doctype html>
 <html style="margin:0;padding:0;background:#0B0908;">
 <head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head>
-<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;border:0;outline:0;">
+<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:'AvianoContrast',Georgia,serif;border:0;outline:0;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0B0908" style="width:100%;background:#0B0908;color:#EDE6DA;border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
       <td align="center" bgcolor="#0B0908" style="padding:0;background:#0B0908;border:0;outline:0;">
@@ -182,7 +182,7 @@ export function buildTicketEmail({ to, name, ticketLink, guestOf, bringing, venu
           <tr><td style="height:26px;"></td></tr>
           <tr>
             <td align="center">
-              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;font-weight:bold;padding:17px 30px;">Open Ticket</a>
+              <a href="${escapeHtml(link)}" style="display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:'AvianoContrast',Arial,sans-serif;letter-spacing:0.22em;text-transform:uppercase;font-size:13px;font-weight:bold;padding:17px 30px;">Open Ticket</a>
             </td>
           </tr>
           <tr><td style="height:30px;"></td></tr>
@@ -227,13 +227,13 @@ function rsvpEmail({ to, name, title, lines, actionLink, actionLabel, contact, p
   const actionHtml = safeActionLink ? `<tr><td style="height:22px;"></td></tr>
           <tr>
             <td align="center">
-              <a href="${escapeHtml(safeActionLink)}" style="display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:Arial,sans-serif;letter-spacing:0.18em;text-transform:uppercase;font-size:12px;font-weight:bold;padding:15px 24px;">${escapeHtml(safeActionLabel)}</a>
+              <a href="${escapeHtml(safeActionLink)}" style="display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:'AvianoContrast',Arial,sans-serif;letter-spacing:0.18em;text-transform:uppercase;font-size:12px;font-weight:bold;padding:15px 24px;">${escapeHtml(safeActionLabel)}</a>
             </td>
           </tr>` : "";
   const html = `<!doctype html>
 <html style="margin:0;padding:0;background:#0B0908;">
 <head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head>
-<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:Georgia,serif;border:0;outline:0;">
+<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:'AvianoContrast',Georgia,serif;border:0;outline:0;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0B0908" style="width:100%;background:#0B0908;color:#EDE6DA;border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
       <td align="center" bgcolor="#0B0908" style="padding:0;background:#0B0908;border:0;outline:0;">
@@ -266,7 +266,7 @@ function rsvpEmail({ to, name, title, lines, actionLink, actionLabel, contact, p
 }
 
 function brandHeader() {
-  return `<tr><td align="center" style="padding:4px 0 20px;"><img alt="WHISPERS seal" src="${LOGO_URL}" width="118" height="118" style="display:block;width:118px;height:118px;margin:0 auto;border:0;outline:none;text-decoration:none;"/></td></tr>
+  return `<tr><td align="center" style="padding:4px 0 20px;"><img alt="WHISPERS" src="${LOGO_URL}" width="220" height="101" style="display:block;width:220px;height:auto;margin:0 auto;border:0;outline:none;text-decoration:none;"/></td></tr>
   <tr><td align="center" style="padding:4px 0 0;"><table role="presentation" width="78" cellspacing="0" cellpadding="0"><tr><td style="height:1px;background:#8B6F4C;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>`;
 }
 

@@ -29,6 +29,11 @@ test("allows the invitation, API routes, ticket pages and the staff scanner", ()
     "/assets/partner-beluga.png",
     "/assets/partner-rothschild.png",
     "/assets/ticket-card.js",
+    "/assets/aviano-contrast.ttf",
+    "/assets/whispers-intro.mov",
+    "/assets/whispers-lockup-dark.png",
+    "/assets/whispers-lockup-light.png",
+    "/assets/whispers-logo.svg",
   ]) {
     assert.equal(isPublicPath(path), true, path);
   }
@@ -53,6 +58,9 @@ test("blocks repository files and anything not on the allowlist", () => {
     "/README.txt",
     "/README.md",
     "/AGENTS.md",
+    "/VECTOR_TYPE.eps",
+    "/video/Timeline2.mov",
+    "/video/Aviano%20Contrast.ttf",
     "/docs/project-spec.md",
     "/docs/",
     "/whispers-invitation-dev-brief.md",
@@ -69,6 +77,9 @@ test("blocks repository files and anything not on the allowlist", () => {
     "/index.htm",
     "/assets/",
     "/assets/whispers-mark.PNG",
+    "/assets/aviano-contrast.TTF",
+    "/assets/whispers-intro.MOV",
+    "/assets/whispers-logo.SVG",
     "/assets/sub/whispers-mark.png",
     "/assets/../sql/schema.sql",
     "/assets/notes.md",

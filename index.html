@@ -8,16 +8,17 @@
 <link href="/assets/whispers-favicon.png" rel="icon" type="image/png"/>
 <link href="/assets/whispers-favicon.png" rel="apple-touch-icon"/>
 <link as="image" fetchpriority="high" href="/assets/whispers-seal.png" rel="preload"/>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&amp;family=Jost:wght@300;400&amp;display=swap" rel="stylesheet"/>
+<link as="font" crossorigin="" href="/assets/aviano-contrast.ttf" rel="preload" type="font/ttf"/>
+<link as="video" href="/assets/whispers-intro.mov" rel="preload" type="video/quicktime"/>
+<link as="image" href="/assets/whispers-lockup-dark.png" rel="preload"/>
 <style>
+@font-face{font-family:AvianoContrast;src:url("/assets/aviano-contrast.ttf") format("truetype");font-weight:300 700;font-style:normal;font-display:swap}
 :root{
   --bg:#070605; --gold:#D9AE78; --gold-hi:#EBCB95; --gold-dim:#8B6F4C;
   --red:#A31621; --rose:#5A0B13; --bone:#EDE6DA; --mute:#BDB2A5;
   --line:rgba(217,174,120,.26);
-  --serif:'Cormorant Garamond',Cambria,Georgia,serif;
-  --sans:'Jost','Helvetica Neue',Arial,sans-serif;
+  --serif:'AvianoContrast',Cambria,Georgia,serif;
+  --sans:'AvianoContrast','Helvetica Neue',Arial,sans-serif;
   --ease:cubic-bezier(.22,.61,.36,1);
   --side:max(18px,env(safe-area-inset-left),env(safe-area-inset-right));
   --partner-clearance:104px;
@@ -92,6 +93,8 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 
 /* ── brand: the existing mark + wordmark ── */
 .brand{margin:0 auto 24px}
+.brand-lockup{display:block;width:min(220px,60vw);height:auto;margin:0 auto;opacity:.96;filter:drop-shadow(0 0 22px rgba(163,22,33,.3))}
+.brand.compact .brand-lockup{width:min(164px,48vw)}
 .mark{display:block;width:76px;height:76px;margin:0 auto;opacity:.96;filter:drop-shadow(0 0 22px rgba(163,22,33,.3))}
 .wordmark{font-family:var(--serif);font-weight:300;font-size:26px;letter-spacing:.44em;margin:12px 0 0 .44em;color:var(--gold)}
 .brand::after{content:"";display:block;width:48px;height:1px;margin:16px auto 0;background:rgba(217,174,120,.65)}
@@ -156,7 +159,10 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 /* ── 2. film / atmosphere ── */
 #s-film{padding:0}
 #film-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-#film-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+#film-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#070605}
+#film-video.on{display:block}
+#film-loading{position:absolute;left:var(--side);right:var(--side);bottom:calc(92px + env(safe-area-inset-bottom));z-index:3;margin:0 auto;max-width:360px;font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.45;color:#D8C7AE;opacity:0;transition:opacity .45s ease}
+#film-loading.on{opacity:1}
 .shot{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8%;
   opacity:0;transform:translateY(10px);filter:blur(6px);transition:opacity 1.3s ease,transform 1.6s var(--ease),filter 1.4s ease}
 .shot.on{opacity:1;transform:none;filter:blur(0)}
@@ -167,15 +173,15 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 @keyframes flick{0%,100%{opacity:.5;transform:scale(1)}35%{opacity:1;transform:scale(1.7)}65%{opacity:.7;transform:scale(1.15)}}
 #film-end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;filter:blur(8px);transition:opacity 1.4s ease,filter 1.6s ease}
 #film-end.on{opacity:1;filter:blur(0)}
-#film-end .mark{width:132px;height:132px;margin-bottom:26px}
+#film-end .brand-lockup{width:min(260px,68vw);margin-bottom:26px}
 #film-end .d{font-family:var(--serif);font-size:clamp(22px,6vw,28px);letter-spacing:.3em;color:var(--gold);margin:0}
 
 /* ── 3. letter / details ── */
 .details{text-align:left;border-top:1px solid var(--line);margin:0}
-.row{display:grid;grid-template-columns:5.2em 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}
-.row dt{font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;padding-top:7px}
-.row dd{margin:0;font-family:var(--serif);font-size:24px;line-height:1.3;color:#F4EDE2}
-.row dd em{display:block;font-size:20px;color:var(--mute)}
+.row{display:grid;grid-template-columns:5.5em 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}
+.row dt{font-size:12px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;padding-top:5px}
+.row dd{margin:0;font-family:var(--serif);font-size:21px;line-height:1.34;color:#F4EDE2}
+.row dd em{display:block;font-size:17px;color:var(--mute)}
 .row dd .time-line{display:block;white-space:nowrap}
 .row dd em.same-line{display:inline;margin-left:.35em;white-space:nowrap}
 .note{font-family:var(--serif);font-style:italic;font-size:20px;line-height:1.55;color:#CFC3B3;margin:24px auto 4px;max-width:380px}
@@ -214,7 +220,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 
 /* ── 6. ticket: printed on the screen, no frame ── */
 .pass{position:relative;padding:4px 0 0}
-.pass .brand{margin-bottom:18px}.pass .mark{width:56px;height:56px}.pass .wordmark{font-size:21px}
+.pass .brand{margin-bottom:18px}.pass .brand-lockup{width:min(172px,54vw)}.pass .mark{width:56px;height:56px}.pass .wordmark{font-size:21px}
 .pass .nm{font-family:var(--serif);font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;color:#F7F0E6;margin:4px 0 6px;overflow-wrap:anywhere}
 .pass .rl{font-family:var(--serif);font-style:italic;font-size:22px;color:#CDB894;margin:0}
 .pass .rule{margin:20px auto}
@@ -257,7 +263,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 
 @media (max-width:360px){
   :root{--side:max(14px,env(safe-area-inset-left),env(safe-area-inset-right));--partner-clearance:96px;--partner-action-clearance:70px}
-  .row{grid-template-columns:4.4em 1fr;gap:10px}.row dt{font-size:9px;letter-spacing:.15em}.row dd{font-size:20px}.row dd em{font-size:17px}
+  .row{grid-template-columns:4.9em 1fr;gap:10px}.row dt{font-size:10px;letter-spacing:.14em}.row dd{font-size:18px}.row dd em{font-size:15px}
   .btn.caps{font-size:14px;letter-spacing:.24em}.wordmark{font-size:23px}
   .screen > .partner-bar{width:calc(100vw - 18px);gap:9px;padding-bottom:max(6px,env(safe-area-inset-bottom))}
   .partner-bar span{font-size:8px;letter-spacing:.18em}
@@ -266,13 +272,14 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 @media (max-width:430px){
   #s-letter{padding-top:calc(18px + env(safe-area-inset-top))}
   #s-letter .brand{margin-bottom:18px}
+  #s-letter .brand-lockup{width:min(190px,58vw)}
   #s-letter .mark{width:66px;height:66px}
   #s-letter .wordmark{font-size:24px;letter-spacing:.4em;margin-left:.4em}
   #s-letter .brand::after{margin-top:14px}
-  #s-letter .row{grid-template-columns:4.8em 1fr;gap:12px;padding:15px 0}
-  #s-letter .row dt{font-size:9px;letter-spacing:.15em;padding-top:5px}
-  #s-letter .row dd{font-size:21px;line-height:1.24}
-  #s-letter .row dd em{font-size:18px;line-height:1.25;margin-top:4px}
+  #s-letter .row{grid-template-columns:5em 1fr;gap:12px;padding:15px 0}
+  #s-letter .row dt{font-size:10px;letter-spacing:.14em;padding-top:4px}
+  #s-letter .row dd{font-size:18px;line-height:1.3}
+  #s-letter .row dd em{font-size:15px;line-height:1.28;margin-top:4px}
   #s-letter .row dd em.same-line{display:inline;margin-left:.35em;margin-top:0;white-space:nowrap}
   #s-letter .note{font-size:18px;line-height:1.42;margin:18px auto 0}
   #toRsvp{min-height:58px;margin-top:18px}
@@ -309,14 +316,15 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <!-- ══ 2. FILM ══ -->
 <section class="screen" id="s-film">
 <div id="film-stage">
-<video id="film-video" muted="" playsinline=""></video>
+<video id="film-video" muted="" playsinline="" preload="auto" src="/assets/whispers-intro.mov"></video>
+<p id="film-loading">The door is opening...</p>
 <div class="shot" data-i="0"><p class="n">I</p><p class="t">A match finds a wick.</p><div class="flame"></div></div>
 <div class="shot" data-i="1"><p class="n">II</p><p class="t">Secateurs close on a rose stem.</p></div>
 <div class="shot" data-i="2"><p class="n">III</p><p class="t">Wax pours. The seal goes in.</p></div>
 <div class="shot" data-i="3"><p class="n">IV</p><p class="t">A coupe fills, from below.</p></div>
 <div class="shot" data-i="4"><p class="n">V</p><p class="t">A hand draws the curtain closed.</p></div>
 <div id="film-end">
-<img alt="" class="mark" src="/assets/whispers-mark.png"/>
+<img alt="" class="brand-lockup" src="/assets/whispers-lockup-dark.png"/>
 <p class="d">10 . 10  ·  22:00</p>
 </div>
 </div>
@@ -327,7 +335,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <!-- ══ 3. LETTER ══ -->
 <section class="screen" id="s-letter">
 <div class="inner">
-<div class="brand st"><img alt="Whispers" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>
+<div class="brand st"><img alt="Whispers" class="brand-lockup" src="/assets/whispers-lockup-dark.png"/></div>
 <dl class="details st">
 <div class="row"><dt>When</dt><dd>Saturday 10 October<span class="time-line">Doors open at 22:00 <em class="same-line">until 03:00</em></span></dd></div>
 <div class="row"><dt>Where</dt><dd>A private address in central Sofia<em>Released on 09.10 at 18:00</em></dd></div>
@@ -345,7 +353,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <!-- ══ 3b. NAME (only when the link has no personal token) ══ -->
 <section class="screen" id="s-identify">
 <div class="inner">
-<div class="brand st"><img alt="Whispers" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>
+<div class="brand st"><img alt="Whispers" class="brand-lockup" src="/assets/whispers-lockup-dark.png"/></div>
 <h2 class="lede st" hidden id="identifyTitle"></h2>
 <p class="sub st" id="identifySub">Your name goes on the door.<br/>Your ticket is issued in this name and reaches you by email on 09.10 at 18:00.</p>
 <div class="field st"><label for="guestName">Full name</label><input autocomplete="name" enterkeyhint="go" id="guestName" maxlength="120" placeholder="First and last name" type="text"/></div>
@@ -361,7 +369,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <!-- ══ 4. RESPOND ══ -->
 <section class="screen" id="s-rsvp">
 <div class="inner">
-<img alt="" class="mark st" src="/assets/whispers-mark.png" style="margin-bottom:30px"/>
+<div class="brand compact st" style="margin-bottom:30px"><img alt="Whispers" class="brand-lockup" src="/assets/whispers-lockup-dark.png"/></div>
 <h2 class="lede st">Will you be there?</h2>
 <p class="date st">Saturday 10 October · Doors open at 22:00</p>
 <div class="rule st"></div>
@@ -376,7 +384,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <!-- ══ 5. PLUS ONE ══ -->
 <section class="screen" id="s-plus">
 <div class="inner">
-<div class="brand st"><img alt="Whispers" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>
+<div class="brand st"><img alt="Whispers" class="brand-lockup" src="/assets/whispers-lockup-dark.png"/></div>
 <h2 class="lede st">One person. Choose well.</h2>
 <p class="sub st">Their name goes on the door beside yours.</p>
 <label class="plus-toggle st" for="bringPlusOne">
@@ -406,7 +414,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <section class="screen" id="s-done">
 <div class="inner">
 <div class="pass st">
-<div class="brand"><img alt="" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>
+<div class="brand"><img alt="" class="brand-lockup" src="/assets/whispers-lockup-dark.png"/></div>
 <p class="nm" id="passname">—</p>
 <p class="rl" id="passrole">Invited guest</p>
 <div class="rule"></div>
@@ -425,7 +433,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <!-- ══ 7. DECLINED ══ -->
 <section class="screen" id="s-decline">
 <div class="inner">
-<div class="brand st"><img alt="Whispers" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>
+<div class="brand st"><img alt="Whispers" class="brand-lockup" src="/assets/whispers-lockup-dark.png"/></div>
 <h2 class="lede st">Understood.</h2>
 <p class="sub st">Your place on the list stays where it is.<br/>You'll hear from us before the next one.</p>
 <div class="rule st"></div>
@@ -441,6 +449,8 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   const $ = (s) => document.querySelector(s);
   const SUBMIT_URL = '/api/rsvp';
   const state = { guestName:null, guestEmail:null, guestPhone:null, guestId:null, attending:null, plusOne:null, wantsTableReservation:false, sealCode:null, confirmationUrl:null, ticketUrl:null, plusTicketUrl:null, plusSealCode:null, venue:null, alreadyRegistered:false, updateMode:false };
+  const filmVideo=$('#film-video'),filmLoading=$('#film-loading'),reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(filmVideo){try{filmVideo.load()}catch(_){}}
 
   // ── Token personalisation ──────────────────────────
   const confirmationToken = new URLSearchParams(window.location.search).get('confirmation') || null;
@@ -516,17 +526,35 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   wrap.addEventListener('keydown',e=>{if(e.key!==' '&&e.key!=='Enter')return;e.preventDefault();if(!e.repeat)start(e)});wrap.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')stop()});wrap.addEventListener('blur',stop);
   $('#skipseal').addEventListener('click',openSeal);
 
-  // Film placeholder
-  let timers=[]; function clearTimers(){timers.forEach(clearTimeout);timers=[]}
-  function playFilm(){
-    const v=$('#film-video');
-    if(v && v.getAttribute('src')){v.style.display='block';v.play().catch(()=>show('#s-letter'));v.onended=()=>show('#s-letter');return;}
-    const shots=document.querySelectorAll('.shot'),HOLDMS=2300;clearTimers();
-    shots.forEach((s,i)=>{timers.push(setTimeout(()=>s.classList.add('on'),i*HOLDMS+120));timers.push(setTimeout(()=>s.classList.remove('on'),i*HOLDMS+HOLDMS-350));});
-    timers.push(setTimeout(()=>$('#film-end').classList.add('on'),shots.length*HOLDMS+100));
-    timers.push(setTimeout(()=>show('#s-letter'),shots.length*HOLDMS+2600));
+  // Film video gate + scripted fallback
+  let timers=[],filmWaitTimer=null,filmFailTimer=null,filmStarted=false;
+  function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+  function stopFilmPlayback(){
+    clearTimers();clearTimeout(filmWaitTimer);clearTimeout(filmFailTimer);filmWaitTimer=null;filmFailTimer=null;filmStarted=false;
+    if(filmLoading)filmLoading.classList.remove('on');
+    if(filmVideo){filmVideo.pause();filmVideo.classList.remove('on');filmVideo.onended=null;filmVideo.onerror=null;filmVideo.oncanplay=null;filmVideo.oncanplaythrough=null;}
   }
-  $('#skipfilm').addEventListener('click',()=>{clearTimers();show('#s-letter')});
+  function playScriptedFilm(){
+    const shots=document.querySelectorAll('.shot'),HOLDMS=reducedMotion?420:2300;clearTimers();
+    shots.forEach((s,i)=>{timers.push(setTimeout(()=>s.classList.add('on'),i*HOLDMS+120));timers.push(setTimeout(()=>s.classList.remove('on'),i*HOLDMS+Math.max(180,HOLDMS-350)));});
+    timers.push(setTimeout(()=>$('#film-end').classList.add('on'),shots.length*HOLDMS+100));
+    timers.push(setTimeout(()=>show('#s-letter'),shots.length*HOLDMS+(reducedMotion?900:2600)));
+  }
+  function playFilm(){
+    stopFilmPlayback();document.querySelectorAll('.shot').forEach(s=>s.classList.remove('on'));$('#film-end').classList.remove('on');
+    if(reducedMotion||!filmVideo||!filmVideo.getAttribute('src')){playScriptedFilm();return;}
+    const startVideo=()=>{if(filmStarted)return;filmStarted=true;clearTimeout(filmWaitTimer);clearTimeout(filmFailTimer);if(filmLoading)filmLoading.classList.remove('on');filmVideo.classList.add('on');filmVideo.currentTime=0;filmVideo.play().catch(()=>{stopFilmPlayback();playScriptedFilm();});};
+    filmVideo.onended=()=>show('#s-letter');
+    filmVideo.onerror=()=>{stopFilmPlayback();playScriptedFilm();};
+    filmVideo.oncanplay=startVideo;
+    filmVideo.oncanplaythrough=startVideo;
+    if(filmVideo.readyState>=2){startVideo();return;}
+    if(filmLoading)filmLoading.classList.add('on');
+    try{filmVideo.load()}catch(_){}
+    filmWaitTimer=setTimeout(()=>{if(filmLoading)filmLoading.classList.add('on')},120);
+    filmFailTimer=setTimeout(()=>{if(!filmStarted){stopFilmPlayback();playScriptedFilm();}},9000);
+  }
+  $('#skipfilm').addEventListener('click',()=>{stopFilmPlayback();show('#s-letter')});
 
   // RESPOND: personal links already know the name; the shared link asks for it
   $('#toRsvp').addEventListener('click',()=>{if(state.updateMode){show('#s-plus');return;}if(state.alreadyRegistered&&state.confirmationUrl){window.location.assign(state.confirmationUrl);return;}show(state.guestEmail&&state.guestPhone?'#s-rsvp':'#s-identify')});
@@ -655,7 +683,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
     // Plus-one card: their own ticket (own token, seal code and QR)
     const s2=document.createElement('div');s2.className='ticket-slide';s2.id='plusOneSlide';
     s2.innerHTML='<div class="pass">'
-      +'<div class="brand"><img alt="" class="mark" src="/assets/whispers-mark.png"/><p class="wordmark">WHISPERS</p></div>'
+      +'<div class="brand"><img alt="" class="brand-lockup" src="/assets/whispers-lockup-dark.png"/></div>'
       +'<p class="nm">'+escapeHtml(state.plusOne.name)+'</p>'
       +'<p class="rl">Guest of '+escapeHtml(state.guestName)+'</p>'
       +'<div class="rule"></div>'

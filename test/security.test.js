@@ -31,8 +31,8 @@ test("scripts load only from the site and jsDelivr (QR libraries), never eval", 
 
 test("fonts, API calls and framing are locked down", () => {
   const d = directives(CONTENT_SECURITY_POLICY);
-  assert.ok(d["style-src"].includes("https://fonts.googleapis.com"));
-  assert.deepEqual(d["font-src"], ["https://fonts.gstatic.com"]);
+  assert.deepEqual(d["style-src"], ["'self'", "'unsafe-inline'"]);
+  assert.deepEqual(d["font-src"], ["'self'"]);
   assert.deepEqual(d["connect-src"], ["'self'"]);
   assert.deepEqual(d["frame-ancestors"], ["'none'"]);
   assert.deepEqual(d["object-src"], ["'none'"]);

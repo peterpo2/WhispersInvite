@@ -212,13 +212,13 @@ test("letter respond CTA stays in flow without covering the closing copy", () =>
   assert.match(html, /#toRsvp::before\{[\s\S]*animation:respondSweep 4\.8s ease-in-out infinite/);
   assert.match(html, /#toRsvp::after\{[\s\S]*animation:respondHalo 3\.6s ease-in-out infinite/);
   assert.match(html, /#s-letter\.on #toRsvp\.st\{animation:respondGlow 3\.6s ease-in-out infinite;transform:none\}/);
-  assert.match(html, /#s-letter \.row dd\{font-size:21px;line-height:1\.24\}/);
+  assert.match(html, /#s-letter \.row dd\{font-size:18px;line-height:1\.3\}/);
 });
 
 test("letter event time keeps the date and door time on separate stable lines", () => {
   assert.match(html, /<dd>Saturday 10 October<span class="time-line">Doors open at 22:00 <em class="same-line">until 03:00<\/em><\/span><\/dd>/);
   assert.match(html, /\.row dd \.time-line\{display:block;white-space:nowrap\}/);
-  assert.match(html, /#s-letter \.row dt\{font-size:9px;letter-spacing:\.15em;padding-top:5px\}/);
+  assert.match(html, /#s-letter \.row dt\{font-size:10px;letter-spacing:\.14em;padding-top:4px\}/);
 });
 
 test("seal intro keeps heavy glow effects off the logo image", () => {

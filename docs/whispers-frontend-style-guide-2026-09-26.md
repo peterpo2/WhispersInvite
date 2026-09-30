@@ -61,10 +61,11 @@ Rules:
 
 ## 4. Typography
 
-Current font pairing:
+Current font system:
 
-- Serif: `Cormorant Garamond`, weight 300/400.
-- Sans: `Jost`, weight 300/400.
+- Primary: `Aviano Contrast` from `/assets/aviano-contrast.ttf`.
+- Use Aviano everywhere in the public UI, staff UI, ticket UI and generated ticket cards.
+- Keep system serif/sans fallbacks only for failure cases and email clients.
 
 Usage:
 
@@ -127,7 +128,7 @@ Buttons:
 Forms:
 
 - Inputs are dark with thin gold border.
-- Labels are uppercase Jost.
+- Labels are uppercase Aviano.
 - Placeholders are muted/italic.
 - Error text is visible crimson/pink, not dark red on dark background.
 - Loading/submitting text goes in neutral status text, not in error text.

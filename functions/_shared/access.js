@@ -20,7 +20,7 @@ const PUBLIC_PATHS = new Set([
 const TICKET_PATH_RE = /^\/ticket\/[^/]+$/;
 const HI_PATH_RE = /^\/hi\/[^/]+$/;
 const INVITE_PATH_RE = /^\/invite\/[^/]+$/;
-const ASSET_PATH_RE = /^\/assets\/[a-z0-9-]+\.(png|js)$/;
+const ASSET_PATH_RE = /^\/assets\/[a-z0-9-]+\.(png|js|ttf|mov|svg)$/;
 const PUBLIC_HOSTS = new Set(["whisperssociety.com", "www.whisperssociety.com"]);
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 

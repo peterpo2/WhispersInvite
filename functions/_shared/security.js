@@ -1,12 +1,12 @@
 // Sent on every response by functions/_middleware.js.
 // The pages use inline <style>/<script> (no build step), so 'unsafe-inline' stays; what the
-// policy blocks is loading code or sending data anywhere except this site, jsDelivr (the QR
-// libraries) and Google Fonts.
+// policy blocks is loading code or sending data anywhere except this site and jsDelivr (the QR
+// libraries). Fonts and media are served locally from /assets.
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' data: blob:",
   "media-src 'self' blob:",
   "connect-src 'self'",

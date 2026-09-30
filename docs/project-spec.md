@@ -214,8 +214,8 @@ unlisted API paths.
 - The staff route is private by obscure URL only for now. Staff username/password + email code
   authentication is planned but intentionally not enabled until domain/email are ready.
 - User data rendered into HTML is escaped.
-- The CSP allows scripts only from this site and jsDelivr, fonts from Google Fonts, API calls to
-  self, no frames and no plugins.
+- The CSP allows scripts only from this site and jsDelivr, fonts/media from local assets, API
+  calls to self, no frames and no plugins.
 - Plus-one name and email are third-party personal data; collect only what is needed for this
   event and delete/export according to the client's retention decision.
 

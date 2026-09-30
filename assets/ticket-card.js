@@ -3,8 +3,8 @@
 // iOS only opens the share sheet from a tap, so call prepare() first and save() on the tap.
 (function () {
   const W = 1080, H = 1920;
-  const SERIF = "'Cormorant Garamond', Georgia, serif";
-  const SANS = "'Jost', 'Helvetica Neue', Arial, sans-serif";
+  const SERIF = "'AvianoContrast', Georgia, serif";
+  const SANS = "'AvianoContrast', 'Helvetica Neue', Arial, sans-serif";
   const GOLD = "#D9AE78", GOLD_HI = "#EBCB95", BONE = "#F4EDE2", MUTE = "#BDB2A5";
 
   function loadImage(src) {
@@ -71,9 +71,8 @@
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     if (art.rose) { ctx.globalAlpha = .07; ctx.drawImage(art.rose, -160, 520, 1400, 1400); ctx.globalAlpha = 1; }
 
-    if (art.mark) ctx.drawImage(art.mark, W / 2 - 85, 120, 170, 170);
-    ctx.fillStyle = GOLD; ctx.font = `300 50px ${SERIF}`;
-    spaced(ctx, "WHISPERS", W / 2, 372, 22);
+    if (art.lockup) ctx.drawImage(art.lockup, W / 2 - 185, 108, 370, 170);
+    else if (art.mark) ctx.drawImage(art.mark, W / 2 - 85, 120, 170, 170);
     ctx.fillStyle = "rgba(217,174,120,.7)"; ctx.fillRect(W / 2 - 50, 408, 100, 2);
 
     ctx.fillStyle = BONE; fit(ctx, t.name, `300 {s}px ${SERIF}`, 104, W - 160);
@@ -129,9 +128,9 @@
   async function prepare(tickets) {
     if (!window.QRCode) throw new Error("QR library missing");
     try { await Promise.all([document.fonts.load(`300 104px ${SERIF}`), document.fonts.load(`italic 400 46px ${SERIF}`), document.fonts.load(`300 52px ${SANS}`)]); } catch (_) {}
-    const [mark, rose] = await Promise.all([loadImage("/assets/whispers-mark.png"), loadImage("/assets/whispers-rose.png")]);
+    const [lockup, mark, rose] = await Promise.all([loadImage("/assets/whispers-lockup-dark.png"), loadImage("/assets/whispers-mark.png"), loadImage("/assets/whispers-rose.png")]);
     const files = [], used = new Set();
-    for (const t of tickets) files.push(await toFile(await draw(t, { mark, rose }), fileName(t.name, used)));
+    for (const t of tickets) files.push(await toFile(await draw(t, { lockup, mark, rose }), fileName(t.name, used)));
     return files;
   }
 
