@@ -136,7 +136,7 @@ export function buildRsvpConfirmationEmails({ guestName, guestEmail, plusOneName
 export function buildTicketEmail({ to, name, ticketLink, guestOf, bringing, venue, config }) {
   const safeName = String(name || "").trim() || "Guest";
   const link = String(ticketLink || "").trim();
-  const subject = "Your WHISPERS Ticket";
+  const subject = `Your WHISPERS Ticket - ${safeName}`;
   const contact = config.replyTo;
   const phone = config.contactPhone;
   const title = "Your private ticket is ready.";
@@ -210,7 +210,7 @@ ${emailHead()}
 }
 
 function rsvpEmail({ to, name, title, lines, actionLink, actionLabel, contact, phone, config }) {
-  const subject = "WHISPERS RSVP confirmed";
+  const subject = `WHISPERS RSVP confirmed - ${String(name || "Guest").trim() || "Guest"}`;
   const text = [
     "WHISPERS",
     "",

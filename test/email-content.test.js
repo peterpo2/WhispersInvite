@@ -79,7 +79,7 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
   assert.equal(emails.length, 2);
   assert.equal(emails[0].to, "peter@example.com");
   assert.equal(emails[1].to, "michaella@example.com");
-  assert.equal(emails[0].subject, "WHISPERS RSVP confirmed");
+  assert.equal(emails[0].subject, "WHISPERS RSVP confirmed - Peter Popov");
   assert.match(emails[0].text, /Your registration is confirmed/);
   assert.match(emails[0].text, /https:\/\/whisperssociety\.com\/confirmation\/primaryconfirm/);
   assert.match(emails[0].text, /Michelle G/);
@@ -89,6 +89,7 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
   assert.match(emails[0].text, /Open confirmation:\nhttps:\/\/whisperssociety\.com\/confirmation\/primaryconfirm/);
   assert.doesNotMatch(emails[0].text, /You can confirm or update this before ticket release/);
   assert.match(emails[1].text, /You are registered as Peter Popov's guest/);
+  assert.equal(emails[1].subject, "WHISPERS RSVP confirmed - Michelle G");
   assert.match(emails[1].text, /https:\/\/whisperssociety\.com\/confirmation\/plusconfirm/);
   assert.match(emails[1].text, /Your confirmation is saved here:/);
   assert.match(emails[0].html, /href="https:\/\/whisperssociety\.com\/confirmation\/primaryconfirm"/);
@@ -137,6 +138,37 @@ test("RSVP confirmation email offers updates only when no guest is already added
   assert.doesNotMatch(emails[0].text, /Your confirmation is saved here:/);
 });
 
+test("RSVP confirmation subjects include the guest name to avoid Gmail quote threading", () => {
+  const config = emailConfigFromEnv({
+    SMTP_HOST: "mail.whisperssociety.com",
+    SMTP_PORT: "465",
+    SMTP_USER: "noreply@whisperssociety.com",
+    SMTP_PASS: "secret",
+    EMAIL_FROM: "WHISPERS <noreply@whisperssociety.com>",
+    EMAIL_REPLY_TO: "guestlist@whisperssociety.com",
+    EMAIL_CONTACT_PHONE: "+359 888 012 380",
+  });
+
+  const [peter] = buildRsvpConfirmationEmails({
+    guestName: "Peter Popov",
+    guestEmail: "peter@example.com",
+    confirmationLink: "https://whisperssociety.com/confirmation/peter",
+    wantsTableReservation: false,
+    config,
+  });
+  const [berta] = buildRsvpConfirmationEmails({
+    guestName: "Berta Gacheva",
+    guestEmail: "berta@example.com",
+    confirmationLink: "https://whisperssociety.com/confirmation/berta",
+    wantsTableReservation: false,
+    config,
+  });
+
+  assert.equal(peter.subject, "WHISPERS RSVP confirmed - Peter Popov");
+  assert.equal(berta.subject, "WHISPERS RSVP confirmed - Berta Gacheva");
+  assert.notEqual(peter.subject, berta.subject);
+});
+
 test("ticket release email uses the ticket link and polished WHISPERS copy", () => {
   const config = emailConfigFromEnv({
     SMTP_HOST: "mail.whisperssociety.com",
@@ -155,7 +187,7 @@ test("ticket release email uses the ticket link and polished WHISPERS copy", () 
     config,
   });
 
-  assert.equal(email.subject, "Your WHISPERS Ticket");
+  assert.equal(email.subject, "Your WHISPERS Ticket - Peter Popov");
   assert.match(email.text, /Your private ticket is ready/);
   assert.match(email.text, /Coming on your own\./);
   assert.match(email.text, /Saturday 10 October\nDoors open at 22:00/);
