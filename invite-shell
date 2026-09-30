@@ -113,6 +113,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6),inset 0 -1px 0 rgba(90,60,30,.35)}
 .btn.primary:hover{color:#140D06;background:linear-gradient(180deg,#F1D6A6 0%,#DAB47C 48%,#BE935E 100%)}
 .btn.caps{font:400 12px/1.2 var(--sans);letter-spacing:.28em;text-transform:uppercase;padding-left:12px;padding-right:12px}
+#backLetter,#backRsvp{min-height:52px;font-size:14px;letter-spacing:.24em;padding-left:20px;padding-right:20px}
 .btn.small{width:auto;min-height:44px;margin-left:auto;margin-right:auto;padding:8px 16px;font-size:12px;letter-spacing:.22em;color:var(--mute);border-color:rgba(217,174,120,.42);background:rgba(8,6,5,.22)}
 .btn[disabled]{opacity:.4;cursor:default;transform:none}
 .btn:focus-visible,.skip:focus-visible{outline:1px solid var(--gold);outline-offset:3px}

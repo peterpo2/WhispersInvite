@@ -258,6 +258,7 @@ test("letter respond CTA stays in flow without covering the closing copy", () =>
   assert.match(html, /#toRsvp\{[\s\S]*animation:respondGlow 3\.6s ease-in-out infinite/);
   assert.match(html, /#toRsvp\{[\s\S]*font-size:clamp\(18px,4\.8vw,22px\);font-weight:500;letter-spacing:\.32em/);
   assert.match(html, /#continueGuest,#confirm\{font-size:clamp\(18px,4\.8vw,22px\);font-weight:500;letter-spacing:\.32em/);
+  assert.match(html, /#backLetter,#backRsvp\{min-height:52px;font-size:14px;letter-spacing:\.24em;padding-left:20px;padding-right:20px\}/);
   assert.match(html, /#toRsvp::before\{[\s\S]*animation:respondSweep 4\.8s ease-in-out infinite/);
   assert.match(html, /#toRsvp::after\{[\s\S]*animation:respondHalo 3\.6s ease-in-out infinite/);
   assert.match(html, /#s-letter\.on #toRsvp\.st\{animation:respondGlow 3\.6s ease-in-out infinite;transform:none\}/);
