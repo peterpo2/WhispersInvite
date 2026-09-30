@@ -72,11 +72,16 @@ test("members and invite tables paginate at twenty rows per page", () => {
 });
 
 test("staff admin navigation and controls have compact phone layouts", () => {
+  assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*body\{font-size:14px;[\s\S]*calc\(118px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.top\{display:grid;grid-template-columns:minmax\(0,1fr\) auto/);
+  assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.staff-meta\{display:grid;grid-template-columns:auto auto/);
   assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.tabs\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.tab\{width:100%;min-height:52px;padding:0 8px;letter-spacing:\.2em;font-size:12px/);
+  assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.tab\{width:100%;min-height:46px;padding:0 8px;letter-spacing:\.18em;font-size:11px/);
+  assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*button,input\{min-height:48px/);
   assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.actions\{grid-template-columns:1fr 1fr/);
   assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.actions #start\{grid-column:1\/-1/);
   assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.manual\{grid-template-columns:1fr/);
+  assert.match(staffPage, /\.invite-state:empty\{min-height:0;margin:0 0 8px\}/);
 });
 
 test("members table edits request, confirmation and check-in through confirmed checkboxes", () => {
