@@ -57,6 +57,19 @@ test("public invite uses the new lockup as the primary brand treatment", () => {
   assert.doesNotMatch(indexHtml, /<img[^>]+class="brand-lockup"[^>]+src="\/assets\/whispers-lockup-dark\.png"/);
 });
 
+test("user-entered Cyrillic text avoids the decorative Aviano font", () => {
+  assert.match(indexHtml, /--text-serif:Georgia,Cambria,'Times New Roman',serif/);
+  assert.match(indexHtml, /\.field input\{[\s\S]*var\(--text-serif\)/);
+  assert.match(indexHtml, /\.pass \.nm\{font-family:var\(--text-serif\)/);
+  assert.match(ticketPage, /--text-serif:Georgia,Cambria,'Times New Roman',serif/);
+  assert.match(ticketPage, /h1\{font-family:var\(--text-serif\)/);
+  assert.match(confirmationPage, /--text-serif:Georgia,Cambria,'Times New Roman',serif/);
+  assert.match(confirmationPage, /h1\{font-family:var\(--text-serif\)/);
+  assert.match(ticketCard, /const TEXT_SERIF = "Georgia, 'Times New Roman', serif"/);
+  assert.match(ticketCard, /fit\(ctx, t\.name, `400 \{s\}px \$\{TEXT_SERIF\}`/);
+  assert.doesNotMatch(ticketCard, /fit\(ctx, t\.name, `300 \{s\}px \$\{SERIF\}`/);
+});
+
 test("public ticket and confirmation links use the transparent lockup without a black box", () => {
   for (const source of [ticketPage, confirmationPage, staffPage, ticketCard]) {
     assert.match(source, /\/assets\/whispers-lockup-transparent\.png/);

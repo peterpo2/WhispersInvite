@@ -36,7 +36,7 @@ export async function onRequestGet({ params, request }) {
 <link href="/assets/whispers-favicon.png" rel="apple-touch-icon"/>
 <style>
 @font-face{font-family:AvianoContrast;src:url("/assets/aviano-contrast.ttf") format("truetype");font-weight:300 700;font-style:normal;font-display:swap}
-:root{--bg:#070605;--gold:#D9AE78;--gold-hi:#EBCB95;--bone:#EDE6DA;--mute:#BDB2A5;--paper:#F1E9DC;--line:rgba(217,174,120,.26);--serif:'AvianoContrast',Cambria,Georgia,serif;--sans:'AvianoContrast','Helvetica Neue',Arial,sans-serif;color-scheme:dark}
+:root{--bg:#070605;--gold:#D9AE78;--gold-hi:#EBCB95;--bone:#EDE6DA;--mute:#BDB2A5;--paper:#F1E9DC;--line:rgba(217,174,120,.26);--serif:'AvianoContrast',Cambria,Georgia,serif;--sans:'AvianoContrast','Helvetica Neue',Arial,sans-serif;--text-serif:Georgia,Cambria,'Times New Roman',serif;color-scheme:dark}
 *{box-sizing:border-box}html{background:var(--bg)}
 body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:radial-gradient(60% 40% at 50% 36%,rgba(120,78,36,.24),transparent 72%),radial-gradient(120% 60% at 50% 112%,rgba(90,11,19,.42),transparent 64%),linear-gradient(180deg,#0A0807,#070605 55%,#060404);color:var(--bone);font-family:var(--serif);font-weight:300;padding:calc(24px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom))}
 body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:url("/assets/whispers-rose.png") 50% 42%/min(150vw,920px) auto no-repeat;opacity:.13;filter:blur(1px) saturate(1.08)}
@@ -46,8 +46,8 @@ body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;backg
 .ticket.loading{opacity:0}
 .brand-lockup{display:block;width:min(210px,62vw);height:auto;margin:0 auto;filter:drop-shadow(0 0 22px rgba(163,22,33,.3))}
 .brand-rule{display:block;width:48px;height:1px;margin:16px auto 0;background:rgba(217,174,120,.65)}
-h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px 0 6px;color:#F7F0E6;overflow-wrap:anywhere}
-.role{font-style:italic;color:#CDB894;margin:0;font-size:18px}
+h1{font-family:var(--text-serif);font-weight:400;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px 0 6px;color:#F7F0E6;overflow-wrap:anywhere}
+.role{font-family:var(--text-serif);font-style:italic;color:#CDB894;margin:0;font-size:18px}
 .rule{position:relative;width:84px;height:1px;margin:22px auto;background:linear-gradient(90deg,transparent,rgba(217,174,120,.85),transparent)}
 .rule:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;background:var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
 .code,.state{font-family:var(--sans);font-weight:300;text-transform:uppercase}
@@ -57,7 +57,7 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
 .qr.ready{background:var(--paper);border:0}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
-.meta{font-size:16px;line-height:1.42;color:#D9CEC0;margin:18px 0 0}.meta b{font-weight:400;color:#F6EFE4}
+.meta{font-size:16px;line-height:1.42;font-family:var(--text-serif);color:#D9CEC0;margin:18px 0 0}.meta b{font-weight:400;color:#F6EFE4}
 .status-line,.relationship .status-line,.small span{display:block}.relationship .status-line + .status-line,.small span + span{margin-top:16px}
 .ticket-date,.ticket-time{display:block;font-family:var(--sans);font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:#F4DFC0;text-shadow:0 0 22px rgba(217,174,120,.22)}.ticket-time{margin-top:3px}
 .venue-line{display:block;margin-top:10px;font-family:var(--sans);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-hi);text-shadow:0 0 28px rgba(235,203,149,.36)}

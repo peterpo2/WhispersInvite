@@ -246,7 +246,8 @@ function showView(name){
   if(name==='staff')loadStaffUsers();
 }
 function refreshCurrent(){if(currentView==='members')loadMembers();else if(currentView==='tables')loadTables();else if(currentView==='invite')loadInvites();else if(currentView==='staff')loadStaffUsers();else loadList();}
-function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
+function csvSafeValue(v){const s=String(v??'');return /^[=+\-@\t\r]/.test(s)?"'"+s:s;}
+function csvCell(v){return '"'+csvSafeValue(v).replace(/"/g,'""')+'"';}
 function pageRows(rows,page){const start=(page-1)*PAGE_SIZE;return rows.slice(start,start+PAGE_SIZE);}
 function renderPager(id,rows,page,onPage){
   const el=document.getElementById(id),pages=Math.max(1,Math.ceil(rows.length/PAGE_SIZE)),safe=Math.min(Math.max(1,page),pages),start=rows.length?((safe-1)*PAGE_SIZE)+1:0,end=Math.min(rows.length,safe*PAGE_SIZE);
@@ -256,7 +257,7 @@ function renderPager(id,rows,page,onPage){
 }
 function exportCsv(){
   const rows=[['Name','Type','Guest of','Email','Phone','Reservation requested','Reservation confirmed','Table','Checked in','Scanned at','Registered at']].concat(filteredMembers().map(m=>[m.name,m.type,m.guestOf,m.email,m.phone,m.wantsTableReservation?'yes':'no',m.reservationConfirmed?'yes':'no',m.table,m.checkedIn?'yes':'no',m.checkedInAt,m.submittedAt]));
-  const blob=new Blob([rows.map(r=>r.map(csvCell).join(',')).join('\\n')],{type:'text/csv;charset=utf-8'});
+  const blob=new Blob(["\uFEFF"+rows.map(r=>r.map(csvCell).join(',')).join('\\r\\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='whispers-members.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 function filteredMembers(){const q=document.getElementById('memberSearch').value.trim().toLowerCase();let rows=members.filter(m=>!q||[m.name,m.type,m.guestOf,m.email,m.phone,m.table].some(v=>String(v||'').toLowerCase().includes(q)));rows.sort((a,b)=>String(a[sortKey]??'').localeCompare(String(b[sortKey]??''))*sortDir);return rows;}

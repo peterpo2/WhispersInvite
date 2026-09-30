@@ -19,6 +19,8 @@
   --line:rgba(217,174,120,.26);
   --serif:'AvianoContrast',Cambria,Georgia,serif;
   --sans:'AvianoContrast','Helvetica Neue',Arial,sans-serif;
+  --text-serif:Georgia,Cambria,'Times New Roman',serif;
+  --text-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
   --ease:cubic-bezier(.22,.61,.36,1);
   --side:max(18px,env(safe-area-inset-left),env(safe-area-inset-right));
   --partner-clearance:104px;
@@ -153,7 +155,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 #s-seal .rule{margin:22px auto}
 .issued{margin:0;color:var(--mute)}
 .generic-issued{font-size:13px;letter-spacing:.28em;text-transform:uppercase;line-height:1.9;color:#CDB693}
-.personalized-issued{font-family:var(--serif);font-style:italic;font-size:20px;line-height:1.4;color:#D2C4B2}
+.personalized-issued{font-family:var(--text-serif);font-style:italic;font-size:20px;line-height:1.4;color:#D2C4B2}
 .personalized-issued b{display:block;font-style:normal;font-weight:300;font-size:clamp(34px,10vw,44px);line-height:1.1;color:#F6EFE4;letter-spacing:.02em;margin-top:6px;overflow-wrap:anywhere}
 .skip{position:fixed;z-index:70;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--skip-action-clearance) + env(safe-area-inset-bottom));
   min-width:34px;min-height:34px;padding:0 8px;background:rgba(7,6,5,.28);border:1px solid rgba(217,174,120,.22);border-radius:999px;cursor:pointer;
@@ -212,7 +214,7 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 .field{margin-top:20px;text-align:left}
 .field label{display:block;font-size:12px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:9px}
 .field input{width:100%;height:58px;padding:0 16px;background:rgba(8,6,5,.45);border:1px solid rgba(217,174,120,.36);border-radius:3px;
-  color:#F6EFE4;font:400 18px var(--serif);outline:none;transition:border-color .3s ease,box-shadow .3s ease;-webkit-appearance:none;appearance:none}
+  color:#F6EFE4;font:400 18px var(--text-serif);outline:none;transition:border-color .3s ease,box-shadow .3s ease;-webkit-appearance:none;appearance:none}
 .field input::placeholder{color:#817669;font-style:italic}
 .field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,174,120,.1)}
 .plus-toggle{position:relative;display:flex;align-items:center;gap:16px;margin:26px 0 4px;padding:18px 2px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:left;cursor:pointer}
@@ -221,7 +223,7 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 .plus-toggle input:checked + .toggle-box{background:var(--gold)}
 .plus-toggle input:checked + .toggle-box::after{content:"";position:absolute;left:8px;top:3px;width:7px;height:13px;border:solid #140D06;border-width:0 1.8px 1.8px 0;transform:rotate(45deg)}
 .plus-toggle input:focus-visible + .toggle-box{outline:1px solid var(--gold);outline-offset:3px}
-.plus-toggle b{display:block;font:400 18px var(--serif);color:#F1EAE0}
+.plus-toggle b{display:block;font:400 18px var(--text-serif);color:#F1EAE0}
 .plus-toggle small{display:block;color:var(--mute);margin-top:4px;font-size:14px;line-height:1.45}
 .plus-fields{animation:fadeIn .45s ease both}
 .privacy{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.55;color:var(--mute);text-align:left;margin:16px 0 0}
@@ -230,15 +232,15 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 /* ── 6. ticket: printed on the screen, no frame ── */
 .pass{position:relative;padding:4px 0 0}
 .pass .brand{margin-bottom:18px}.pass .brand-lockup{width:min(172px,54vw)}.pass .mark{width:56px;height:56px}.pass .wordmark{font-size:21px}
-.pass .nm{font-family:var(--serif);font-weight:300;font-size:clamp(28px,8vw,40px);line-height:1.08;color:#F7F0E6;margin:4px 0 6px;overflow-wrap:anywhere}
-.pass .rl{font-family:var(--serif);font-style:italic;font-size:16px;color:#CDB894;margin:0}
+.pass .nm{font-family:var(--text-serif);font-weight:400;font-size:clamp(28px,8vw,40px);line-height:1.08;color:#F7F0E6;margin:4px 0 6px;overflow-wrap:anywhere}
+.pass .rl{font-family:var(--text-serif);font-style:italic;font-size:16px;color:#CDB894;margin:0}
 .pass .rule{margin:20px auto}
 .code{font-size:17px;letter-spacing:.2em;color:var(--gold-hi);margin:0 0 6px;text-shadow:0 0 24px rgba(217,174,120,.4)}
 .codelabel{font-size:10px;letter-spacing:.26em;color:var(--mute);text-transform:uppercase;margin:0}
 .qr{width:min(58vw,210px);height:min(58vw,210px);margin:20px auto 22px;background:#F1E9DC;padding:9px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
-.qr.release-note{width:auto;height:auto;min-height:132px;padding:22px;font:300 18px/1.5 var(--serif);color:#E8DCCC;text-transform:none;letter-spacing:0;background:rgba(8,6,5,.42);border:1px solid rgba(217,174,120,.34);box-shadow:0 14px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(217,174,120,.08)}
-.passfoot{font-family:var(--serif);font-size:15px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}
+.qr.release-note{width:auto;height:auto;min-height:132px;padding:22px;font:300 18px/1.5 var(--text-serif);color:#E8DCCC;text-transform:none;letter-spacing:0;background:rgba(8,6,5,.42);border:1px solid rgba(217,174,120,.34);box-shadow:0 14px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(217,174,120,.08)}
+.passfoot{font-family:var(--text-serif);font-size:15px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}
 .passfoot b{font-weight:400;color:#F6EFE4}
 .passfoot .date-line,.passfoot .doors-line{display:block}.passfoot .doors-line{margin-top:3px}
 .venue-map{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
@@ -506,13 +508,9 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
         if (!data || !data.found || state.guestName) return;
         state.guestName = data.name;
         state.guestId   = data.id || urlToken;
-        state.guestEmail = data.email || null;
-        state.guestPhone = data.phone || null;
         state.alreadyRegistered = data.alreadyRegistered === true;
         state.confirmationUrl = data.confirmationUrl || null;
         if (nameInput) nameInput.value = data.name;
-        if (emailInput && data.email) emailInput.value = data.email;
-        if (phoneInput && data.phone) phoneInput.value = data.phone;
         if ($('#identifyTitle')) { $('#identifyTitle').textContent = 'Confirm your details.'; $('#identifyTitle').hidden = false; }
         if ($('#identifySub')) $('#identifySub').textContent = 'Your name is already on the list. Please leave your email and phone so we can send you your ticket.';
         // Show name on seal screen

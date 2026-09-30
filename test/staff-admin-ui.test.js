@@ -123,6 +123,14 @@ test("reservation-state endpoint can update request and confirmed separately", (
   assert.match(reservationStateApi, /reservation_confirmed/);
 });
 
+test("members CSV export is Excel-safe for UTF-8 and formula-like values", () => {
+  assert.match(staffPage, /function csvSafeValue\(v\)/);
+  assert.match(staffPage, /new Blob\(\["\\uFEFF"\+rows\.map/);
+  assert.match(staffPage, /'\\\\r\\\\n'/);
+  assert.match(staffPage, /\^\[=\+\\-@\\t\\r\]/);
+  assert.match(staffPage, /type:'text\/csv;charset=utf-8'/);
+});
+
 test("staff page renders login and owner staff management controls", () => {
   assert.match(staffPage, /renderStaffLoginPage/);
   assert.match(staffPage, /requireStaff/);

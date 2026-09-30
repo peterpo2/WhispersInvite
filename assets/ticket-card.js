@@ -3,8 +3,9 @@
 // iOS only opens the share sheet from a tap, so call prepare() first and save() on the tap.
 (function () {
   const W = 1080, H = 1920;
-  const SERIF = "'AvianoContrast', Georgia, serif";
-  const SANS = "'AvianoContrast', 'Helvetica Neue', Arial, sans-serif";
+  const DISPLAY_SERIF = "'AvianoContrast', Georgia, serif";
+  const DISPLAY_SANS = "'AvianoContrast', 'Helvetica Neue', Arial, sans-serif";
+  const TEXT_SERIF = "Georgia, 'Times New Roman', serif";
   const GOLD = "#D9AE78", GOLD_HI = "#EBCB95", BONE = "#F4EDE2", MUTE = "#BDB2A5";
 
   function loadImage(src) {
@@ -75,13 +76,13 @@
     else if (art.mark) ctx.drawImage(art.mark, W / 2 - 85, 120, 170, 170);
     ctx.fillStyle = "rgba(217,174,120,.7)"; ctx.fillRect(W / 2 - 50, 408, 100, 2);
 
-    ctx.fillStyle = BONE; fit(ctx, t.name, `300 {s}px ${SERIF}`, 104, W - 160);
+    ctx.fillStyle = BONE; fit(ctx, t.name, `400 {s}px ${TEXT_SERIF}`, 104, W - 160);
     ctx.fillText(t.name, W / 2, 540);
-    ctx.fillStyle = "#CDB894"; ctx.font = `italic 400 46px ${SERIF}`;
+    ctx.fillStyle = "#CDB894"; ctx.font = `italic 400 46px ${TEXT_SERIF}`;
     ctx.fillText(t.role, W / 2, 610);
     rule(ctx, 668);
 
-    ctx.font = `400 40px ${SERIF}`;
+    ctx.font = `400 40px ${TEXT_SERIF}`;
     let y = 750;
     for (const line of (t.lines || []).slice(0, 2)) {
       for (const part of wrap(ctx, line, W - 200)) {
@@ -93,11 +94,11 @@
     ctx.fillStyle = "#F1E9DC"; ctx.fillRect(W / 2 - 300, 880, 600, 600);
     ctx.drawImage(qr, W / 2 - 280, 900, 560, 560);
 
-    ctx.fillStyle = GOLD_HI; ctx.font = `300 34px ${SANS}`;
+    ctx.fillStyle = GOLD_HI; ctx.font = `300 34px ${DISPLAY_SANS}`;
     spaced(ctx, "READY FOR THE DOOR", W / 2, 1545, 8);
 
     ctx.fillStyle = "rgba(217,174,120,.3)"; ctx.fillRect(110, 1592, W - 220, 2);
-    ctx.font = `400 40px ${SERIF}`;
+    ctx.font = `400 40px ${TEXT_SERIF}`;
     y = 1662;
     for (const line of (t.lines || []).slice(2)) {
       for (const part of wrap(ctx, line, W - 220)) {
@@ -105,12 +106,12 @@
       }
     }
     if (t.note) {
-      ctx.fillStyle = MUTE; ctx.font = `italic 400 38px ${SERIF}`;
+      ctx.fillStyle = MUTE; ctx.font = `italic 400 38px ${TEXT_SERIF}`;
       for (const part of wrap(ctx, t.note, W - 260)) {
         ctx.fillText(part, W / 2, Math.min(y + 28, H - 160)); y += 48;
       }
     }
-    ctx.fillStyle = GOLD_HI; ctx.font = `300 42px ${SANS}`;
+    ctx.fillStyle = GOLD_HI; ctx.font = `300 42px ${DISPLAY_SANS}`;
     spaced(ctx, t.sealCode || "WSP" + String.fromCharCode(183) + "10", W / 2, H - 86, 10);
     return c;
   }
@@ -139,7 +140,7 @@
 
   async function prepare(tickets) {
     if (!window.QRCode) throw new Error("QR library missing");
-    try { await Promise.all([document.fonts.load(`300 104px ${SERIF}`), document.fonts.load(`italic 400 46px ${SERIF}`), document.fonts.load(`300 52px ${SANS}`)]); } catch (_) {}
+    try { await Promise.all([document.fonts.load(`300 52px ${DISPLAY_SANS}`), document.fonts.load(`400 104px ${TEXT_SERIF}`), document.fonts.load(`italic 400 46px ${TEXT_SERIF}`)]); } catch (_) {}
     const [lockup, mark, rose] = await Promise.all([loadImage("/assets/whispers-lockup-transparent.png"), loadImage("/assets/whispers-mark.png"), loadImage("/assets/whispers-rose.png")]);
     const files = [], used = new Set();
     for (const t of tickets) files.push(await toFile(await draw(t, { lockup, mark, rose }), fileName(t.name, used)));

@@ -2,9 +2,8 @@ const DEFAULT_FROM = "WHISPERS <noreply@whisperssociety.com>";
 const DEFAULT_REPLY_TO = "guestlist@whisperssociety.com";
 const DEFAULT_PHONE = "+359 888 012 380";
 const LOGO_URL = "https://whisperssociety.com/assets/whispers-lockup-transparent.png";
-const FONT_URL = "https://whisperssociety.com/assets/aviano-contrast.ttf";
-const EMAIL_SERIF = "'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif";
-const EMAIL_SANS = "'AvianoContrast','Trebuchet MS','Helvetica Neue',Arial,sans-serif";
+const EMAIL_SERIF = "Georgia,'Times New Roman',serif";
+const EMAIL_SANS = "'Trebuchet MS','Helvetica Neue',Arial,sans-serif";
 const EMAIL_HEADING = "#FFFFFF";
 const EMAIL_TEXT = "#FFF8EC";
 
@@ -277,7 +276,7 @@ function brandHeader() {
 }
 
 function emailHead() {
-  return `<head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><style>@font-face{font-family:'AvianoContrast';src:url('${FONT_URL}') format('truetype');font-weight:300;font-style:normal;font-display:swap;}</style></head>`;
+  return `<head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head>`;
 }
 
 function nameStyle() {
