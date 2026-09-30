@@ -3,8 +3,9 @@ const DEFAULT_REPLY_TO = "guestlist@whisperssociety.com";
 const DEFAULT_PHONE = "+359 888 012 380";
 const LOGO_URL = "https://whisperssociety.com/assets/whispers-lockup-transparent.png";
 const FONT_URL = "https://whisperssociety.com/assets/aviano-contrast.ttf";
-const EMAIL_SERIF = "'AvianoContrast','Times New Roman',Georgia,serif";
-const EMAIL_SANS = "'AvianoContrast','Helvetica Neue',Arial,sans-serif";
+const EMAIL_SERIF = "'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif";
+const EMAIL_SANS = "'AvianoContrast','Trebuchet MS','Helvetica Neue',Arial,sans-serif";
+const EMAIL_TEXT = "#FFE6BA";
 
 export function emailConfigFromEnv(env) {
   const smtpHost = String(env.SMTP_HOST || "").trim();
@@ -287,15 +288,19 @@ function titleStyle() {
 }
 
 function copyLine(line, fontSize) {
-  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;font-weight:300;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">${escapeHtml(line)}</span></font></td></tr>`;
+  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:300;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(line)}</span></font></td></tr>`;
 }
 
 function contactLine(contact, phone, fontSize) {
-  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;font-weight:300;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">For questions:</span></font><br><a href="mailto:${escapeHtml(contact)}" style="color:#F6C987!important;-webkit-text-fill-color:#F6C987;">${escapeHtml(contact)}</a><br><font color="#F6D4A2"><span style="color:#F6D4A2!important;-webkit-text-fill-color:#F6D4A2;">${escapeHtml(phone)}</span></font></td></tr>`;
+  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:300;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">For questions:</span></font><br><a href="mailto:${escapeHtml(contact)}" style="${textLinkStyle()}">${escapeHtml(contact)}</a><br><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(phone)}</span></font></td></tr>`;
 }
 
-function buttonStyle(letterSpacing, fontSize, padding) {
-  return `display:inline-block;border:1px solid #F6C987;color:#0B0908;background:#E2B578;text-decoration:none;font-family:${EMAIL_SANS};letter-spacing:${letterSpacing};text-transform:uppercase;font-size:${fontSize}px;font-weight:bold;padding:${padding};`;
+function textLinkStyle() {
+  return `font-family:${EMAIL_SERIF};font-size:16px;line-height:1.7;text-decoration:none;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:300;`;
+}
+
+function buttonStyle() {
+  return `display:inline-block;border:1px solid #F6C987;color:#0B0908!important;-webkit-text-fill-color:#0B0908;background:#E2B578!important;text-decoration:none;font-family:${EMAIL_SANS};letter-spacing:0.22em;text-transform:uppercase;font-size:13px;font-weight:bold;padding:17px 30px;`;
 }
 
 function emailShellStyle() {

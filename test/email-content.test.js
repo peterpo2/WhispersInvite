@@ -41,7 +41,7 @@ test("invite email uses noreply sender, guestlist reply-to and contact details",
   assert.doesNotMatch(email.html, /whispers-lockup-dark\.png/);
   assert.doesNotMatch(email.html, /whispers-rose\.png/);
   assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/aviano-contrast\.ttf/);
-  assert.match(email.html, /font-family:'AvianoContrast','Times New Roman',Georgia,serif/);
+  assert.match(email.html, /font-family:'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif/);
   assert.match(email.html, /radial-gradient/);
   assert.doesNotMatch(email.html, /text-shadow/);
   assert.doesNotMatch(email.html, /font-size:32px/);
@@ -102,7 +102,7 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
   assert.doesNotMatch(emails[0].html, /whispers-lockup-dark\.png/);
   assert.doesNotMatch(emails[0].html, /whispers-rose\.png/);
   assert.match(emails[0].html, /https:\/\/whisperssociety\.com\/assets\/aviano-contrast\.ttf/);
-  assert.match(emails[0].html, /font-family:'AvianoContrast','Times New Roman',Georgia,serif/);
+  assert.match(emails[0].html, /font-family:'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif/);
   assert.match(emails[0].html, /radial-gradient/);
   assert.doesNotMatch(emails[0].html, /text-shadow/);
   assert.doesNotMatch(emails[0].html, />WHISPERS<\/td>/);
@@ -169,7 +169,7 @@ test("ticket release email uses the ticket link and polished WHISPERS copy", () 
   assert.doesNotMatch(email.html, /whispers-lockup-dark\.png/);
   assert.doesNotMatch(email.html, /whispers-rose\.png/);
   assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/aviano-contrast\.ttf/);
-  assert.match(email.html, /font-family:'AvianoContrast','Times New Roman',Georgia,serif/);
+  assert.match(email.html, /font-family:'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif/);
   assert.match(email.html, /radial-gradient/);
   assert.doesNotMatch(email.html, /text-shadow/);
   assert.doesNotMatch(email.html, /font-size:32px/);
@@ -257,9 +257,58 @@ test("email HTML uses the event font with roomier sentence spacing", () => {
 
   for (const html of [invite.html, rsvp.html, ticket.html]) {
     assert.match(html, /@font-face\{font-family:'AvianoContrast';src:url\('https:\/\/whisperssociety\.com\/assets\/aviano-contrast\.ttf'\)/);
-    assert.match(html, /font-family:'AvianoContrast','Times New Roman',Georgia,serif/);
-    assert.match(html, /font-family:'AvianoContrast','Helvetica Neue',Arial,sans-serif/);
+    assert.match(html, /font-family:'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif/);
+    assert.match(html, /font-family:'AvianoContrast','Trebuchet MS','Helvetica Neue',Arial,sans-serif/);
     assert.match(html, /line-height:1\.7/);
     assert.match(html, /padding:0 0 14px;/);
   }
+});
+
+test("email links share one visual style in Gmail-friendly inline CSS", () => {
+  const config = emailConfigFromEnv({
+    SMTP_HOST: "mail.whisperssociety.com",
+    SMTP_PORT: "465",
+    SMTP_USER: "noreply@whisperssociety.com",
+    SMTP_PASS: "secret",
+    EMAIL_FROM: "WHISPERS <noreply@whisperssociety.com>",
+    EMAIL_REPLY_TO: "guestlist@whisperssociety.com",
+    EMAIL_CONTACT_PHONE: "+359 888 012 380",
+  });
+
+  const invite = buildInviteEmail({
+    to: "guest@example.com",
+    name: "Peter Popov",
+    inviteLink: "https://whisperssociety.com/invite/token",
+    config,
+  });
+  const [rsvp] = buildRsvpConfirmationEmails({
+    guestName: "Peter Popov",
+    guestEmail: "peter@example.com",
+    confirmationLink: "https://whisperssociety.com/confirmation/token",
+    wantsTableReservation: false,
+    config,
+  });
+  const ticket = buildTicketEmail({
+    to: "guest@example.com",
+    name: "Peter Popov",
+    ticketLink: "https://whisperssociety.com/ticket/token",
+    config,
+  });
+
+  for (const html of [invite.html, rsvp.html, ticket.html]) {
+    assert.match(html, /color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA/);
+    assert.doesNotMatch(html, /color:#F6C987!important;-webkit-text-fill-color:#F6C987/);
+    assert.match(html, /href="mailto:guestlist@whisperssociety\.com" style="[^"]*font-family:'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif[^"]*font-size:16px[^"]*text-decoration:none[^"]*color:#FFE6BA!important/);
+  }
+
+  const ctaStyles = [invite.html, rsvp.html, ticket.html].map((html) => {
+    const match = html.match(/<a href="https:\/\/whisperssociety\.com\/(?:invite|confirmation|ticket)\/token" style="([^"]+)"/);
+    assert.ok(match);
+    return match[1];
+  });
+  assert.deepEqual(ctaStyles, [ctaStyles[0], ctaStyles[0], ctaStyles[0]]);
+  assert.match(ctaStyles[0], /font-family:'AvianoContrast','Trebuchet MS','Helvetica Neue',Arial,sans-serif/);
+  assert.match(ctaStyles[0], /font-size:13px/);
+  assert.match(ctaStyles[0], /color:#0B0908!important/);
+  assert.match(ctaStyles[0], /text-decoration:none/);
 });
