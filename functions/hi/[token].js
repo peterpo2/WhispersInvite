@@ -23,6 +23,14 @@ export async function onRequestGet({ params, request, env }) {
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#070605"/>
+<meta property="og:title" content="WHISPERS"/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://whisperssociety.com/assets/whispers-lockup-dark.png"/>
+<meta property="og:image:width" content="4191"/>
+<meta property="og:image:height" content="1923"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="WHISPERS"/>
+<meta name="twitter:image" content="https://whisperssociety.com/assets/whispers-lockup-dark.png"/>
 <title>WHISPERS Confirmation</title>
 <link href="/assets/whispers-favicon.png" rel="icon" type="image/png"/>
 <link href="/assets/whispers-favicon.png" rel="apple-touch-icon"/>

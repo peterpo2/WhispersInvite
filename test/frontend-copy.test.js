@@ -93,6 +93,15 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
   assert.match(ticketPage, /\$\('ticketNote'\)\.textContent='Show this seal at the door\. The QR code confirms your place in the WHISPERS list\.'/);
 });
 
+test("ticket and confirmation links define clean social previews", () => {
+  for (const source of [ticketPage, confirmationPage]) {
+    assert.match(source, /<meta property="og:title" content="WHISPERS"\/>/);
+    assert.match(source, /<meta property="og:image" content="https:\/\/whisperssociety\.com\/assets\/whispers-lockup-dark\.png"\/>/);
+    assert.match(source, /<meta name="twitter:image" content="https:\/\/whisperssociety\.com\/assets\/whispers-lockup-dark\.png"\/>/);
+    assert.doesNotMatch(source, /<meta property="og:image" content="[^"]*whispers-seal\.png"/);
+  }
+});
+
 test("ticket and confirmation typography stays compact on phone screens", () => {
   assert.match(ticketPage, /h1\{[^}]*font-size:clamp\(32px,8\.6vw,42px\)/);
   assert.match(ticketPage, /\.role\{[^}]*font-size:18px/);
