@@ -430,12 +430,12 @@ export function buildInviteUrl(requestUrl, token) {
 }
 
 export function buildConfirmationUrl(requestUrl, token) {
-  return `${siteOriginFromRequestUrl(requestUrl)}/hi/${encodeURIComponent(token)}`;
+  return `${siteOriginFromRequestUrl(requestUrl)}/confirmation/${encodeURIComponent(token)}`;
 }
 
 export function buildConfirmationUpdateUrl(requestUrl, token) {
   const origin = siteOriginFromRequestUrl(requestUrl);
-  return `${origin}/?confirmation=${encodeURIComponent(token)}&update=1`;
+  return `${origin}/invite?confirmation=${encodeURIComponent(token)}&update=1`;
 }
 
 export function buildCheckInUrl(requestUrl, token) {

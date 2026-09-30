@@ -2,8 +2,8 @@
 
 ## Snapshot
 
-- Live URL: `https://whispers-invite.pages.dev/`
-- Staff scanner: `https://whispers-invite.pages.dev/staff/rose-door-10`
+- Live URL: `https://whisperssociety.com/`
+- Staff scanner: `https://whisperssociety.com/staff/rose-door-10`
 - Ticket page: `/ticket/<token>`
 - Stack: Cloudflare Pages, Pages Functions, Supabase Postgres via PostgREST
 - Event: WHISPERS, Sofia, Saturday 10 October 2026, doors 22:00
@@ -17,13 +17,16 @@ custom-domain email delivery and final address blast are not complete yet.
 
 | Link | Behaviour |
 |---|---|
-| `/` | Public invitation. Visitor goes through the full RSVP flow. |
+| `/` | Logo-only public calling card. |
+| `/invite` | Public invitation. Visitor goes through the full RSVP flow without a token. |
 | `/invite/<token>` | Personal invitation. `/api/guest-check` loads the invited name and any contact details from `guest_list`. |
-| `/hi/<confirmation_token>` | Confirmation/status after RSVP. Can offer a safe update path before ticket release. |
+| `/confirmation/<confirmation_token>` | Confirmation/status after RSVP. Can offer a safe update path before ticket release. |
+| `/hi/<confirmation_token>` | Legacy confirmation/status alias for already-created links. |
 | `/ticket/<token>` | Real ticket link. It stays locked until `2026-10-09T18:00:00+03:00`. |
 
-`/invite/<token>` redirects to `/?token=<token>`. The front end calls `/api/guest-check` when a
-token is present. `/hi/<confirmation_token>` renders the confirmation shell directly.
+`/invite/<token>` redirects to `/invite?token=<token>`. The front end calls `/api/guest-check`
+when a token is present. `/confirmation/<confirmation_token>` renders the confirmation shell
+directly, and `/hi/<confirmation_token>` remains as a compatibility alias.
 
 ### Screens
 
@@ -34,14 +37,14 @@ token is present. `/hi/<confirmation_token>` renders the confirmation shell dire
 5. RSVP: accept or decline.
 6. Plus-one/reservation: optional one-person guest with full name and email, plus a
    table reservation request checkbox.
-7. Done or decline: attending guests land on `/hi/<confirmation_token>`. The confirmation does
+7. Done or decline: attending guests land on `/confirmation/<confirmation_token>`. The confirmation does
    not reveal QR, seal code, ticket URL or venue before ticket release.
 
 ### Confirmation Update
 
-`/hi/<confirmation_token>` shows `Update details` only when the viewer is the primary guest, the
-RSVP is attending, no added guest exists, and ticket release has not happened. The update link
-opens `/?confirmation=<confirmation_token>&update=1`, which skips primary name/email/phone and
+`/confirmation/<confirmation_token>` shows `Update details` only when the viewer is the primary guest, the
+RSVP is attending, and ticket release has not happened. The update link
+opens `/invite?confirmation=<confirmation_token>&update=1`, which skips primary name/email/phone and
 lets the guest add one guest and/or request a table. After submit, the guest returns to the
 confirmation page.
 
@@ -140,7 +143,7 @@ they are optional; when missing, the guest enters them during the personal RSVP 
 The Invite admin view lists every invited primary guest. Members lists only RSVP rows. Invite
 statuses are shown as `Not responded`, `Attending` or `Declined`.
 Invite / Confirmation / Ticket columns each have their own copy/send action. Invite sends
-`/invite/<id>`, confirmation sends `/hi/<confirmation_token>`, and ticket sends
+`/invite/<id>`, confirmation sends `/confirmation/<confirmation_token>`, and ticket sends
 `/ticket/<ticket_token>`. Automatic emails use the SuperHosting SMTP mailbox
 `noreply@whisperssociety.com`,
 `Reply-To: guestlist@whisperssociety.com` and include `guestlist@whisperssociety.com` plus
@@ -196,10 +199,12 @@ staff/admin. Guest tickets must not reveal the table label.
 The middleware allowlist permits only:
 
 - `/`
-- `/index.html`
+- `/invite`
 - listed `/api/*` routes
 - `/ticket/<token>`
+- `/confirmation/<token>`
 - `/hi/<token>`
+- `/invite/<token>`
 - `/staff/rose-door-10`
 - `/assets/<lowercase-name>.png`
 - `/assets/<lowercase-name>.js`

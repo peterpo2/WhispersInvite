@@ -64,8 +64,8 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
     guestEmail: "peter@example.com",
     plusOneName: "Michelle G",
     plusOneEmail: "michaella@example.com",
-    confirmationLink: "https://whisperssociety.com/hi/primaryconfirm",
-    plusOneConfirmationLink: "https://whisperssociety.com/hi/plusconfirm",
+    confirmationLink: "https://whisperssociety.com/confirmation/primaryconfirm",
+    plusOneConfirmationLink: "https://whisperssociety.com/confirmation/plusconfirm",
     wantsTableReservation: true,
     config,
   });
@@ -75,19 +75,19 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
   assert.equal(emails[1].to, "michaella@example.com");
   assert.equal(emails[0].subject, "WHISPERS RSVP confirmed");
   assert.match(emails[0].text, /Your registration is confirmed/);
-  assert.match(emails[0].text, /https:\/\/whisperssociety\.com\/hi\/primaryconfirm/);
+  assert.match(emails[0].text, /https:\/\/whisperssociety\.com\/confirmation\/primaryconfirm/);
   assert.match(emails[0].text, /Michelle G/);
   assert.match(emails[0].text, /Table reservation requested/);
   assert.match(emails[0].text, /09\.10 at 18:00/);
   assert.match(emails[0].text, /Your confirmation is saved here:/);
-  assert.match(emails[0].text, /Open confirmation:\nhttps:\/\/whisperssociety\.com\/hi\/primaryconfirm/);
+  assert.match(emails[0].text, /Open confirmation:\nhttps:\/\/whisperssociety\.com\/confirmation\/primaryconfirm/);
   assert.doesNotMatch(emails[0].text, /You can confirm or update this before ticket release/);
   assert.match(emails[1].text, /You are registered as Peter Popov's guest/);
-  assert.match(emails[1].text, /https:\/\/whisperssociety\.com\/hi\/plusconfirm/);
+  assert.match(emails[1].text, /https:\/\/whisperssociety\.com\/confirmation\/plusconfirm/);
   assert.match(emails[1].text, /Your confirmation is saved here:/);
-  assert.match(emails[0].html, /href="https:\/\/whisperssociety\.com\/hi\/primaryconfirm"/);
+  assert.match(emails[0].html, /href="https:\/\/whisperssociety\.com\/confirmation\/primaryconfirm"/);
   assert.match(emails[0].html, />Open confirmation<\/a>/);
-  assert.doesNotMatch(emails[0].html, />https:\/\/whisperssociety\.com\/hi\/primaryconfirm</);
+  assert.doesNotMatch(emails[0].html, />https:\/\/whisperssociety\.com\/confirmation\/primaryconfirm</);
   assert.doesNotMatch(emails[0].html, /font-size:32px/);
   assert.doesNotMatch(emails[0].html, /font-size:22px/);
   assert.match(emails[1].html, /guestlist@whisperssociety\.com/);
@@ -114,7 +114,7 @@ test("RSVP confirmation email offers updates only when no guest is already added
     guestEmail: "peter@example.com",
     plusOneName: "",
     plusOneEmail: "",
-    confirmationLink: "https://whisperssociety.com/hi/primaryconfirm",
+    confirmationLink: "https://whisperssociety.com/confirmation/primaryconfirm",
     plusOneConfirmationLink: "",
     wantsTableReservation: false,
     config,
@@ -122,7 +122,7 @@ test("RSVP confirmation email offers updates only when no guest is already added
 
   assert.equal(emails.length, 1);
   assert.match(emails[0].text, /You can confirm or update this before ticket release\./);
-  assert.match(emails[0].text, /Update details:\nhttps:\/\/whisperssociety\.com\/hi\/primaryconfirm/);
+  assert.match(emails[0].text, /Update details:\nhttps:\/\/whisperssociety\.com\/confirmation\/primaryconfirm/);
   assert.match(emails[0].html, />Update details<\/a>/);
   assert.doesNotMatch(emails[0].text, /Your confirmation is saved here:/);
 });

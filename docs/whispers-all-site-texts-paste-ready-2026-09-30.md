@@ -210,7 +210,7 @@ Submit and network errors:
 
 ### 7. Immediate Confirmation Fallback
 
-This screen is only used if the RSVP response does not redirect to `/hi/[confirmation_token]`.
+This screen is only used if the RSVP response does not redirect to `/confirmation/[confirmation_token]`.
 
 Card copy:
 
@@ -269,7 +269,7 @@ Action:
 
 ## Confirmation Page
 
-Path: `/hi/[confirmation_token]`
+Path: `/confirmation/[confirmation_token]`
 
 Browser title:
 

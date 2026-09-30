@@ -1,6 +1,6 @@
 const PUBLIC_PATHS = new Set([
   "/",
-  "/index.html",
+  "/invite",
   "/api/rsvp",
   "/api/ticket",
   "/api/checkin",
@@ -18,6 +18,7 @@ const PUBLIC_PATHS = new Set([
 ]);
 
 const TICKET_PATH_RE = /^\/ticket\/[^/]+$/;
+const CONFIRMATION_PATH_RE = /^\/confirmation\/[^/]+$/;
 const HI_PATH_RE = /^\/hi\/[^/]+$/;
 const INVITE_PATH_RE = /^\/invite\/[^/]+$/;
 const ASSET_PATH_RE = /^\/assets\/[a-z0-9-]+\.(png|js|ttf|mov|svg)$/;
@@ -34,7 +35,7 @@ function isPrivateDevHost(host) {
 
 export function isPublicPath(pathname) {
   if (typeof pathname !== "string") return false;
-  return PUBLIC_PATHS.has(pathname) || TICKET_PATH_RE.test(pathname) || HI_PATH_RE.test(pathname) || INVITE_PATH_RE.test(pathname) || ASSET_PATH_RE.test(pathname);
+  return PUBLIC_PATHS.has(pathname) || TICKET_PATH_RE.test(pathname) || CONFIRMATION_PATH_RE.test(pathname) || HI_PATH_RE.test(pathname) || INVITE_PATH_RE.test(pathname) || ASSET_PATH_RE.test(pathname);
 }
 
 export function isPublicHost(host) {

@@ -69,16 +69,18 @@ whispers-invitation-dev-brief.md   Original client brief: source of truth for de
 ```
 
 **Reference, not code:** `whispers-invitation-dev-brief.md` is the original client brief and
-still the source of truth for design, tone and copy. Personal `/hi/<id>` links and the plain
-shared link both exist now (see End-to-end flow).
+still the source of truth for design, tone and copy. `/` is now a logo-only calling card;
+the active invitation flow lives at `/invite` and `/invite/<id>` (see End-to-end flow).
 
 ## Architecture
 
 ### End-to-end flow
-1. The guest opens `/hi/<token>` (redirects to `/?token=<token>`) or the plain `/`
-   (`index.html`). The screens are seal → film → letter → [identify] → rsvp → plus →
-   done / decline. With a token, `/api/guest-check` supplies the name (shown on the seal) and
-   identify is skipped. Without one, identify asks for a full name (2+ words).
+1. The guest opens `/invite` or `/invite/<token>` (`/invite/<token>` redirects to
+   `/invite?token=<token>`). The screens are seal → film → letter → [identify] → rsvp →
+   plus → done / decline. With a token, `/api/guest-check` supplies the name (shown on the
+   seal) and identify is skipped. Without one, identify asks for a full name (2+ words).
+   After RSVP, guests land on `/confirmation/<token>`; `/hi/<token>` remains a legacy
+   confirmation/status alias for old links.
 2. `submitRSVP()` POSTs to `/api/rsvp`, which returns `ticketToken`, `sealCode`, `ticketUrl`
    and `checkInUrl`.
 3. `/ticket/:token` renders the ticket page. It fetches `/api/ticket` on the client and draws a
@@ -115,8 +117,9 @@ Check-in happens only in `door.js`. It is atomic: `door.js` PATCHes with `&check
 first, so the result is "already checked in".
 
 `functions/_middleware.js` runs before every request:
-- Only `/`, `/index.html`, the `/api/*` routes above (exact names, so `/api/*.js` is blocked),
-  `/ticket/:token`, `/hi/:token`, `/staff/rose-door-10` and `/assets/<lowercase-name>.png|js`
+- Only `/`, `/invite`, the `/api/*` routes above (exact names, so `/api/*.js` is blocked),
+  `/ticket/:token`, `/confirmation/:token`, `/hi/:token`, `/invite/:token`,
+  `/staff/rose-door-10` and `/assets/<lowercase-name>.png|js|ttf|mov|svg`
   reach `next()`. Everything else is a no-store 404.
   Add any new route to `isPublicPath` in `functions/_shared/access.js` and its test.
 - `/robots.txt` returns `Disallow: /`.
@@ -146,7 +149,7 @@ first, so the result is "already checked in".
       plus-one is ignored.
   - `buildRsvpRow(body, makeId, now, makeSeal)` produces the DB row. The server owns identity:
     the client's `ticketToken`, `event`, `submittedAt` and `sealCode` are ignored.
-    - `ticket_token` = `makeId()`. `guest_id` is the invitation `guestId` (from `/hi/<token>`)
+    - `ticket_token` = `makeId()`. `guest_id` is the invitation `guestId` (from `/invite/<token>`)
       when given, otherwise the ticket token.
     - `event_key` is always `EVENT_KEY` (`"whispers-2026-10-10"`).
     - `submitted_at` is `now().toISOString()` (inject `now` in tests).
@@ -160,8 +163,8 @@ first, so the result is "already checked in".
     same ticket; a different plus-one → a new ticket and the old one stops working; declining →
     the plus-one is cleared. `/api/rsvp` refuses (409) to replace a plus-one who is already
     inside, and returns `plusOneName` so the page can show a kept plus-one's ticket.
-  - Referral invitation links are out of scope for now. Keep the active product flow to personal
-    `/hi/<id>` links and the plain shared `/` link unless the organizer explicitly brings
+  - Referral invitation links are out of scope for now. Keep the active product flow to
+    `/invite` and personal `/invite/<id>` links unless the organizer explicitly brings
     referrals back.
   - `buildRsvpUpdate(row, existing)`: the PATCH for a repeat RSVP from the same invitation. It
     carries name, status, plus-one and `submitted_at`, keeps `existing.seal_code` (a guest who

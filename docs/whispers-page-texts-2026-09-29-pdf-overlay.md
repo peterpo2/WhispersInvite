@@ -260,7 +260,7 @@ Use:
 
 ## Confirmation / Status Page
 
-Path: `/hi/[confirmation_token]`
+Path: `/confirmation/[confirmation_token]`
 
 ### Browser Title
 
@@ -753,6 +753,6 @@ Plus-one text:
 
 - Public-facing guest text is English.
 - `/invite/[token]` is the RSVP entry link.
-- `/hi/[confirmation_token]` is the confirmation/status page.
+- `/confirmation/[confirmation_token]` is the confirmation/status page.
 - `/ticket/[ticket_token]` is the ticket page.
 - Location remains hidden until the release time unless `event_details` exposes a venue.

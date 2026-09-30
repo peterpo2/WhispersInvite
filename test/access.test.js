@@ -5,7 +5,7 @@ import { isPublicHost, isPublicPath, isSiteLocked } from "../functions/_shared/a
 test("allows the invitation, API routes, ticket pages and the staff scanner", () => {
   for (const path of [
     "/",
-    "/index.html",
+    "/invite",
     "/api/rsvp",
     "/api/ticket",
     "/api/checkin",
@@ -20,6 +20,7 @@ test("allows the invitation, API routes, ticket pages and the staff scanner", ()
     "/api/staff/invites",
     "/api/staff/invite-send",
     "/ticket/123e4567e89b12d3a456426614174000",
+    "/confirmation/123e4567e89b12d3a456426614174000",
     "/hi/123e4567e89b12d3a456426614174000",
     "/invite/invite00000000000000000000000000",
     "/staff/rose-door-10",
@@ -57,6 +58,7 @@ test("blocks repository files and anything not on the allowlist", () => {
     "/package-lock.json",
     "/README.txt",
     "/README.md",
+    "/index.html",
     "/AGENTS.md",
     "/VECTOR_TYPE.eps",
     "/video/Timeline2.mov",

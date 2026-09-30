@@ -9,8 +9,8 @@ Postgres through the REST API. There is no framework, no bundler and no build st
 
 ## Current State
 
-- Live site: `https://whispers-invite.pages.dev/`
-- Staff scanner: `https://whispers-invite.pages.dev/staff/rose-door-10`
+- Live site: `https://whisperssociety.com/`
+- Staff scanner: `https://whisperssociety.com/staff/rose-door-10`
 - Next operational steps: [`TASKS.md`](TASKS.md)
 - Owner SQL queries: [`sql/useful-queries.sql`](sql/useful-queries.sql)
 - Developer/agent reference: [`AGENTS.md`](AGENTS.md)
@@ -21,9 +21,11 @@ Postgres through the REST API. There is no framework, no bundler and no build st
 
 | URL | Purpose |
 |---|---|
-| `/` | Public invitation. The guest goes through the full RSVP flow. |
+| `/` | Logo-only public calling card. No RSVP controls. |
+| `/invite` | Public invitation. The guest goes through the full RSVP flow without a token. |
 | `/invite/<token>` | Personal invitation. The invited name is shown, and missing email/phone are collected before RSVP. |
-| `/hi/<token>` | Confirmation/status page after RSVP. May offer `Update details` only before ticket release and only when no added guest exists. |
+| `/confirmation/<token>` | Confirmation/status page after RSVP. May offer `Update details` only before ticket release. |
+| `/hi/<token>` | Legacy confirmation/status alias kept so old links continue to work. |
 | `/ticket/<token>` | Real ticket page for a guest or plus-one. It stays locked until `09.10 18:00`. |
 | `/staff/rose-door-10` | Staff scanner. Keep private and do not link from public pages. |
 
@@ -31,7 +33,7 @@ The middleware allowlist blocks repository files, docs, SQL files, tests and unk
 
 ## Guest Flow
 
-1. Guest opens `/`, `/invite/<token>` or a post-RSVP `/hi/<token>`.
+1. Guest opens `/invite`, `/invite/<token>` or a post-RSVP `/confirmation/<token>`.
 2. The page plays seal -> film -> letter.
 3. The public link asks for full name, email and phone. A personal invite uses `guest_list`;
    if staff entered only a name, the guest confirms their own email and phone before RSVP.
@@ -40,16 +42,17 @@ The middleware allowlist blocks repository files, docs, SQL files, tests and unk
 6. They may request a table reservation for themselves or their two-person group.
 7. The server creates private ticket tokens and seal codes, but does not reveal them before
    `2026-10-09T18:00:00+03:00`.
-8. The done screen redirects to `/hi/<confirmation_token>`, which shows confirmation/status, not a QR ticket.
+8. The done screen redirects to `/confirmation/<confirmation_token>`, which shows confirmation/status, not a QR ticket.
 
 The guest and the plus-one each get their own ticket token, seal code, QR code and check-in
 state. QR codes encode `/ticket/<token>`, not `/api/checkin`. A normal phone camera opens the
 ticket page; only the staff scanner checks people in. Before ticket release, ticket pages show a
 locked state without QR, seal code or location.
 
-Repeat RSVPs from the same personal identity or the same email+phone keep the guest ticket. If
-the guest already has an added guest, `Update details` is hidden and the server rejects a second
-added guest. After ticket release (`2026-10-09T18:00:00+03:00`), guest-facing changes are closed.
+Repeat RSVPs from the same personal identity or the same email+phone keep the guest ticket.
+`Update details` remains available before ticket release, including when a guest already has an
+added guest; the latest update replaces the previous added guest. After ticket release
+(`2026-10-09T18:00:00+03:00`), guest-facing changes are closed.
 
 ## Invite Admin
 
@@ -58,7 +61,7 @@ name. Email and phone are optional admin prefill fields; if they are missing, th
 in from their personal confirmation link. The system generates:
 
 - invite link: `/invite/<guest_list.id>`
-- confirmation link: `/hi/<confirmation_token>` after RSVP
+- confirmation link: `/confirmation/<confirmation_token>` after RSVP
 - ticket link: `/ticket/<ticket_token>`
 
 The ticket link may exist internally in advance, but guests do not need it before release. Plus-one
@@ -67,7 +70,7 @@ confirmation and ticket links are generated during RSVP.
 Invite shows all invited primary guests, including people who have not answered yet. Members shows
 only people with an RSVP response. Invite statuses are `Not responded`, `Attending` and `Declined`.
 Invite / Confirmation / Ticket columns each have their own copy/send action. Invite email sends
-`/invite/<token>`, RSVP confirmation email sends `/hi/<confirmation_token>`, and ticket release
+`/invite/<token>`, RSVP confirmation email sends `/confirmation/<confirmation_token>`, and ticket release
 email sends `/ticket/<ticket_token>`. Automatic emails are sent from `noreply@whisperssociety.com`, use
 `guestlist@whisperssociety.com` as the reply-to address, and include the guest-list email plus
 `+359 888 012 380` as contact details.
@@ -134,12 +137,14 @@ previews do not have production database access unless variables are configured 
 ## Project Structure
 
 ```text
-index.html                       Invitation UI, inline CSS and JS
+index.html                       Invitation app shell served by /invite
 assets/                          Runtime images and ticket-card.js
-functions/_middleware.js         Route allowlist and security headers
+functions/_middleware.js         Route allowlist, security headers and /invite/<token> redirect
 functions/_shared/               Tested pure helpers and response utilities
 functions/api/                   RSVP, ticket, door, checkin and guest lookup APIs
-functions/hi/[token].js          Redirects personal links to /?token=
+functions/index.js               Logo-only public calling card
+functions/confirmation/[token].js New confirmation/status route
+functions/hi/[token].js          Legacy confirmation/status alias
 functions/ticket/[token].js      Server-rendered ticket shell
 functions/staff/rose-door-10.js  Camera scanner for staff
 sql/                             Schema, migrations and owner queries

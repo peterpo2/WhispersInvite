@@ -216,8 +216,8 @@ test("confirmation update is available before ticket release even with an added 
 
 test("builds a confirmation update URL without exposing ticket links", () => {
   assert.equal(
-    buildConfirmationUpdateUrl("https://whisperssociety.com/hi/abc", "confirm000000000000000000000000"),
-    "https://whisperssociety.com/?confirmation=confirm000000000000000000000000&update=1"
+    buildConfirmationUpdateUrl("https://whisperssociety.com/confirmation/abc", "confirm000000000000000000000000"),
+    "https://whisperssociety.com/invite?confirmation=confirm000000000000000000000000&update=1"
   );
 });
 
@@ -471,7 +471,7 @@ test("builds private ticket and check-in URLs from a URL-safe token", () => {
 
   assert.equal(token, TOKEN);
   assert.equal(buildInviteUrl("https://whispers-invite.pages.dev/path", token), `https://whispers-invite.pages.dev/invite/${TOKEN}`);
-  assert.equal(buildConfirmationUrl("https://whispers-invite.pages.dev/path", token), `https://whispers-invite.pages.dev/hi/${TOKEN}`);
+  assert.equal(buildConfirmationUrl("https://whispers-invite.pages.dev/path", token), `https://whispers-invite.pages.dev/confirmation/${TOKEN}`);
   assert.equal(buildTicketUrl("https://whispers-invite.pages.dev/path", token), `https://whispers-invite.pages.dev/ticket/${TOKEN}`);
   assert.equal(buildCheckInUrl("https://whispers-invite.pages.dev/path", token), `https://whispers-invite.pages.dev/api/checkin?token=${TOKEN}`);
 });

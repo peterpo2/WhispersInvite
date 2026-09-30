@@ -96,7 +96,7 @@ test("ticket and confirmation typography stays compact on phone screens", () => 
   assert.match(confirmationPage, /\.note\{[^}]*font-size:15px;line-height:1\.42/);
 });
 
-test("old confirmation links that contain an invite token redirect to the invite", () => {
+test("old hi links that contain an invite token redirect to the invite", () => {
   assert.match(confirmationPage, /guest_list\?select=id&id=eq\./);
   assert.match(confirmationPage, /Response\.redirect\(`\$\{origin\}\/invite\/\$\{encodeURIComponent\(token\)\}`/);
   assert.doesNotMatch(confirmationPage, /!\/\^\[A-Za-z0-9\]\{32,40\}\$\/\.test\(token\)/);
@@ -178,7 +178,7 @@ test("confirmation page avoids redundant ticket status labels", () => {
 });
 
 test("start over returns to the invitation entry point, not the replaced ticket URL", () => {
-  assert.match(html, /const startUrl = urlToken \? '\/\?token=' \+ encodeURIComponent\(urlToken\) : '\/'/);
+  assert.match(html, /const startUrl = urlToken \? '\/invite\?token=' \+ encodeURIComponent\(urlToken\) : '\/invite'/);
   assert.match(html, /function reset\(\)\{window\.location\.assign\(startUrl\)\}/);
   assert.match(html, /id="reset2">Register again<\/button>/);
   assert.doesNotMatch(html, /\$\('#reset'\)\.addEventListener/);

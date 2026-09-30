@@ -207,7 +207,7 @@ Cancel confirmation:
 
 ### Local Confirmation Fallback Screen
 
-This screen is only used if the RSVP response does not include a confirmation URL. In the normal flow, the guest is redirected to `/hi/[confirmation_token]`.
+This screen is only used if the RSVP response does not include a confirmation URL. In the normal flow, the guest is redirected to `/confirmation/[confirmation_token]`.
 
 Brand and ticket release:
 
@@ -262,14 +262,14 @@ Path: `/invite/[token]`
 
 This route does not render its own page. It redirects to:
 
-- `/?token=[token]` when the invite token is valid.
+- `/invite?token=[token]` when the invite token is valid.
 - `/` when the token is missing or invalid.
 
 The rendered text after redirect is the public RSVP flow above.
 
 ## Confirmation Page
 
-Path: `/hi/[confirmation_token]`
+Path: `/confirmation/[confirmation_token]`
 
 ### Browser Title
 
@@ -779,6 +779,6 @@ Visible text:
 ## Notes
 
 - `/invite/[token]` is the RSVP entry link and currently redirects into the public RSVP page.
-- `/hi/[confirmation_token]` is the confirmation/status page.
+- `/confirmation/[confirmation_token]` is the confirmation/status page.
 - `/ticket/[ticket_token]` is the ticket page. It shows locked or pending states before release, and the QR ticket after release.
 - The ticket link itself is created earlier, but the release email is sent separately when tickets are released.
