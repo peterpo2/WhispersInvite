@@ -102,6 +102,43 @@ Use it properly by:
 
 The EPS itself should remain source material, not a directly loaded page asset.
 
+### Vector-Derived Logo System
+
+The site should move to a higher-quality logo system derived from `VECTOR_TYPE.eps`.
+
+Design intent:
+
+- Use the EPS as the master source for the WHISPERS logo/type artwork.
+- Export browser-safe runtime artwork from it.
+- Prefer SVG for the primary runtime logo/wordmark/lockup if the export is clean, lightweight and visually faithful.
+- Use high-resolution PNG if the SVG export is too heavy, visually unreliable, or contains Illustrator artifacts that do not render consistently in browsers.
+- Keep the existing old logo PNG assets in the project as fallback/archive assets. Do not delete them as part of this change.
+
+The new vector-derived artwork should become the preferred logo treatment everywhere:
+
+- First seal screen.
+- Film/poster/fallback state.
+- Event Details screen.
+- Identify/details screens.
+- RSVP and plus-one screens.
+- Confirmation and decline screens.
+- Personal `/hi/<token>` status page.
+- Ticket page.
+- Staff/admin pages.
+- Generated ticket card image, if the canvas renderer can use the exported web asset reliably.
+- Email header where technically possible; email clients may fall back to the existing PNG if SVG or custom assets are not reliable.
+
+The old `whispers-mark.png`, `whispers-seal.png`, `whispers-favicon.png` and related existing PNGs should remain available as backups. They should not be the primary visual choice once the vector-derived asset is implemented, except where technical constraints require a fallback.
+
+Suggested runtime assets:
+
+- `assets/whispers-logo.svg` or `assets/whispers-logo.png` for the mark.
+- `assets/whispers-wordmark.svg` or `assets/whispers-wordmark.png` for the wordmark.
+- `assets/whispers-lockup.svg` or `assets/whispers-lockup.png` for the combined mark + wordmark treatment.
+- `assets/whispers-seal-vector.svg` or `assets/whispers-seal-vector.png` if the seal itself can be exported cleanly from the vector source.
+
+The implementation should compare the vector-derived export against the current PNG logo treatment before replacing it. The replacement should be visibly sharper, more premium, and more consistent on high-density mobile screens.
+
 ## Public Flow Design
 
 ### First Screen: Seal
@@ -206,6 +243,9 @@ Recommended runtime filenames:
 - `assets/whispers-intro.mov`
 - `assets/whispers-lockup-dark.png`
 - `assets/whispers-lockup-light.png`
+- `assets/whispers-logo.svg`
+- `assets/whispers-wordmark.svg`
+- `assets/whispers-lockup.svg`
 
 If an optimized export is produced from `VECTOR_TYPE.eps`, use a lowercase name such as:
 
@@ -251,6 +291,7 @@ Automated tests should cover:
 
 - `/assets/aviano-contrast.ttf` is allowed.
 - `/assets/whispers-intro.mov` is allowed.
+- vector-derived logo assets in `/assets/` are allowed only with lowercase safe filenames and approved extensions.
 - source files like `/VECTOR_TYPE.eps` and `/video/Timeline2.mov` are blocked if they remain outside `assets/`.
 - public flow source contains the video preload.
 - public flow source assigns the video `src`.
@@ -259,10 +300,14 @@ Automated tests should cover:
 - Skip pauses/stops video and advances.
 - Event Details keeps the two-line `When` structure.
 - Aviano is declared and used as the primary font variable.
+- the new vector-derived logo/lockup is used as the primary brand treatment where applicable.
+- old logo PNGs are retained and not deleted.
 
 Manual/browser QA should cover:
 
 - Mobile viewport loads the seal screen.
+- Vector-derived logo/lockup looks sharper than the old PNG on desktop and mobile.
+- Old PNG fallback assets still exist and are not publicly exposed beyond already-approved asset routes.
 - Network throttling: tap/hold seal quickly before the video has fully loaded; the Film screen waits and starts video when ready.
 - Normal network: video starts immediately after seal opens.
 - Video end advances automatically.
@@ -292,6 +337,7 @@ No further product decision is needed before planning. The implementation plan s
 - copying/renaming runtime assets,
 - updating the middleware allowlist,
 - wiring early preload/load behavior,
+- exporting and selecting the cleanest vector-derived logo assets,
 - preserving fallback behavior,
 - applying Aviano globally without breaking readability,
 - and testing the flow.
