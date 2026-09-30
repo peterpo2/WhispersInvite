@@ -5,7 +5,8 @@ import { supabaseFetch } from "../../_shared/supabase.js";
 
 const MAX_RETRIES = 3;
 const INVITE_COLUMNS = "id,name,email,phone,ticket_token,confirmation_email_sent_at,confirmation_email_send_count,created_at,updated_at";
-const RSVP_COLUMNS = "guest_id,status,submitted_at,guest_name,guest_email,guest_phone,confirmation_token,ticket_token";
+const RSVP_COLUMNS = "id,guest_id,status,submitted_at,guest_name,guest_email,guest_phone,confirmation_token,ticket_token";
+const COMPANION_COLUMNS = "id,rsvp_id,guest_name,email,phone,confirmation_token,ticket_token,created_at,rsvps!inner(guest_name,event_key,status,submitted_at)";
 
 export async function onRequestGet({ request, env }) {
   const staff = await requireStaff(request, env, "admin");
@@ -62,16 +63,46 @@ async function listInvites(request, env) {
   if (rsvps.error) return rsvps.error;
   if (!rsvps.response.ok) return json({ error: "Could not load invites" }, 502);
 
-  const rsvpByGuestId = new Map((await rsvps.response.json()).map((row) => [row.guest_id, row]));
+  const companions = await supabaseFetch(
+    env,
+    `/rest/v1/rsvp_companions?select=${COMPANION_COLUMNS}&order=created_at.desc&limit=1000`
+  );
+  if (companions.error) return companions.error;
+  if (!companions.response.ok) return json({ error: "Could not load invites" }, 502);
+
+  const rsvpRows = await rsvps.response.json();
   const rows = await invites.response.json();
   return json({
     ok: true,
-    invites: rows.map((row) => publicInvite(request.url, row, rsvpByGuestId.get(row.id) || null)),
+    invites: mergeInviteRowsForStaff(request.url, {
+      invites: rows,
+      rsvps: rsvpRows,
+      companions: await companions.response.json(),
+    }),
   });
 }
 
+export function mergeInviteRowsForStaff(requestUrl, { invites = [], rsvps = [], companions = [] } = {}) {
+  const rsvpByGuestId = new Map(rsvps.map((row) => [row.guest_id, row]));
+  const inviteIds = new Set(invites.map((row) => row.id));
+  const rows = invites.map((row) => publicInvite(requestUrl, row, rsvpByGuestId.get(row.id) || null));
+
+  for (const rsvp of rsvps) {
+    if (inviteIds.has(rsvp.guest_id)) continue;
+    rows.push(publicDirectRsvp(requestUrl, rsvp));
+  }
+
+  for (const companion of companions) {
+    const parent = Array.isArray(companion.rsvps) ? companion.rsvps[0] : companion.rsvps;
+    if (parent?.event_key && parent.event_key !== EVENT_KEY) continue;
+    rows.push(publicCompanion(requestUrl, companion, parent));
+  }
+
+  return rows.sort((a, b) => new Date(b.submittedAt || b.createdAt || 0).getTime() - new Date(a.submittedAt || a.createdAt || 0).getTime());
+}
+
 function publicInvite(requestUrl, row, rsvp) {
-  const ticketToken = row.ticket_token || rsvp?.ticket_token || "";
+  const ticketToken = rsvp?.ticket_token || row.ticket_token || "";
   const confirmationToken = rsvp?.confirmation_token || "";
   return {
     id: row.id,
@@ -88,9 +119,59 @@ function publicInvite(requestUrl, row, rsvp) {
     rsvpName: rsvp?.guest_name || "",
     rsvpEmail: rsvp?.guest_email || "",
     rsvpPhone: rsvp?.guest_phone || "",
+    guestOf: "",
+    source: "invite",
     submittedAt: rsvp?.submitted_at || null,
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null,
+  };
+}
+
+function publicDirectRsvp(requestUrl, rsvp) {
+  return {
+    id: `rsvp:${rsvp.id}`,
+    name: rsvp.guest_name,
+    email: rsvp.guest_email || "",
+    phone: rsvp.guest_phone || "",
+    ticketToken: rsvp.ticket_token || "",
+    confirmationEmailSentAt: null,
+    confirmationEmailSendCount: 0,
+    inviteLink: "",
+    confirmationLink: rsvp.confirmation_token ? buildConfirmationUrl(requestUrl, rsvp.confirmation_token) : "",
+    ticketLink: rsvp.ticket_token ? buildTicketUrl(requestUrl, rsvp.ticket_token) : "",
+    status: rsvp.status || "not_responded",
+    rsvpName: rsvp.guest_name || "",
+    rsvpEmail: rsvp.guest_email || "",
+    rsvpPhone: rsvp.guest_phone || "",
+    guestOf: "",
+    source: "rsvp",
+    submittedAt: rsvp.submitted_at || null,
+    createdAt: rsvp.submitted_at || null,
+    updatedAt: null,
+  };
+}
+
+function publicCompanion(requestUrl, companion, parent) {
+  return {
+    id: `companion:${companion.id}`,
+    name: companion.guest_name,
+    email: companion.email || "",
+    phone: companion.phone || "",
+    ticketToken: companion.ticket_token || "",
+    confirmationEmailSentAt: null,
+    confirmationEmailSendCount: 0,
+    inviteLink: "",
+    confirmationLink: companion.confirmation_token ? buildConfirmationUrl(requestUrl, companion.confirmation_token) : "",
+    ticketLink: companion.ticket_token ? buildTicketUrl(requestUrl, companion.ticket_token) : "",
+    status: parent?.status || "not_responded",
+    rsvpName: parent?.guest_name || "",
+    rsvpEmail: companion.email || "",
+    rsvpPhone: companion.phone || "",
+    guestOf: parent?.guest_name || "",
+    source: "companion",
+    submittedAt: companion.created_at || parent?.submitted_at || null,
+    createdAt: companion.created_at || parent?.submitted_at || null,
+    updatedAt: null,
   };
 }
 

@@ -8,6 +8,7 @@ import { supabaseFetch } from "../../_shared/supabase.js";
 const COLUMNS = "id,name,email,confirmation_email_send_count";
 const RSVP_COLUMNS = "id,guest_id,guest_name,guest_email,status,confirmation_token,ticket_token,wants_table_reservation";
 const COMPANION_COLUMNS = "id,rsvp_id,guest_name,email,confirmation_token,ticket_token";
+const COMPANION_DIRECT_COLUMNS = "id,rsvp_id,guest_name,email,confirmation_token,ticket_token,rsvps!inner(guest_name,event_key,status,wants_table_reservation)";
 const EVENT_DETAILS_COLUMNS = "venue_name,venue_address";
 const SEND_TYPES = new Set(["invite", "confirmation", "ticket"]);
 
@@ -27,6 +28,25 @@ export async function onRequestPost({ request, env }) {
   if (!id || id.length > 120) return json({ error: "Invalid invite send" }, 400);
   if (!SEND_TYPES.has(type)) return json({ error: "Invalid invite send" }, 400);
 
+  const config = emailConfigFromEnv(env);
+  if (config.error) return json({ error: config.error }, 500);
+
+  if (id.startsWith("rsvp:")) {
+    if (type === "invite") return json({ error: "Direct registrations do not have invite emails" }, 400);
+    const built = await buildDirectRsvpEmails({ env, requestUrl: request.url, id: id.slice(5), type, config });
+    const sent = await sendBuiltEmails({ config, built, type });
+    if (sent) return sent;
+    return json({ ok: true, type, sentAt: new Date().toISOString(), sent: built.emails.length });
+  }
+
+  if (id.startsWith("companion:")) {
+    if (type === "invite") return json({ error: "Added guests do not have invite emails" }, 400);
+    const built = await buildCompanionEmails({ env, requestUrl: request.url, id: id.slice(10), type, config });
+    const sent = await sendBuiltEmails({ config, built, type });
+    if (sent) return sent;
+    return json({ ok: true, type, sentAt: new Date().toISOString(), sent: built.emails.length });
+  }
+
   const found = await supabaseFetch(
     env,
     `/rest/v1/guest_list?select=${COLUMNS}&id=eq.${encodeURIComponent(id)}&limit=1`
@@ -37,20 +57,9 @@ export async function onRequestPost({ request, env }) {
   const [invite] = await found.response.json();
   if (!invite) return json({ error: "Invite not found" }, 404);
 
-  const config = emailConfigFromEnv(env);
-  if (config.error) return json({ error: config.error }, 500);
-
   const built = await buildEmailsForType({ env, requestUrl: request.url, invite, type, config });
-  if (built.error instanceof Response) return built.error;
-  if (built.error) return json({ error: built.error }, built.status || 400);
-
-  try {
-    for (const email of built.emails) {
-      await sendSmtpMail(config, email);
-    }
-  } catch {
-    return json({ error: `Could not send ${type} email` }, 502);
-  }
+  const sent = await sendBuiltEmails({ config, built, type });
+  if (sent) return sent;
 
   const sentAt = new Date().toISOString();
   if (type !== "invite") {
@@ -75,6 +84,20 @@ export async function onRequestPost({ request, env }) {
   if (!updated.response.ok) return json({ error: "Could not send invite" }, 502);
 
   return json({ ok: true, type, confirmationEmailSentAt: sentAt, confirmationEmailSendCount: sendCount, sent: built.emails.length });
+}
+
+async function sendBuiltEmails({ config, built, type }) {
+  if (built.error instanceof Response) return built.error;
+  if (built.error) return json({ error: built.error }, built.status || 400);
+
+  try {
+    for (const email of built.emails) {
+      await sendSmtpMail(config, email);
+    }
+  } catch {
+    return json({ error: `Could not send ${type} email` }, 502);
+  }
+  return null;
 }
 
 async function buildEmailsForType({ env, requestUrl, invite, type, config }) {
@@ -110,6 +133,70 @@ async function buildEmailsForType({ env, requestUrl, invite, type, config }) {
   if (!companionsFound.response.ok) return { error: "Could not load registration", status: 502 };
   const companions = await companionsFound.response.json();
 
+  return buildRegistrationEmails({ env, requestUrl, rsvp, companions, type, config });
+}
+
+async function buildDirectRsvpEmails({ env, requestUrl, id, type, config }) {
+  const found = await supabaseFetch(
+    env,
+    `/rest/v1/rsvps?select=${RSVP_COLUMNS}&id=eq.${encodeURIComponent(id)}&event_key=eq.${encodeURIComponent(EVENT_KEY)}&limit=1`
+  );
+  if (found.error) return { error: found.error };
+  if (!found.response.ok) return { error: "Could not load registration", status: 502 };
+  const [rsvp] = await found.response.json();
+  if (!rsvp || rsvp.status !== "attending") return { error: "Registration is not attending", status: 400 };
+
+  const companionsFound = await supabaseFetch(
+    env,
+    `/rest/v1/rsvp_companions?select=${COMPANION_COLUMNS}&rsvp_id=eq.${encodeURIComponent(rsvp.id)}&limit=10`
+  );
+  if (companionsFound.error) return { error: companionsFound.error };
+  if (!companionsFound.response.ok) return { error: "Could not load registration", status: 502 };
+  return buildRegistrationEmails({ env, requestUrl, rsvp, companions: await companionsFound.response.json(), type, config });
+}
+
+async function buildCompanionEmails({ env, requestUrl, id, type, config }) {
+  const found = await supabaseFetch(
+    env,
+    `/rest/v1/rsvp_companions?select=${COMPANION_DIRECT_COLUMNS}&id=eq.${encodeURIComponent(id)}&limit=1`
+  );
+  if (found.error) return { error: found.error };
+  if (!found.response.ok) return { error: "Could not load added guest", status: 502 };
+  const [companion] = await found.response.json();
+  const parent = Array.isArray(companion?.rsvps) ? companion.rsvps[0] : companion?.rsvps;
+  if (!companion || parent?.event_key !== EVENT_KEY || parent?.status !== "attending") return { error: "Added guest is not registered", status: 400 };
+  if (type === "confirmation") {
+    const emails = buildRsvpConfirmationEmails({
+      guestName: parent.guest_name,
+      guestEmail: "",
+      plusOneName: companion.guest_name,
+      plusOneEmail: companion.email,
+      confirmationLink: "",
+      plusOneConfirmationLink: companion.confirmation_token ? buildConfirmationUrl(requestUrl, companion.confirmation_token) : "",
+      wantsTableReservation: parent.wants_table_reservation === true,
+      config,
+    });
+    if (!emails.length) return { error: "No confirmation email available", status: 400 };
+    return { emails };
+  }
+
+  const venue = await loadTicketEmailVenue(env);
+  if (venue.error instanceof Response) return { error: venue.error };
+  if (venue.error) return { error: venue.error, status: 502 };
+  if (!companion.email || !companion.ticket_token) return { error: "No ticket email available", status: 400 };
+  return {
+    emails: [buildTicketEmail({
+      to: companion.email,
+      name: companion.guest_name,
+      guestOf: parent.guest_name,
+      ticketLink: buildTicketUrl(requestUrl, companion.ticket_token),
+      venue: venue.value,
+      config,
+    })],
+  };
+}
+
+async function buildRegistrationEmails({ env, requestUrl, rsvp, companions, type, config }) {
   if (type === "confirmation") {
     const firstCompanion = companions.find((item) => item.email && item.confirmation_token) || null;
     const emails = buildRsvpConfirmationEmails({

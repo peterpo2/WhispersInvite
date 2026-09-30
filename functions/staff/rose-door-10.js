@@ -333,11 +333,13 @@ async function loadInvites(){
   invites=data.invites||[];renderInvites();
 }
 function inviteStatusLabel(status){return status==='attending'?'Attending':status==='declined'?'Declined':'Not responded';}
-function filteredInvites(){const q=document.getElementById('inviteSearch').value.trim().toLowerCase();return invites.filter(i=>!q||[i.name,i.email,i.phone,i.status,inviteStatusLabel(i.status),i.confirmationEmailSentAt?'sent':'not sent',i.inviteLink,i.confirmationLink,i.ticketLink].some(v=>String(v||'').toLowerCase().includes(q)));}
+function inviteTypeLabel(i){return i.source==='companion'?'Added guest':i.source==='rsvp'?'Direct RSVP':'Admin invite';}
+function inviteNameCell(i){const extra=[inviteTypeLabel(i),i.guestOf?'Guest of '+i.guestOf:''].filter(Boolean).join(' · ');return esc(i.name)+(extra?'<br><span class="small">'+esc(extra)+'</span>':'');}
+function filteredInvites(){const q=document.getElementById('inviteSearch').value.trim().toLowerCase();return invites.filter(i=>!q||[i.name,i.email,i.phone,i.status,inviteStatusLabel(i.status),inviteTypeLabel(i),i.guestOf,i.confirmationEmailSentAt?'sent':'not sent',i.inviteLink,i.confirmationLink,i.ticketLink].some(v=>String(v||'').toLowerCase().includes(q)));}
 function renderInvites(){
   const body=document.querySelector('#invitesTable tbody'),rows=filteredInvites();
   const visible=pageRows(rows,invitesPage);
-  body.innerHTML=visible.map(i=>'<tr><td>'+esc(i.name)+'</td><td>'+esc(i.email)+'</td><td>'+esc(i.phone)+'</td><td>'+esc(inviteStatusLabel(i.status))+(i.submittedAt?'<br><span class="pill">'+esc(new Date(i.submittedAt).toLocaleString())+'</span>':'')+'</td><td>'+linkActionCell(i,'invite',i.inviteLink)+'</td><td>'+linkActionCell(i,'confirmation',i.confirmationLink)+'</td><td>'+linkActionCell(i,'ticket',i.ticketLink)+'</td><td>'+esc(i.createdAt?new Date(i.createdAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="8">No invites.</td></tr>';
+  body.innerHTML=visible.map(i=>'<tr><td>'+inviteNameCell(i)+'</td><td>'+esc(i.email)+'</td><td>'+esc(i.phone)+'</td><td>'+esc(inviteStatusLabel(i.status))+(i.submittedAt?'<br><span class="pill">'+esc(new Date(i.submittedAt).toLocaleString())+'</span>':'')+'</td><td>'+linkActionCell(i,'invite',i.inviteLink)+'</td><td>'+linkActionCell(i,'confirmation',i.confirmationLink)+'</td><td>'+linkActionCell(i,'ticket',i.ticketLink)+'</td><td>'+esc(i.createdAt?new Date(i.createdAt).toLocaleString():'')+'</td></tr>').join('')||'<tr><td colspan="8">No invites.</td></tr>';
   renderPager('invitesPager',rows,invitesPage,p=>{invitesPage=p;renderInvites();});
   body.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy,b));
   body.querySelectorAll('[data-send-link-id]').forEach(b=>b.onclick=()=>sendLinkEmail(b.dataset.sendLinkId,b.dataset.sendLinkType,b));

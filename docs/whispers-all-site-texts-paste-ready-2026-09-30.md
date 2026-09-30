@@ -97,7 +97,7 @@ Details:
 - You, and one guest of your choosing
 
 - Sound
-- Sammer · Lucia · Atia
+- Sammer · Lucia Kosta · Atia
 
 - Rules
 - No photos in the room

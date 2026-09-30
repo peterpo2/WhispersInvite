@@ -33,6 +33,8 @@ test("staff admin includes an invite registry tab", () => {
   assert.match(staffPage, /<th>Invite<\/th><th>Confirmation<\/th><th>Ticket<\/th>/);
   assert.doesNotMatch(staffPage, /<th>Send<\/th>/);
   assert.match(staffPage, /i\.inviteLink,i\.confirmationLink,i\.ticketLink/);
+  assert.match(staffPage, /inviteTypeLabel/);
+  assert.match(staffPage, /i\.guestOf/);
 });
 
 test("staff page defines an explicit clean social preview image", () => {
@@ -49,6 +51,8 @@ test("invite link columns can send their own email type", () => {
   assert.match(inviteSendApi, /buildInviteEmail/);
   assert.match(inviteSendApi, /buildRsvpConfirmationEmails/);
   assert.match(inviteSendApi, /buildTicketEmail/);
+  assert.match(inviteSendApi, /id\.startsWith\("rsvp:"\)/);
+  assert.match(inviteSendApi, /id\.startsWith\("companion:"\)/);
   assert.match(staffPage, /JSON\.stringify\(\{id,type\}\)/);
   assert.match(staffPage, /linkActionCell\(i,'invite',i\.inviteLink\)/);
   assert.match(staffPage, /linkActionCell\(i,'confirmation',i\.confirmationLink\)/);
