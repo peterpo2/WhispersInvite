@@ -115,6 +115,10 @@ test("only custom domains and local development hosts can serve public pages", (
     "127.0.0.1",
     "127.0.0.1:8788",
     "[::1]:8788",
+    "192.168.0.103:8788",
+    "10.0.0.25:8788",
+    "172.16.0.4:8788",
+    "172.31.255.254:8788",
   ]) {
     assert.equal(isPublicHost(host), true, host);
   }
@@ -124,6 +128,8 @@ test("only custom domains and local development hosts can serve public pages", (
     "23058b1c.whispers-invite.pages.dev",
     "evil-whisperssociety.com",
     "whisperssociety.com.evil.example",
+    "172.32.0.1:8788",
+    "8.8.8.8:8788",
     "",
     undefined,
     null,

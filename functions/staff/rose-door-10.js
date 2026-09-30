@@ -49,7 +49,7 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 <body>
 <div class="grain" aria-hidden="true"></div>
 <main>
-<div class="top"><div class="brand"><img src="/assets/whispers-lockup-dark.png" alt="WHISPERS"/><div><div class="k">WHISPERS</div><h1>Door</h1></div></div><button id="refresh">Refresh</button></div>
+<div class="top"><div class="brand"><img src="/assets/whispers-lockup-transparent.png" alt="WHISPERS"/><div><div class="k">WHISPERS</div><h1>Door</h1></div></div><button id="refresh">Refresh</button></div>
 <nav class="tabs" aria-label="Staff sections"><button class="tab active" data-view="scanner">Scanner</button><button class="tab" data-view="members">Members</button><button class="tab" data-view="tables">Tables</button><button class="tab" data-view="invite">Invite</button></nav>
 <div class="view active" id="view-scanner">
 <section class="panel camera"><video id="video" playsinline muted></video><div class="scanline"></div></section>

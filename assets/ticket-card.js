@@ -128,7 +128,7 @@
   async function prepare(tickets) {
     if (!window.QRCode) throw new Error("QR library missing");
     try { await Promise.all([document.fonts.load(`300 104px ${SERIF}`), document.fonts.load(`italic 400 46px ${SERIF}`), document.fonts.load(`300 52px ${SANS}`)]); } catch (_) {}
-    const [lockup, mark, rose] = await Promise.all([loadImage("/assets/whispers-lockup-dark.png"), loadImage("/assets/whispers-mark.png"), loadImage("/assets/whispers-rose.png")]);
+    const [lockup, mark, rose] = await Promise.all([loadImage("/assets/whispers-lockup-transparent.png"), loadImage("/assets/whispers-mark.png"), loadImage("/assets/whispers-rose.png")]);
     const files = [], used = new Set();
     for (const t of tickets) files.push(await toFile(await draw(t, { lockup, mark, rose }), fileName(t.name, used)));
     return files;

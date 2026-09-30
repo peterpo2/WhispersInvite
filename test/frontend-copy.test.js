@@ -7,6 +7,11 @@ const ticketPage = readFileSync("functions/ticket/[token].js", "utf8");
 const confirmationPage = readFileSync("functions/hi/[token].js", "utf8");
 const staffPage = readFileSync("functions/staff/rose-door-10.js", "utf8");
 const rsvpApi = readFileSync("functions/api/rsvp.js", "utf8");
+const sectionHtml = (id) => {
+  const match = html.match(new RegExp(`<section[^>]*id="${id}"[^>]*>([\\s\\S]*?)<\\/section>`));
+  assert.ok(match, `Missing section ${id}`);
+  return match[1];
+};
 
 test("pre-release confirmation uses the approved save ticket action", () => {
   assert.match(html, /\[hidden\]\{display:none!important\}/);
@@ -78,6 +83,17 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
   assert.doesNotMatch(ticketPage, /Use your confirmation link to RSVP/);
   assert.match(ticketPage, /\$\('ticketNote'\)\.textContent=''/);
   assert.match(ticketPage, /\$\('ticketNote'\)\.textContent='Show this seal at the door\. The QR code confirms your place in the WHISPERS list\.'/);
+});
+
+test("ticket and confirmation typography stays compact on phone screens", () => {
+  assert.match(ticketPage, /h1\{[^}]*font-size:clamp\(32px,8\.6vw,42px\)/);
+  assert.match(ticketPage, /\.role\{[^}]*font-size:18px/);
+  assert.match(ticketPage, /\.meta\{font-size:16px;line-height:1\.42/);
+  assert.match(ticketPage, /\.small\{[^}]*font-size:15px;line-height:1\.42/);
+  assert.match(confirmationPage, /h1\{[^}]*font-size:clamp\(32px,8\.6vw,42px\)/);
+  assert.match(confirmationPage, /\.role\{[^}]*font-size:18px/);
+  assert.match(confirmationPage, /\.meta\{font-size:16px;line-height:1\.42/);
+  assert.match(confirmationPage, /\.note\{[^}]*font-size:15px;line-height:1\.42/);
 });
 
 test("old confirmation links that contain an invite token redirect to the invite", () => {
@@ -177,6 +193,8 @@ test("public invitation shells use in-flow partner bars with real logo assets", 
   assert.match(ticketPage, /partner-logo rothschild[\s\S]*partner-logo beluga/);
   assert.match(html, /\.screen > \.partner-bar\{position:relative/);
   assert.match(html, /<section class="screen" id="s-letter">[\s\S]*<aside aria-label="Event partners" class="partner-bar">/);
+  assert.doesNotMatch(sectionHtml("s-seal"), /class="partner-bar"/);
+  assert.doesNotMatch(sectionHtml("s-film"), /class="partner-bar"/);
   assert.doesNotMatch(html, /<body data-scene="seal">[\s\S]*<aside aria-label="Event partners" class="partner-bar">[\s\S]*<section class="screen on" id="s-seal">/);
   assert.match(html, /\.partner-logos\{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0\}/);
   assert.match(html, /\.partner-logo\.rothschild\{width:118px;height:45px\}/);
@@ -195,30 +213,33 @@ test("public invitation shells use in-flow partner bars with real logo assets", 
   assert.doesNotMatch(ticketPage, /\/assets\/partner-rothschild\.jpg/);
 });
 
-test("public floating actions sit above the partner bar", () => {
+test("public floating actions sit lower on seal and film screens", () => {
   assert.match(html, /--partner-clearance:104px/);
-  assert.match(html, /--partner-action-clearance:78px/);
+  assert.match(html, /--skip-action-clearance:34px/);
   assert.match(html, /\.screen\{[\s\S]*padding:[^}]*calc\(24px \+ env\(safe-area-inset-bottom\)\)/);
-  assert.match(html, /\.skip\{[\s\S]*bottom:calc\(var\(--partner-action-clearance\) \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(html, /\.skip\{[\s\S]*bottom:calc\(var\(--skip-action-clearance\) \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(html, /\.skip\{[\s\S]*z-index:70/);
 });
 
 test("letter respond CTA stays in flow without covering the closing copy", () => {
   assert.match(html, /#s-letter\{padding-bottom:calc\(10px \+ env\(safe-area-inset-bottom\)\);scroll-padding-bottom:calc\(110px \+ env\(safe-area-inset-bottom\)\)\}/);
   assert.match(html, /#s-letter \.inner\{margin-top:auto;margin-bottom:0;padding-bottom:0\}/);
-  assert.match(html, /#toRsvp\{position:sticky;z-index:90;bottom:calc\(14px \+ env\(safe-area-inset-bottom\)\)/);
-  assert.match(html, /#toRsvp\{[\s\S]*width:100%;margin:22px auto 0/);
+  assert.match(html, /#toRsvp\{position:relative;z-index:20;width:100%;margin:24px auto 0/);
+  assert.doesNotMatch(html, /#toRsvp\{position:sticky/);
   assert.match(html, /#toRsvp\{[\s\S]*animation:respondGlow 3\.6s ease-in-out infinite/);
   assert.match(html, /#toRsvp::before\{[\s\S]*animation:respondSweep 4\.8s ease-in-out infinite/);
   assert.match(html, /#toRsvp::after\{[\s\S]*animation:respondHalo 3\.6s ease-in-out infinite/);
   assert.match(html, /#s-letter\.on #toRsvp\.st\{animation:respondGlow 3\.6s ease-in-out infinite;transform:none\}/);
-  assert.match(html, /#s-letter \.row dd\{font-size:18px;line-height:1\.3\}/);
+  assert.match(html, /#s-letter \.row dd\{font-size:13px;line-height:1\.48\}/);
 });
 
 test("letter event time keeps the date and door time on separate stable lines", () => {
   assert.match(html, /<dd>Saturday 10 October<span class="time-line">Doors open at 22:00 <em class="same-line">until 03:00<\/em><\/span><\/dd>/);
-  assert.match(html, /\.row dd \.time-line\{display:block;white-space:nowrap\}/);
-  assert.match(html, /#s-letter \.row dt\{font-size:10px;letter-spacing:\.14em;padding-top:4px\}/);
+  assert.match(html, /\.row dd \.time-line\{display:block;font-size:1em;white-space:normal\}/);
+  assert.match(html, /#s-letter \.row\{grid-template-columns:5\.4em 1fr;gap:6px;padding:15px 0\}/);
+  assert.match(html, /#s-letter \.row dt\{font-size:15px;letter-spacing:\.11em;padding-top:1px\}/);
+  assert.match(html, /#s-letter \.row dd \.time-line\{font-size:13px\}/);
+  assert.match(html, /#s-letter \.brand-lockup\{width:min\(240px,70vw\)\}/);
 });
 
 test("seal intro keeps heavy glow effects off the logo image", () => {
@@ -227,6 +248,13 @@ test("seal intro keeps heavy glow effects off the logo image", () => {
   assert.match(html, /\.sealwrap\{[^}]*isolation:isolate;contain:layout paint;transform:translateZ\(0\)/);
   assert.match(html, /\.sealwrap::before,\.sealwrap::after\{[^}]*z-index:0/);
   assert.match(html, /\.sealimg\{[^}]*z-index:1/);
+  assert.match(html, /\.ring\.seal-progress\{[^}]*inset:0/);
+  assert.match(html, /\.progress-track\{[^}]*display:none/);
+  assert.match(html, /\.progress-orbit\{stroke:var\(--gold-hi\);stroke-width:1\.35/);
+  assert.match(html, /<svg aria-hidden="true" class="ring seal-progress" viewBox="0 0 100 100"><circle class="progress-orbit" cx="50" cy="50" id="prog" r="45\.2"><\/circle><\/svg>/);
+  assert.match(html, /const C=2\*Math\.PI\*45\.2/);
+  assert.match(html, /prog\.style\.strokeDasharray=C/);
+  assert.match(html, /prog\.style\.strokeDashoffset=C\*\(1-p\)/);
   assert.match(html, /#s-seal\.cracking \.sealwrap::before,#s-seal\.cracking \.sealwrap::after\{opacity:0;animation:none/);
   assert.match(html, /@keyframes sealBreathe\{0%,100%\{transform:translateZ\(0\) scale\(\.992\)\}50%\{transform:translateZ\(0\) scale\(1\.012\)\}\}/);
   assert.match(html, /@keyframes crack\{0%\{transform:translateZ\(0\) scale\(\.975\);opacity:1\}30%\{transform:translateZ\(0\) scale\(1\.045\);opacity:1\}100%\{transform:translateZ\(0\) scale\(1\.16\);opacity:0\}\}/);

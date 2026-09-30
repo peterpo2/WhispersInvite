@@ -36,22 +36,22 @@ body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;backg
 .grain{position:fixed;inset:-50%;z-index:0;pointer-events:none;opacity:.045;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");animation:grain 1.1s steps(3) infinite}@keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}100%{transform:translate(0,0)}}@media (prefers-reduced-motion:reduce){.grain{animation:none}}
 .ticket{position:relative;z-index:1;width:100%;max-width:480px;margin:auto;text-align:center;transition:opacity .22s ease}
 .ticket.loading{opacity:0}
-.brand-lockup{display:block;width:min(188px,56vw);height:auto;margin:0 auto;filter:drop-shadow(0 0 22px rgba(163,22,33,.3))}
+.brand-lockup{display:block;width:min(210px,62vw);height:auto;margin:0 auto;filter:drop-shadow(0 0 22px rgba(163,22,33,.3))}
 .brand-rule{display:block;width:48px;height:1px;margin:16px auto 0;background:rgba(217,174,120,.65)}
-h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 0 6px;color:#F7F0E6;overflow-wrap:anywhere}
-.role{font-style:italic;color:#CDB894;margin:0;font-size:22px}
+h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px 0 6px;color:#F7F0E6;overflow-wrap:anywhere}
+.role{font-style:italic;color:#CDB894;margin:0;font-size:18px}
 .rule{position:relative;width:84px;height:1px;margin:22px auto;background:linear-gradient(90deg,transparent,rgba(217,174,120,.85),transparent)}
 .rule:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;background:var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
 .code,.state{font-family:var(--sans);font-weight:300;text-transform:uppercase}
-.code{font-size:21px;letter-spacing:.24em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,174,120,.4)}
+.code{font-size:18px;letter-spacing:.22em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,174,120,.4)}
 .qr{width:min(62vw,230px);height:min(62vw,230px);margin:22px auto;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);padding:10px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
 .qr[hidden]{display:none}
 .qr.ready{background:var(--paper);border:0}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
-.meta{font-size:21px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}.meta b{font-weight:400;color:#F6EFE4}
+.meta{font-size:16px;line-height:1.42;color:#D9CEC0;margin:0;padding-top:16px;border-top:1px solid var(--line)}.meta b{font-weight:400;color:#F6EFE4}
 #bringing{display:block;border-top:1px solid rgba(217,174,120,.14);padding-top:10px;margin-top:10px}#bringing:empty{display:none}
-.small{font-style:italic;font-size:19px;line-height:1.55;color:#CFC3B3;margin:22px auto 0;max-width:360px}.small:empty{display:none}
+.small{font-style:italic;font-size:15px;line-height:1.42;color:#CFC3B3;margin:18px auto 0;max-width:360px}.small:empty{display:none}
 .state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
 .meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
 .save,.pending-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:400 15px/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6);text-decoration:none}
@@ -67,7 +67,7 @@ h1{font-weight:300;font-size:clamp(38px,11vw,52px);line-height:1.05;margin:20px 
 <body>
 <div class="grain" aria-hidden="true"></div>
 <main class="ticket loading">
-<img class="brand-lockup" src="/assets/whispers-lockup-dark.png" alt="WHISPERS"/>
+<img class="brand-lockup" src="/assets/whispers-lockup-transparent.png" alt="WHISPERS"/>
 <span class="brand-rule" aria-hidden="true"></span>
 <h1 id="guest">…</h1>
 <p class="role">Private guest</p>
