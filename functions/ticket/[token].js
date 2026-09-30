@@ -58,7 +58,8 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
 .meta{font-size:16px;line-height:1.42;color:#D9CEC0;margin:18px 0 0}.meta b{font-weight:400;color:#F6EFE4}
-.ticket-date{display:block;font-family:var(--sans);font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:#F4DFC0;text-shadow:0 0 22px rgba(217,174,120,.22)}
+.status-line,.relationship .status-line,.small span{display:block}.relationship .status-line + .status-line,.small span + span{margin-top:10px}
+.ticket-date,.ticket-time{display:block;font-family:var(--sans);font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:#F4DFC0;text-shadow:0 0 22px rgba(217,174,120,.22)}.ticket-time{margin-top:3px}
 .venue-line{display:block;margin-top:10px;font-family:var(--sans);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-hi);text-shadow:0 0 28px rgba(235,203,149,.36)}
 .venue-line:empty{display:none}.venue-line a{color:var(--gold-hi);text-decoration:none;border-bottom:1px solid rgba(235,203,149,.55)}
 .relationship{display:block;color:#F2E8D9;margin:0}.relationship:empty{display:none}
@@ -84,7 +85,7 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
 <h1 id="guest">…</h1>
 <p class="role">Private guest</p>
 <div class="rule"></div>
-<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October</b> &middot; Doors <b>22:00</b></span><span class="venue-line" id="venue"></span></p>
+<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October</b></span><span class="ticket-time">Doors open at <b>22:00</b></span><span class="venue-line" id="venue"></span></p>
 <div class="qr" id="qr"></div>
 <p class="state" id="state"></p>
 <div class="ticket-divider" aria-hidden="true"></div>
@@ -132,9 +133,12 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
     $('code').textContent='10.10 · 22:00';
     $('qr').hidden=true;
     $('state').textContent='';
-    $('ticketMeta').innerHTML='Location remains sealed until 09.10 at 18:00.';
-    $('bringing').textContent='';
-    $('ticketNote').textContent='Your ticket will be sent to you on 09.10 at 18:00.';
+    $('ticketMeta').innerHTML='<span class="status-line">Location remains sealed until 09.10 at 18:00.</span>';
+    const extras=[];
+    if(t.bringing)extras.push('Registered with '+escapeHtml(t.bringing)+'.');
+    if(t.table_reserved||t.table_requested)extras.push('Table reservation requested.');
+    $('bringing').innerHTML=extras.map((line)=>'<span class="status-line">'+escapeHtml(line)+'</span>').join('');
+    $('ticketNote').innerHTML='<span>Your ticket will be sent to you</span><span>on 09.10 at 18:00.</span>';
     reveal();
     return;
   }
@@ -149,7 +153,7 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
   $('ticketNote').textContent='Show this seal at the door. The QR code confirms your place in the WHISPERS list.';
   $('state').textContent=t.checked_in_at?'Already checked in':'Ready for the door';
   if(window.WhispersTickets){
-    const lines=['Saturday 10 October · Doors 22:00'];
+    const lines=['Saturday 10 October','Doors open at 22:00'];
     if(venueText)lines.push(venueText);
     if(t.bringing)lines.push('Bringing '+t.bringing); else if(!t.brought_by)lines.push('Coming on your own');
     if(t.table_reserved)lines.push('Your table is confirmed.');

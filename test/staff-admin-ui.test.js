@@ -119,3 +119,12 @@ test("staff page renders login and owner staff management controls", () => {
   assert.match(staffPage, /\/api\/staff\/logout/);
   assert.doesNotMatch(staffPage, /staff email/i);
 });
+
+test("door staff can see only scanner and tables views", () => {
+  assert.match(staffPage, /door:\['scanner','tables'\]/);
+  assert.match(staffPage, /if\(!allowedViews\.includes\(btn\.dataset\.view\)\)btn\.hidden=true/);
+  assert.match(staffPage, /if\(name==='tables'\)loadTables\(\)/);
+  assert.match(staffPage, /if\(currentView==='members'\)loadMembers\(\);else if\(currentView==='tables'\)loadTables\(\)/);
+  assert.doesNotMatch(staffPage, /door:\['scanner','members'/);
+  assert.doesNotMatch(staffPage, /door:\['scanner','members','tables'/);
+});

@@ -79,8 +79,7 @@ the active invitation flow lives at `/invite` and `/invite/<id>` (see End-to-end
    `/invite?token=<token>`). The screens are seal → film → letter → [identify] → rsvp →
    plus → done / decline. With a token, `/api/guest-check` supplies the name (shown on the
    seal) and identify is skipped. Without one, identify asks for a full name (2+ words).
-   After RSVP, guests land on `/confirmation/<token>`; `/hi/<token>` remains a legacy
-   confirmation/status alias for old links.
+   After RSVP, guests land on `/confirmation/<token>`.
 2. `submitRSVP()` POSTs to `/api/rsvp`, which returns `ticketToken`, `sealCode`, `ticketUrl`
    and `checkInUrl`.
 3. `/ticket/:token` renders the ticket page. It fetches `/api/ticket` on the client and draws a
@@ -118,7 +117,7 @@ first, so the result is "already checked in".
 
 `functions/_middleware.js` runs before every request:
 - Only `/`, `/invite`, the `/api/*` routes above (exact names, so `/api/*.js` is blocked),
-  `/ticket/:token`, `/confirmation/:token`, `/hi/:token`, `/invite/:token`,
+  `/ticket/:token`, `/confirmation/:token`, `/invite/:token`,
   `/staff/rose-door-10` and `/assets/<lowercase-name>.png|js|ttf|mov|svg`
   reach `next()`. Everything else is a no-store 404.
   Add any new route to `isPublicPath` in `functions/_shared/access.js` and its test.

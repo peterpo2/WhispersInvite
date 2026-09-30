@@ -21,12 +21,11 @@ custom-domain email delivery and final address blast are not complete yet.
 | `/invite` | Public invitation. Visitor goes through the full RSVP flow without a token. |
 | `/invite/<token>` | Personal invitation. `/api/guest-check` loads the invited name and any contact details from `guest_list`. |
 | `/confirmation/<confirmation_token>` | Confirmation/status after RSVP. Can offer a safe update path before ticket release. |
-| `/hi/<confirmation_token>` | Legacy confirmation/status alias for already-created links. |
 | `/ticket/<token>` | Real ticket link. It stays locked until `2026-10-09T18:00:00+03:00`. |
 
 `/invite/<token>` redirects to `/invite?token=<token>`. The front end calls `/api/guest-check`
 when a token is present. `/confirmation/<confirmation_token>` renders the confirmation shell
-directly, and `/hi/<confirmation_token>` remains as a compatibility alias.
+directly.
 
 ### Screens
 
@@ -203,7 +202,6 @@ The middleware allowlist permits only:
 - listed `/api/*` routes
 - `/ticket/<token>`
 - `/confirmation/<token>`
-- `/hi/<token>`
 - `/invite/<token>`
 - `/staff/rose-door-10`
 - `/assets/<lowercase-name>.png`

@@ -34,7 +34,7 @@ select
   r.plus_one_name,
   r.seal_code,
   r.submitted_at,
-  'https://whispers-invite.pages.dev/hi/' || g.id         as invitation_link
+  'https://whispers-invite.pages.dev/invite/' || g.id     as invitation_link
 from public.guest_list g
 left join public.rsvps r
   on r.guest_id = g.id and r.event_key = 'whispers-2026-10-10'
@@ -155,7 +155,7 @@ select * from public.event_details where event_key = 'whispers-2026-10-10';
 
 
 -- ── 10. ADD GUESTS / INVITATION LINKS (WRITE) ────────────────────────
--- id = the end of the link: https://whispers-invite.pages.dev/hi/<id>
+-- id = the end of the link: https://whispers-invite.pages.dev/invite/<id>
 -- Letters, digits and dashes only. ON CONFLICT updates the name.
 insert into public.guest_list (id, name, email) values
   ('first-last', 'First Last', null)
@@ -173,7 +173,7 @@ delete from public.guest_list where id = 'first-last';
 select id, guest_id, guest_name, status, plus_one_name, submitted_at
 from public.rsvps where event_key = 'whispers-2026-10-10' order by submitted_at;
 
--- Then delete one by its guest_id (for /hi/ links) or by id from the list above:
+-- Then delete one by its guest_id (for invite links) or by id from the list above:
 delete from public.rsvps where event_key = 'whispers-2026-10-10' and guest_id = 'michelleg';
 -- delete from public.rsvps where id = 123;
 

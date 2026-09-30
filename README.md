@@ -25,7 +25,6 @@ Postgres through the REST API. There is no framework, no bundler and no build st
 | `/invite` | Public invitation. The guest goes through the full RSVP flow without a token. |
 | `/invite/<token>` | Personal invitation. The invited name is shown, and missing email/phone are collected before RSVP. |
 | `/confirmation/<token>` | Confirmation/status page after RSVP. May offer `Update details` only before ticket release. |
-| `/hi/<token>` | Legacy confirmation/status alias kept so old links continue to work. |
 | `/ticket/<token>` | Real ticket page for a guest or plus-one. It stays locked until `09.10 18:00`. |
 | `/staff/rose-door-10` | Staff scanner. Keep private and do not link from public pages. |
 
@@ -143,8 +142,7 @@ functions/_middleware.js         Route allowlist, security headers and /invite/<
 functions/_shared/               Tested pure helpers and response utilities
 functions/api/                   RSVP, ticket, door, checkin and guest lookup APIs
 functions/index.js               Logo-only public calling card
-functions/confirmation/[token].js New confirmation/status route
-functions/hi/[token].js          Legacy confirmation/status alias
+functions/confirmation/[token].js Confirmation/status route
 functions/ticket/[token].js      Server-rendered ticket shell
 functions/staff/rose-door-10.js  Camera scanner for staff
 sql/                             Schema, migrations and owner queries
@@ -160,6 +158,19 @@ docs/project-spec.md             Current product and technical spec
   wider sharing.
 - Every response gets CSP, HSTS, no framing, no referrer and `noindex`.
 - User input is validated on the server and escaped before it is rendered.
+
+## Staff Owner Bootstrap
+
+For the existing production database, first run `sql/2026-09-30-staff-auth.sql` in the Supabase
+SQL editor. Then generate the first owner insert locally:
+
+```bash
+npm run staff:bootstrap-owner -- ppadmin
+```
+
+Copy the generated SQL into the Supabase SQL editor and copy the temporary password immediately.
+The password is shown once by the local command and is never committed. After `ppadmin` logs in,
+create or reset all other organizer and door accounts from the Staff tab.
 
 ## What Is Still Open
 

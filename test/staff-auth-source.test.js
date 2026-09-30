@@ -41,11 +41,11 @@ test("existing staff APIs require staff roles", () => {
     ["functions/api/door.js", "door"],
     ["functions/api/staff/members.js", "admin"],
     ["functions/api/staff/checkin-state.js", "admin"],
-    ["functions/api/staff/reservation-state.js", "admin"],
+    ["functions/api/staff/reservation-state.js", "door"],
     ["functions/api/staff/invites.js", "admin"],
     ["functions/api/staff/invite-send.js", "admin"],
-    ["functions/api/staff/tables.js", "admin"],
-    ["functions/api/staff/table-assignment.js", "admin"],
+    ["functions/api/staff/tables.js", "door"],
+    ["functions/api/staff/table-assignment.js", "door"],
   ];
   for (const [file, role] of files) {
     const source = readFileSync(file, "utf8");
@@ -68,4 +68,15 @@ test("owner-only staff user APIs can create, edit, delete and reset generated pa
   assert.match(password, /hashPassword/);
   assert.doesNotMatch(users, /password_hash.*json/);
   assert.doesNotMatch(password, /password_hash.*json/);
+});
+
+test("staff owner bootstrap script generates hashed SQL for a supplied username", () => {
+  const script = readFileSync("scripts/bootstrap-staff-owner.mjs", "utf8");
+  assert.match(script, /hashPassword/);
+  assert.match(script, /validateStaffUsername/);
+  assert.match(script, /makeTemporaryPassword/);
+  assert.match(script, /insert into public\.staff_users/);
+  assert.match(script, /role, password_hash/);
+  assert.match(script, /owner/);
+  assert.doesNotMatch(script, /ppadmin/);
 });

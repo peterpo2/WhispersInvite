@@ -7,7 +7,7 @@ const inviteShell = readFileSync(new URL("../invite-shell", import.meta.url), "u
 const rootPage = readFileSync(new URL("../functions/index.js", import.meta.url), "utf8");
 const middleware = readFileSync(new URL("../functions/_middleware.js", import.meta.url), "utf8");
 const ticketPage = readFileSync(new URL("../functions/ticket/[token].js", import.meta.url), "utf8");
-const confirmationPage = readFileSync(new URL("../functions/hi/[token].js", import.meta.url), "utf8");
+const confirmationPage = readFileSync(new URL("../functions/confirmation/[token].js", import.meta.url), "utf8");
 const staffPage = readFileSync(new URL("../functions/staff/rose-door-10.js", import.meta.url), "utf8");
 const ticketCard = readFileSync(new URL("../assets/ticket-card.js", import.meta.url), "utf8");
 
@@ -66,5 +66,5 @@ test("public ticket and confirmation links use the transparent lockup without a 
 
 test("event details keep the approved two-line when copy", () => {
   assert.match(indexHtml, /Saturday 10 October/);
-  assert.match(indexHtml, /Doors open at 22:00 <em class="same-line">until 03:00<\/em>/);
+  assert.match(indexHtml, /<em class="time-line">Doors open at 22:00 until 03:00<\/em>/);
 });

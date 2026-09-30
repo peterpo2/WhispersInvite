@@ -229,7 +229,7 @@ document.getElementById('refresh').onclick=refreshCurrent;
 document.getElementById('logout').onclick=async()=>{await fetch('/api/staff/logout',{method:'POST'});location.reload();};
 const PAGE_SIZE=20;
 let members=[],membersPage=1,sortKey='submittedAt',sortDir=-1,tablesData=null,selectedTableId=null,tableSearch='',invites=[],invitesPage=1,staffUsers=[],currentView='scanner';
-const ROLE_VIEWS={owner:['scanner','members','tables','invite','staff'],admin:['scanner','members','tables','invite'],door:['scanner']};
+const ROLE_VIEWS={owner:['scanner','members','tables','invite','staff'],admin:['scanner','members','tables','invite'],door:['scanner','tables']};
 const allowedViews=ROLE_VIEWS[STAFF_USER.role]||['scanner'];
 document.querySelectorAll('.tab').forEach(btn=>{if(!allowedViews.includes(btn.dataset.view))btn.hidden=true;});
 document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>showView(btn.dataset.view));

@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "staff:bootstrap-owner": "node scripts/bootstrap-staff-owner.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.39.0"

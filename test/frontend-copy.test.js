@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 
 const html = readFileSync("index.html", "utf8");
 const ticketPage = readFileSync("functions/ticket/[token].js", "utf8");
-const confirmationPage = readFileSync("functions/hi/[token].js", "utf8");
+const confirmationPage = readFileSync("functions/confirmation/[token].js", "utf8");
 const staffPage = readFileSync("functions/staff/rose-door-10.js", "utf8");
 const rsvpApi = readFileSync("functions/api/rsvp.js", "utf8");
 const sectionHtml = (id) => {
@@ -36,8 +36,8 @@ test("confirmed RSVP offers only a clear cancellation action", () => {
 });
 
 test("pre-release confirmation avoids repeated location release copy", () => {
-  assert.match(html, /<p class="passfoot">Saturday <b>10 October<\/b> · Doors <b>22:00<\/b><span class="bringing" id="bringingLine">/);
-  assert.doesNotMatch(html, /<p class="passfoot">Saturday <b>10 October<\/b> · Doors <b>22:00<\/b><br\/><span class="venue-line">Sofia · private location/);
+  assert.match(html, /<p class="passfoot"><span class="date-line">Saturday <b>10 October<\/b><\/span><span class="doors-line">Doors open at <b>22:00<\/b><\/span><span class="bringing" id="bringingLine">/);
+  assert.doesNotMatch(html, /Saturday <b>10 October<\/b> · Doors <b>22:00<\/b>/);
 });
 
 test("personal invite contact step does not keep the shared name prompt", () => {
@@ -59,7 +59,7 @@ test("phone input normalizes Bulgarian local numbers but preserves international
 });
 
 test("public invitation uses the approved access and update copy", () => {
-  assert.match(html, /This invitation grants free access\. Drinks are charged separately\. Tables upon request\./);
+  assert.match(html, /This invitation grants free access\.<em>Drinks are charged separately\. Tables upon request\.<\/em>/);
   assert.match(html, /You can confirm or update this before ticket release\./);
   assert.doesNotMatch(html, /This invitation only grants access to the event/);
   assert.doesNotMatch(html, /What happens beneath the rose stays beneath the rose/);
@@ -87,10 +87,11 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
   assert.doesNotMatch(ticketPage, /RSVP FIRST/);
   assert.match(ticketPage, /if\(data\.inviteUrl\)\{\$\('pendingInvite'\)\.href=data\.inviteUrl;\$\('pendingInvite'\)\.hidden=false;\}/);
   assert.match(ticketPage, />Save your ticket<\/button>/);
-  assert.match(ticketPage, /<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October<\/b> &middot; Doors <b>22:00<\/b><\/span><span class="venue-line" id="venue"><\/span><\/p>/);
+  assert.match(ticketPage, /<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October<\/b><\/span><span class="ticket-time">Doors open at <b>22:00<\/b><\/span><span class="venue-line" id="venue"><\/span><\/p>/);
   assert.match(ticketPage, /\.venue-line\{[^}]*font-weight:500/);
   assert.match(ticketPage, /\.venue-line\{[^}]*color:var\(--gold-hi\)/);
-  assert.match(ticketPage, /\.ticket-date\{[^}]*color:#F4DFC0/);
+  assert.match(ticketPage, /\.ticket-date,\.ticket-time\{[^}]*color:#F4DFC0/);
+  assert.match(ticketPage, /\.ticket-time\{display:block/);
   assert.match(ticketPage, /\.save,\.pending-link\{[^}]*font:500 clamp\(18px,4\.8vw,22px\)\/1\.2 var\(--sans\)/);
   assert.doesNotMatch(ticketPage, />Private ticket<\/button>/);
   assert.doesNotMatch(ticketPage, /Use your confirmation link to RSVP/);
@@ -118,10 +119,10 @@ test("ticket and confirmation typography stays compact on phone screens", () => 
   assert.match(confirmationPage, /\.note\{[^}]*font-size:15px;line-height:1\.42/);
 });
 
-test("old hi links that contain an invite token redirect to the invite", () => {
-  assert.match(confirmationPage, /guest_list\?select=id&id=eq\./);
-  assert.match(confirmationPage, /Response\.redirect\(`\$\{origin\}\/invite\/\$\{encodeURIComponent\(token\)\}`/);
-  assert.doesNotMatch(confirmationPage, /!\/\^\[A-Za-z0-9\]\{32,40\}\$\/\.test\(token\)/);
+test("confirmation page is the only public confirmation route", () => {
+  assert.match(confirmationPage, /\/api\/confirmation\?token=/);
+  assert.doesNotMatch(confirmationPage, /guest_list\?select=id&id=eq\./);
+  assert.doesNotMatch(confirmationPage, /\/invite\/\$\{encodeURIComponent\(token\)\}/);
 });
 
 test("ticket page forwards the local release preview flag to the ticket API", () => {
@@ -140,7 +141,10 @@ test("locked registered ticket avoids redundant ticket status labels", () => {
   assert.match(ticketPage, /\.qr\[hidden\]\{display:none\}/);
   assert.match(ticketPage, /\$\('code'\)\.textContent='10\.10 · 22:00'/);
   assert.match(ticketPage, /\$\('qr'\)\.hidden=true/);
-  assert.match(ticketPage, /\$\('state'\)\.textContent='';\s*\$\('ticketMeta'\)\.innerHTML='Location remains sealed until 09\.10 at 18:00\.';\s*\$\('bringing'\)\.textContent='';\s*\$\('ticketNote'\)\.textContent='Your ticket will be sent to you on 09\.10 at 18:00\.'/);
+  assert.match(ticketPage, /\$\('ticketMeta'\)\.innerHTML='<span class="status-line">Location remains sealed until 09\.10 at 18:00\.<\/span>'/);
+  assert.match(ticketPage, /extras\.push\('Registered with '\+escapeHtml\(t\.bringing\)\+'\.'\)/);
+  assert.match(ticketPage, /extras\.push\('Table reservation requested\.'\)/);
+  assert.match(ticketPage, /\$\('ticketNote'\)\.innerHTML='<span>Your ticket will be sent to you<\/span><span>on 09\.10 at 18:00\.<\/span>'/);
   assert.match(ticketPage, /else if\(!t\.brought_by\)lines\.push\('Coming on your own'\)/);
   assert.match(ticketPage, /note:'Show this seal at the door\.'/);
   assert.doesNotMatch(ticketPage, /id="ticketType"/);
@@ -261,12 +265,18 @@ test("letter respond CTA stays in flow without covering the closing copy", () =>
 });
 
 test("letter event time keeps the date and door time on separate stable lines", () => {
-  assert.match(html, /<dd>Saturday 10 October<span class="time-line">Doors open at 22:00 <em class="same-line">until 03:00<\/em><\/span><\/dd>/);
-  assert.match(html, /\.row dd \.time-line\{display:block;font-size:1em;white-space:normal\}/);
+  assert.match(html, /<dd>Saturday 10 October<em class="time-line">Doors open at 22:00 until 03:00<\/em><\/dd>/);
+  assert.match(html, /<div class="row"><dt>Access<\/dt><dd>This invitation grants free access\.<em>Drinks are charged separately\. Tables upon request\.<\/em><\/dd><\/div>/);
+  assert.match(html, /\.row dd \.time-line\{display:block;font-size:12px;color:var\(--mute\);font-style:italic;white-space:normal\}/);
   assert.match(html, /#s-letter \.row\{grid-template-columns:5\.4em 1fr;gap:6px;padding:15px 0\}/);
   assert.match(html, /#s-letter \.row dt\{font-size:15px;letter-spacing:\.11em;padding-top:1px\}/);
   assert.match(html, /#s-letter \.row dd \.time-line\{font-size:13px\}/);
   assert.match(html, /#s-letter \.brand-lockup\{width:min\(240px,70vw\)\}/);
+});
+
+test("identify intro keeps the ticket email promise as a two-line italic block", () => {
+  assert.match(html, /<p class="sub st" id="identifySub">Your name goes on the door\.<em class="script-line">Your ticket is issued in this name<br\/>and reaches you by email on 09\.10 at 18:00\.<\/em><\/p>/);
+  assert.match(html, /\.sub em\.script-line\{display:block;margin-top:8px;font-style:italic;color:var\(--mute\)\}/);
 });
 
 test("seal intro keeps heavy glow effects off the logo image", () => {

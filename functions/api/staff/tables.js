@@ -4,7 +4,7 @@ import { requireStaff } from "../../_shared/staff-auth.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 export async function onRequestGet({ request, env }) {
-  const staff = await requireStaff(request, env, "admin");
+  const staff = await requireStaff(request, env, "door");
   if (staff.error) return staff.error;
 
   const tables = await supabaseFetch(env, "/rest/v1/staff_tables?select=id,label,capacity,sort_order&order=sort_order.asc");

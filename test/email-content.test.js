@@ -39,10 +39,13 @@ test("invite email uses noreply sender, guestlist reply-to and contact details",
   assert.match(email.html, /\+359 888 012 380/);
   assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/whispers-lockup-transparent\.png/);
   assert.doesNotMatch(email.html, /whispers-lockup-dark\.png/);
-  assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/whispers-rose\.png/);
+  assert.doesNotMatch(email.html, /whispers-rose\.png/);
   assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/aviano-contrast\.ttf/);
   assert.match(email.html, /font-family:'AvianoContrast',Georgia,serif/);
   assert.match(email.html, /radial-gradient/);
+  assert.doesNotMatch(email.html, /text-shadow/);
+  assert.doesNotMatch(email.html, /font-size:32px/);
+  assert.doesNotMatch(email.html, /font-size:22px/);
   assert.doesNotMatch(email.html, />WHISPERS<\/td>/);
 });
 
@@ -97,10 +100,11 @@ test("RSVP confirmation email goes to the guest and their registered guest", () 
   assert.match(emails[1].html, /\+359 888 012 380/);
   assert.match(emails[0].html, /https:\/\/whisperssociety\.com\/assets\/whispers-lockup-transparent\.png/);
   assert.doesNotMatch(emails[0].html, /whispers-lockup-dark\.png/);
-  assert.match(emails[0].html, /https:\/\/whisperssociety\.com\/assets\/whispers-rose\.png/);
+  assert.doesNotMatch(emails[0].html, /whispers-rose\.png/);
   assert.match(emails[0].html, /https:\/\/whisperssociety\.com\/assets\/aviano-contrast\.ttf/);
   assert.match(emails[0].html, /font-family:'AvianoContrast',Georgia,serif/);
   assert.match(emails[0].html, /radial-gradient/);
+  assert.doesNotMatch(emails[0].html, /text-shadow/);
   assert.doesNotMatch(emails[0].html, />WHISPERS<\/td>/);
 });
 
@@ -154,6 +158,8 @@ test("ticket release email uses the ticket link and polished WHISPERS copy", () 
   assert.equal(email.subject, "Your WHISPERS Ticket");
   assert.match(email.text, /Your private ticket is ready/);
   assert.match(email.text, /Coming on your own\./);
+  assert.match(email.text, /Saturday 10 October\nDoors open at 22:00/);
+  assert.doesNotMatch(email.text, /Saturday 10 October · Doors 22:00/);
   assert.doesNotMatch(email.text, /Bringing/);
   assert.doesNotMatch(email.text, /Guest of/);
   assert.match(email.text, /https:\/\/whisperssociety\.com\/ticket\/tickettoken/);
@@ -161,10 +167,13 @@ test("ticket release email uses the ticket link and polished WHISPERS copy", () 
   assert.match(email.html, /Open Ticket/);
   assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/whispers-lockup-transparent\.png/);
   assert.doesNotMatch(email.html, /whispers-lockup-dark\.png/);
-  assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/whispers-rose\.png/);
+  assert.doesNotMatch(email.html, /whispers-rose\.png/);
   assert.match(email.html, /https:\/\/whisperssociety\.com\/assets\/aviano-contrast\.ttf/);
   assert.match(email.html, /font-family:'AvianoContrast',Georgia,serif/);
   assert.match(email.html, /radial-gradient/);
+  assert.doesNotMatch(email.html, /text-shadow/);
+  assert.doesNotMatch(email.html, /font-size:32px/);
+  assert.doesNotMatch(email.html, /font-size:22px/);
   assert.doesNotMatch(email.html, />WHISPERS<\/td>/);
 });
 
