@@ -117,6 +117,10 @@ test("ticket and confirmation typography stays compact on phone screens", () => 
   assert.match(confirmationPage, /\.role\{[^}]*font-size:18px/);
   assert.match(confirmationPage, /\.meta\{font-size:16px;line-height:1\.42/);
   assert.match(confirmationPage, /\.note\{[^}]*font-size:15px;line-height:1\.42/);
+  assert.match(confirmationPage, /\.status-line \+ \.status-line,\.note span \+ span\{margin-top:16px\}/);
+  assert.match(confirmationPage, /\.note\{[^}]*margin:26px auto 0/);
+  assert.match(ticketPage, /\.relationship \.status-line \+ \.status-line,\.small span \+ span\{margin-top:16px\}/);
+  assert.match(ticketPage, /\.small\{[^}]*margin:26px auto 0/);
 });
 
 test("confirmation page is the only public confirmation route", () => {

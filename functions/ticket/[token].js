@@ -58,12 +58,12 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
 .meta{font-size:16px;line-height:1.42;color:#D9CEC0;margin:18px 0 0}.meta b{font-weight:400;color:#F6EFE4}
-.status-line,.relationship .status-line,.small span{display:block}.relationship .status-line + .status-line,.small span + span{margin-top:10px}
+.status-line,.relationship .status-line,.small span{display:block}.relationship .status-line + .status-line,.small span + span{margin-top:16px}
 .ticket-date,.ticket-time{display:block;font-family:var(--sans);font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:#F4DFC0;text-shadow:0 0 22px rgba(217,174,120,.22)}.ticket-time{margin-top:3px}
 .venue-line{display:block;margin-top:10px;font-family:var(--sans);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-hi);text-shadow:0 0 28px rgba(235,203,149,.36)}
 .venue-line:empty{display:none}.venue-line a{color:var(--gold-hi);text-decoration:none;border-bottom:1px solid rgba(235,203,149,.55)}
 .relationship{display:block;color:#F2E8D9;margin:0}.relationship:empty{display:none}
-.small{font-style:italic;font-size:15px;line-height:1.42;color:#CFC3B3;margin:18px auto 0;max-width:360px}.small:empty{display:none}
+.small{font-style:italic;font-size:15px;line-height:1.42;color:#CFC3B3;margin:26px auto 0;max-width:360px}.small:empty{display:none}
 .state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
 .ticket-divider{width:100%;height:1px;margin:18px auto 16px;background:linear-gradient(90deg,transparent,rgba(217,174,120,.38),transparent)}
 .meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
