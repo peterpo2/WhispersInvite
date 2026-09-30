@@ -1,4 +1,10 @@
-export async function onRequestGet() {
+import { renderStaffLoginPage } from "../_shared/staff-login-page.js";
+import { requireStaff } from "../_shared/staff-auth.js";
+
+export async function onRequestGet({ request, env }) {
+  const staff = await requireStaff(request, env, "door");
+  if (staff.error) return renderStaffLoginPage();
+
   return new Response(`<!doctype html>
 <html lang="en">
 <head>
@@ -26,6 +32,7 @@ body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;backg
 main{position:relative;z-index:1;max-width:min(1280px,calc(100vw - 32px));margin:0 auto}
 .top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}.brand img{width:112px;height:auto;flex:0 0 112px;filter:drop-shadow(0 0 16px rgba(163,22,33,.3))}
+.staff-meta{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.staff-who{color:var(--muted);font-size:12px;letter-spacing:.14em;text-transform:uppercase}.staff-who b{color:var(--bone);font-weight:400}.staff-meta button{min-height:40px;padding:0 10px;font-size:11px;letter-spacing:.14em}
 .k{font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold)}h1{font-family:var(--serif);font-weight:300;font-size:32px;line-height:1.05;margin:2px 0 0}
 .panel{padding:16px 0;margin:0;border-bottom:1px solid var(--line)}
 .camera{position:relative;aspect-ratio:3/4;max-height:64svh;width:100%;background:#000;overflow:hidden;display:grid;place-items:center;padding:0;border:1px solid rgba(217,174,120,.4);border-radius:3px;margin-bottom:4px}
@@ -50,14 +57,15 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 .group-actions{flex-wrap:wrap}.mini-check{min-height:42px;display:flex;align-items:center;gap:7px;border:1px solid rgba(217,174,120,.35);border-radius:3px;padding:0 10px;color:var(--bone);font-size:12px;letter-spacing:.1em;text-transform:uppercase}.mini-check input{min-height:0;width:18px;height:18px;padding:0}
 .table-add-head{display:grid;grid-template-columns:1fr minmax(220px,340px);gap:10px;align-items:center;margin-bottom:10px}.table-add-head h3{margin:0}.table-search{width:100%;min-height:44px;text-transform:none;letter-spacing:0;font:400 15px var(--sans);cursor:text}@media(max-width:460px){.table-add-head{display:block}.table-search{margin-top:10px}}
 .invite-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:12px}.invite-form input{text-transform:none;letter-spacing:0;font:400 15px var(--sans);cursor:text;min-width:0}.invite-form button{white-space:nowrap}.link-cell{max-width:260px;overflow-wrap:anywhere;color:#D8CEC2}.copy-btn{min-height:38px;padding:0 9px;letter-spacing:.1em;font-size:11px}.invite-state{min-height:20px;color:var(--muted);font-size:13px;margin:0 0 10px}.invite-state.err{color:#E8808A}@media(max-width:900px){.invite-form{grid-template-columns:1fr}.link-cell{max-width:unset}}
-@media(max-width:520px){body{font-size:15px;padding:calc(12px + env(safe-area-inset-top)) max(12px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(78px + env(safe-area-inset-bottom))}main{max-width:100%}.top{gap:10px;margin-bottom:12px;padding-bottom:12px}.brand{gap:9px}.brand img{width:96px;flex-basis:96px}.k{font-size:10px;letter-spacing:.28em}h1{font-size:30px}.top #refresh{min-height:44px;padding:0 12px;letter-spacing:.18em;font-size:12px;flex:0 0 auto}.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible;margin-bottom:14px;padding-bottom:0}.tab{width:100%;min-height:52px;padding:0 8px;letter-spacing:.2em;font-size:12px}.camera{max-height:min(58svh,520px);aspect-ratio:3/4}.actions{grid-template-columns:1fr 1fr}.actions #start{grid-column:1/-1}.actions button{min-height:52px;letter-spacing:.18em;font-size:12px}.manual{grid-template-columns:1fr}.manual input{width:100%;font-size:17px}.manual button{width:100%}}
+.staff-create{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px}.staff-create input{text-transform:none;letter-spacing:0;font:400 15px var(--sans);cursor:text}.password-reveal{display:none;border:1px solid rgba(217,174,120,.35);background:rgba(217,174,120,.08);padding:12px;margin:0 0 12px}.password-reveal.on{display:grid;gap:8px}.password-reveal code{display:block;font-size:18px;overflow-wrap:anywhere;color:#F6EFE4}.staff-row-actions{display:flex;gap:6px;flex-wrap:wrap}.staff-row-actions button{min-height:36px;padding:0 8px;font-size:10px;letter-spacing:.1em}.staff-control{width:100%;min-height:38px;text-transform:none;letter-spacing:0;font:400 13px var(--sans);cursor:text}.staff-select{min-height:38px;background:#090706;color:var(--bone);border:1px solid rgba(217,174,120,.5);border-radius:3px}
+@media(max-width:520px){body{font-size:15px;padding:calc(12px + env(safe-area-inset-top)) max(12px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(78px + env(safe-area-inset-bottom))}main{max-width:100%}.top{gap:10px;margin-bottom:12px;padding-bottom:12px;align-items:flex-start}.brand{gap:9px}.brand img{width:96px;flex-basis:96px}.staff-meta{display:grid;justify-items:end}.k{font-size:10px;letter-spacing:.28em}h1{font-size:30px}.top #refresh{min-height:44px;padding:0 12px;letter-spacing:.18em;font-size:12px;flex:0 0 auto}.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible;margin-bottom:14px;padding-bottom:0}.tab{width:100%;min-height:52px;padding:0 8px;letter-spacing:.2em;font-size:12px}.camera{max-height:min(58svh,520px);aspect-ratio:3/4}.actions{grid-template-columns:1fr 1fr}.actions #start{grid-column:1/-1}.actions button{min-height:52px;letter-spacing:.18em;font-size:12px}.manual{grid-template-columns:1fr}.staff-create{grid-template-columns:1fr}.manual input{width:100%;font-size:17px}.manual button,.staff-create button{width:100%}}
 </style>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
 <main>
-<div class="top"><div class="brand"><img src="/assets/whispers-lockup-transparent.png" alt="WHISPERS"/><div><h1>Door</h1></div></div><button id="refresh">Refresh</button></div>
-<nav class="tabs" aria-label="Staff sections"><button class="tab active" data-view="scanner">Scanner</button><button class="tab" data-view="members">Members</button><button class="tab" data-view="tables">Tables</button><button class="tab" data-view="invite">Invite</button></nav>
+<div class="top"><div class="brand"><img src="/assets/whispers-lockup-transparent.png" alt="WHISPERS"/><div><h1>Door</h1></div></div><div class="staff-meta"><div class="staff-who"><b>${staff.user.username}</b> · ${staff.user.role}</div><button id="refresh">Refresh</button><button id="logout">Logout</button></div></div>
+<nav class="tabs" aria-label="Staff sections"><button class="tab active" data-view="scanner">Scanner</button><button class="tab" data-view="members">Members</button><button class="tab" data-view="tables">Tables</button><button class="tab" data-view="invite">Invite</button><button class="tab" data-view="staff">Staff</button></nav>
 <div class="view active" id="view-scanner">
 <section class="panel camera"><video id="video" playsinline muted></video><div class="scanline"></div></section>
 <section class="panel">
@@ -82,10 +90,19 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--gold);outline-o
 <div class="grid"><table id="invitesTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Invite</th><th>Confirmation</th><th>Ticket</th><th>Created</th></tr></thead><tbody></tbody></table></div><div class="pager" id="invitesPager"></div>
 </section>
 </div>
+<div class="view" id="view-staff">
+<section class="panel">
+<form class="staff-create" id="staffCreate"><input id="newStaffUsername" maxlength="40" placeholder="Username" autocomplete="off" autocapitalize="none" spellcheck="false"/><button class="primary" type="submit">Create Admin</button></form>
+<div class="password-reveal" id="staffPasswordReveal"><div class="small">Password is shown once. Copy it now.</div><code id="staffPasswordValue"></code><button id="copyStaffPassword" type="button">Copy Password</button></div>
+<div class="grid"><table id="staffUsersTable"><thead><tr><th>Username</th><th>Role</th><th>Active</th><th>Created</th><th>Last login</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+<p class="invite-state" id="staffState" aria-live="polite"></p>
+</section>
+</div>
 </main>
 <canvas id="canvas" hidden></canvas>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
+const STAFF_USER = ${JSON.stringify(staff.user)};
 const video=document.getElementById('video'),canvas=document.getElementById('canvas'),result=document.getElementById('result'),list=document.getElementById('list');
 let stream=null,loop=null,pass=0;const seen=new Map(),REPEAT_MS=4000;
 function show(kind,title,body){result.className='panel result '+kind;result.innerHTML='<h2>'+title+'</h2>'+body;}
@@ -209,10 +226,15 @@ document.getElementById('start').onclick=()=>{toTop();startCamera().catch(e=>{st
 document.getElementById('stop').onclick=stopCamera;
 document.getElementById('manualBtn').onclick=()=>scanValue(document.getElementById('manual').value.trim(),true);
 document.getElementById('refresh').onclick=refreshCurrent;
+document.getElementById('logout').onclick=async()=>{await fetch('/api/staff/logout',{method:'POST'});location.reload();};
 const PAGE_SIZE=20;
-let members=[],membersPage=1,sortKey='submittedAt',sortDir=-1,tablesData=null,selectedTableId=null,tableSearch='',invites=[],invitesPage=1,currentView='scanner';
+let members=[],membersPage=1,sortKey='submittedAt',sortDir=-1,tablesData=null,selectedTableId=null,tableSearch='',invites=[],invitesPage=1,staffUsers=[],currentView='scanner';
+const ROLE_VIEWS={owner:['scanner','members','tables','invite','staff'],admin:['scanner','members','tables','invite'],door:['scanner']};
+const allowedViews=ROLE_VIEWS[STAFF_USER.role]||['scanner'];
+document.querySelectorAll('.tab').forEach(btn=>{if(!allowedViews.includes(btn.dataset.view))btn.hidden=true;});
 document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>showView(btn.dataset.view));
 function showView(name){
+  if(!allowedViews.includes(name))name='scanner';
   currentView=name;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));
@@ -220,8 +242,9 @@ function showView(name){
   if(name==='members')loadMembers();
   if(name==='tables')loadTables();
   if(name==='invite')loadInvites();
+  if(name==='staff')loadStaffUsers();
 }
-function refreshCurrent(){if(currentView==='members')loadMembers();else if(currentView==='tables')loadTables();else if(currentView==='invite')loadInvites();else loadList();}
+function refreshCurrent(){if(currentView==='members')loadMembers();else if(currentView==='tables')loadTables();else if(currentView==='invite')loadInvites();else if(currentView==='staff')loadStaffUsers();else loadList();}
 function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
 function pageRows(rows,page){const start=(page-1)*PAGE_SIZE;return rows.slice(start,start+PAGE_SIZE);}
 function renderPager(id,rows,page,onPage){
@@ -342,7 +365,57 @@ document.getElementById('inviteForm').onsubmit=async(e)=>{
   if(!res.ok){state.className='invite-state err';state.textContent=data.error||'Could not create invite';return;}
   document.getElementById('inviteForm').reset();state.textContent='Invite created.';await loadInvites();
 };
-if(location.hash==='#members')showView('members');else if(location.hash==='#tables')showView('tables');else if(location.hash==='#invite')showView('invite');
+async function loadStaffUsers(){
+  if(STAFF_USER.role!=='owner')return;
+  const state=document.getElementById('staffState'),body=document.querySelector('#staffUsersTable tbody');state.className='invite-state';state.textContent='';body.innerHTML='<tr><td colspan="6">Loading...</td></tr>';
+  let res,data;try{res=await fetch('/api/staff/users',{headers:{'Accept':'application/json'}});data=await res.json();}catch(_){body.innerHTML='<tr><td colspan="6">No connection.</td></tr>';return;}
+  if(!res.ok){body.innerHTML='<tr><td colspan="6">'+esc(data.error||'Could not load staff users')+'</td></tr>';return;}
+  staffUsers=data.users||[];renderStaffUsers();
+}
+function renderStaffUsers(){
+  const body=document.querySelector('#staffUsersTable tbody');
+  body.innerHTML=staffUsers.map(u=>'<tr><td><input class="staff-control" data-staff-username="'+esc(u.id)+'" value="'+esc(u.username)+'"/></td><td><select class="staff-select" data-staff-role="'+esc(u.id)+'"><option value="owner" '+(u.role==='owner'?'selected':'')+'>owner</option><option value="admin" '+(u.role==='admin'?'selected':'')+'>admin</option><option value="door" '+(u.role==='door'?'selected':'')+'>door</option></select></td><td><input type="checkbox" '+(u.active?'checked':'')+' data-staff-active="'+esc(u.id)+'"/></td><td>'+esc(u.createdAt?new Date(u.createdAt).toLocaleString():'')+'</td><td>'+esc(u.lastLoginAt?new Date(u.lastLoginAt).toLocaleString():'')+'</td><td><div class="staff-row-actions"><button data-staff-save="'+esc(u.id)+'">Save</button><button data-staff-reset="'+esc(u.id)+'">Reset Password</button><button data-staff-delete="'+esc(u.id)+'">Delete</button></div></td></tr>').join('')||'<tr><td colspan="6">No staff users.</td></tr>';
+  body.querySelectorAll('[data-staff-save]').forEach(b=>b.onclick=()=>saveStaffUser(b.dataset.staffSave));
+  body.querySelectorAll('[data-staff-reset]').forEach(b=>b.onclick=()=>resetStaffPassword(b.dataset.staffReset));
+  body.querySelectorAll('[data-staff-delete]').forEach(b=>b.onclick=()=>deleteStaffUser(b.dataset.staffDelete));
+}
+function showStaffPassword(temporaryPassword){
+  const box=document.getElementById('staffPasswordReveal'),value=document.getElementById('staffPasswordValue');
+  value.textContent=temporaryPassword||'';box.classList.toggle('on',Boolean(temporaryPassword));box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function copyStaffPassword(){
+  const value=document.getElementById('staffPasswordValue').textContent;if(!value)return;
+  try{await navigator.clipboard.writeText(value);document.getElementById('copyStaffPassword').textContent='Copied';setTimeout(()=>document.getElementById('copyStaffPassword').textContent='Copy Password',1200);}catch(_){window.prompt('Copy password',value);}
+}
+document.getElementById('copyStaffPassword').onclick=copyStaffPassword;
+document.getElementById('staffCreate').onsubmit=async(e)=>{
+  e.preventDefault();const state=document.getElementById('staffState');state.className='invite-state';state.textContent='Creating staff user...';
+  let res,data;try{res=await fetch('/api/staff/users',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({username:document.getElementById('newStaffUsername').value})});data=await res.json();}catch(_){state.className='invite-state err';state.textContent='No connection.';return;}
+  if(!res.ok){state.className='invite-state err';state.textContent=data.error||'Could not create staff user';return;}
+  document.getElementById('staffCreate').reset();state.textContent='Admin created.';showStaffPassword(data.temporaryPassword);await loadStaffUsers();
+};
+async function saveStaffUser(id){
+  const username=document.querySelector('[data-staff-username="'+CSS.escape(id)+'"]').value,role=document.querySelector('[data-staff-role="'+CSS.escape(id)+'"]').value,active=document.querySelector('[data-staff-active="'+CSS.escape(id)+'"]').checked;
+  const state=document.getElementById('staffState');state.className='invite-state';state.textContent='Saving...';
+  let res,data;try{res=await fetch('/api/staff/users',{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({id,username,role,active})});data=await res.json();}catch(_){state.className='invite-state err';state.textContent='No connection.';return;}
+  if(!res.ok){state.className='invite-state err';state.textContent=data.error||'Could not save staff user';return;}
+  state.textContent='Saved.';await loadStaffUsers();
+}
+async function resetStaffPassword(id){
+  if(!window.confirm('Generate a new password for this staff user?'))return;
+  const state=document.getElementById('staffState');state.className='invite-state';state.textContent='Resetting password...';
+  let res,data;try{res=await fetch('/api/staff/users/password',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({id})});data=await res.json();}catch(_){state.className='invite-state err';state.textContent='No connection.';return;}
+  if(!res.ok){state.className='invite-state err';state.textContent=data.error||'Could not reset password';return;}
+  state.textContent='Password reset.';showStaffPassword(data.temporaryPassword);
+}
+async function deleteStaffUser(id){
+  if(!window.confirm('Delete this staff user?'))return;
+  const state=document.getElementById('staffState');state.className='invite-state';state.textContent='Deleting...';
+  let res,data;try{res=await fetch('/api/staff/users',{method:'DELETE',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({id})});data=await res.json();}catch(_){state.className='invite-state err';state.textContent='No connection.';return;}
+  if(!res.ok){state.className='invite-state err';state.textContent=data.error||'Could not delete staff user';return;}
+  state.textContent='Deleted.';await loadStaffUsers();
+}
+if(location.hash==='#members')showView('members');else if(location.hash==='#tables')showView('tables');else if(location.hash==='#invite')showView('invite');else if(location.hash==='#staff')showView('staff');
 loadList();
 </script>
 </body>

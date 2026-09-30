@@ -1,5 +1,6 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { EVENT_KEY } from "../../_shared/rsvp.js";
+import { requireStaff } from "../../_shared/staff-auth.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 const RSVP_COLUMNS = [
@@ -21,7 +22,10 @@ const RSVP_COLUMNS = [
   "staff_table_assignments(staff_tables(label))",
 ].join(",");
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
+  const staff = await requireStaff(request, env, "admin");
+  if (staff.error) return staff.error;
+
   const rsvps = await supabaseFetch(
     env,
     `/rest/v1/rsvps?select=${RSVP_COLUMNS}&event_key=eq.${encodeURIComponent(EVENT_KEY)}&order=submitted_at.desc&limit=1000`

@@ -1,5 +1,6 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { EVENT_KEY, buildConfirmationUrl, buildInviteRow, buildInviteUrl, buildTicketUrl, validateInvitePayload } from "../../_shared/rsvp.js";
+import { requireStaff } from "../../_shared/staff-auth.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 const MAX_RETRIES = 3;
@@ -7,10 +8,15 @@ const INVITE_COLUMNS = "id,name,email,phone,ticket_token,confirmation_email_sent
 const RSVP_COLUMNS = "guest_id,status,submitted_at,guest_name,guest_email,guest_phone,confirmation_token,ticket_token";
 
 export async function onRequestGet({ request, env }) {
+  const staff = await requireStaff(request, env, "admin");
+  if (staff.error) return staff.error;
   return listInvites(request, env);
 }
 
 export async function onRequestPost({ request, env }) {
+  const staff = await requireStaff(request, env, "admin");
+  if (staff.error) return staff.error;
+
   let body;
   try {
     body = await request.json();

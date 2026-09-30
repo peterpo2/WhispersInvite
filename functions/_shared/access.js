@@ -7,6 +7,9 @@ const PUBLIC_PATHS = new Set([
   "/api/door",
   "/api/guest-check",
   "/api/confirmation",
+  "/api/staff/login",
+  "/api/staff/logout",
+  "/api/staff/me",
   "/api/staff/members",
   "/api/staff/checkin-state",
   "/api/staff/reservation-state",
@@ -14,6 +17,8 @@ const PUBLIC_PATHS = new Set([
   "/api/staff/invite-send",
   "/api/staff/tables",
   "/api/staff/table-assignment",
+  "/api/staff/users",
+  "/api/staff/users/password",
   "/staff/rose-door-10",
 ]);
 

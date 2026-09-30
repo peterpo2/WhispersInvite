@@ -1,8 +1,12 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { EVENT_KEY } from "../../_shared/rsvp.js";
+import { requireStaff } from "../../_shared/staff-auth.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
+  const staff = await requireStaff(request, env, "admin");
+  if (staff.error) return staff.error;
+
   const tables = await supabaseFetch(env, "/rest/v1/staff_tables?select=id,label,capacity,sort_order&order=sort_order.asc");
   if (tables.error) return tables.error;
   if (!tables.response.ok) return json({ error: "Could not load tables" }, 502);

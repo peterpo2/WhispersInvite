@@ -104,3 +104,18 @@ test("reservation-state endpoint can update request and confirmed separately", (
   assert.match(reservationStateApi, /reservationConfirmed/);
   assert.match(reservationStateApi, /reservation_confirmed/);
 });
+
+test("staff page renders login and owner staff management controls", () => {
+  assert.match(staffPage, /renderStaffLoginPage/);
+  assert.match(staffPage, /requireStaff/);
+  assert.match(staffPage, /const STAFF_USER =/);
+  assert.match(staffPage, /data-view="staff"/);
+  assert.match(staffPage, /id="staffUsersTable"/);
+  assert.match(staffPage, /id="newStaffUsername"/);
+  assert.match(staffPage, /temporaryPassword/);
+  assert.match(staffPage, /copyStaffPassword/);
+  assert.match(staffPage, /resetStaffPassword/);
+  assert.match(staffPage, /deleteStaffUser/);
+  assert.match(staffPage, /\/api\/staff\/logout/);
+  assert.doesNotMatch(staffPage, /staff email/i);
+});

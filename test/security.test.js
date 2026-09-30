@@ -5,6 +5,7 @@ import { CONTENT_SECURITY_POLICY, SECURITY_HEADERS } from "../functions/_shared/
 
 const schema = readFileSync("sql/schema.sql", "utf8");
 const rlsMigration = readFileSync("sql/2026-09-29-enable-rls-staff-companions.sql", "utf8");
+const staffAuthMigration = readFileSync("sql/2026-09-30-staff-auth.sql", "utf8");
 
 function directives(policy) {
   return Object.fromEntries(policy.split(";").map((d) => d.trim()).filter(Boolean).map((d) => {
@@ -44,4 +45,16 @@ test("staff and companion tables have RLS enabled in schema and migration", () =
     assert.match(schema, new RegExp(`alter table ${table} enable row level security;`));
     assert.match(rlsMigration, new RegExp(`alter table public\\.${table} enable row level security;`));
   }
+});
+
+test("staff auth tables store hashed passwords and sessions with RLS", () => {
+  for (const table of ["staff_users", "staff_sessions"]) {
+    assert.match(schema, new RegExp(`create table if not exists ${table}`));
+    assert.match(schema, new RegExp(`alter table ${table} enable row level security;`));
+    assert.match(staffAuthMigration, new RegExp(`create table if not exists public\\.${table}`));
+    assert.match(staffAuthMigration, new RegExp(`alter table public\\.${table} enable row level security;`));
+  }
+  assert.match(schema, /password_hash text not null/);
+  assert.doesNotMatch(schema, /password text/);
+  assert.match(schema, /session_token_hash text not null/);
 });

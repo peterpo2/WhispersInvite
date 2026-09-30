@@ -1,5 +1,6 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
 import { doorScans, ticketForToken, tokenFromValue } from "../_shared/rsvp.js";
+import { requireStaff } from "../_shared/staff-auth.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const TICKET_COLUMNS = "id,guest_name,seal_code,ticket_token,checked_in_at,status,plus_one_name,plus_one_seal_code,plus_one_ticket_token,plus_one_checked_in_at";
@@ -10,7 +11,10 @@ function publicTicket(ticket) {
   return rest;
 }
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
+  const staff = await requireStaff(request, env, "door");
+  if (staff.error) return staff.error;
+
   const listed = await supabaseFetch(
     env,
     "/rest/v1/rsvps?select=guest_name,seal_code,checked_in_at,plus_one_name,plus_one_seal_code,plus_one_checked_in_at&status=eq.attending&or=(checked_in_at.not.is.null,plus_one_checked_in_at.not.is.null)&order=submitted_at.desc&limit=200"
@@ -35,6 +39,9 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
+  const staff = await requireStaff(request, env, "door");
+  if (staff.error) return staff.error;
+
   let body;
   try {
     body = await request.json();

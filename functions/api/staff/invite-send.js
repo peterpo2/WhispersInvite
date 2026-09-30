@@ -2,6 +2,7 @@ import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { buildInviteEmail, buildRsvpConfirmationEmails, buildTicketEmail, emailConfigFromEnv } from "../../_shared/email-content.js";
 import { EVENT_KEY, buildConfirmationUrl, buildInviteUrl, buildTicketUrl } from "../../_shared/rsvp.js";
 import { sendSmtpMail } from "../../_shared/smtp.js";
+import { requireStaff } from "../../_shared/staff-auth.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 const COLUMNS = "id,name,email,confirmation_email_send_count";
@@ -11,6 +12,9 @@ const EVENT_DETAILS_COLUMNS = "venue_name,venue_address";
 const SEND_TYPES = new Set(["invite", "confirmation", "ticket"]);
 
 export async function onRequestPost({ request, env }) {
+  const staff = await requireStaff(request, env, "admin");
+  if (staff.error) return staff.error;
+
   let body;
   try {
     body = await request.json();

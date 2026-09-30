@@ -1,7 +1,11 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
+import { requireStaff } from "../../_shared/staff-auth.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 export async function onRequestPost({ request, env }) {
+  const staff = await requireStaff(request, env, "admin");
+  if (staff.error) return staff.error;
+
   let body;
   try {
     body = await request.json();
