@@ -66,5 +66,5 @@ test("public ticket and confirmation links use the transparent lockup without a 
 
 test("event details keep the approved two-line when copy", () => {
   assert.match(indexHtml, /Saturday 10 October/);
-  assert.match(indexHtml, /<em class="time-line">Doors open at 22:00 until 03:00<\/em>/);
+  assert.match(indexHtml, /<em class="time-line"><span>Doors open at 22:00<\/span><span>until 3 am<\/span><\/em>/);
 });

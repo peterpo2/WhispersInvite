@@ -222,7 +222,8 @@ Requirements:
 - The layout should feel more intentional and premium, not like a default data table.
 - The current two-line `When` structure stays:
   - `Saturday 10 October`
-  - `Doors open at 22:00 until 03:00`
+  - `Doors open at 22:00`
+  - `until 3 am`
 - The right-side text must remain readable on 320px mobile widths.
 - Text must not overflow, collide with labels, or create horizontal scroll.
 - Labels and values should both use Aviano, with different scale, tracking, color and hierarchy.

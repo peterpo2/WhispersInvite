@@ -86,7 +86,7 @@ Details:
 
 - When
 - Saturday 10 October · Doors open at 22:00
-- until 03:00
+- until 3 am
 - Where
 - A private address in central Sofia
 - Released on 09.10 at 18:00

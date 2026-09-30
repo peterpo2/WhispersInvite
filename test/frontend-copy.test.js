@@ -265,9 +265,10 @@ test("letter respond CTA stays in flow without covering the closing copy", () =>
 });
 
 test("letter event time keeps the date and door time on separate stable lines", () => {
-  assert.match(html, /<dd>Saturday 10 October<em class="time-line">Doors open at 22:00 until 03:00<\/em><\/dd>/);
+  assert.match(html, /<dd>Saturday 10 October<em class="time-line"><span>Doors open at 22:00<\/span><span>until 3 am<\/span><\/em><\/dd>/);
   assert.match(html, /<div class="row"><dt>Access<\/dt><dd>This invitation grants free access\.<em>Drinks are charged separately\. Tables upon request\.<\/em><\/dd><\/div>/);
   assert.match(html, /\.row dd \.time-line\{display:block;font-size:12px;color:var\(--mute\);font-style:italic;white-space:normal\}/);
+  assert.match(html, /\.row dd \.time-line span\{display:block\}/);
   assert.match(html, /#s-letter \.row\{grid-template-columns:5\.4em 1fr;gap:6px;padding:15px 0\}/);
   assert.match(html, /#s-letter \.row dt\{font-size:15px;letter-spacing:\.11em;padding-top:1px\}/);
   assert.match(html, /#s-letter \.row dd \.time-line\{font-size:13px\}/);

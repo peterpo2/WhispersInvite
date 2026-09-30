@@ -188,7 +188,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 .row dt{font-size:15px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;padding-top:1px;line-height:1.35}
 .row dd{margin:0;font-family:var(--serif);font-size:14px;line-height:1.5;color:#F4EDE2}
 .row dd em{display:block;font-size:12px;color:var(--mute)}
-.row dd .time-line{display:block;font-size:12px;color:var(--mute);font-style:italic;white-space:normal}
+.row dd .time-line{display:block;font-size:12px;color:var(--mute);font-style:italic;white-space:normal}.row dd .time-line span{display:block}
 .note{font-family:var(--serif);font-style:italic;font-size:20px;line-height:1.55;color:#CFC3B3;margin:24px auto 4px;max-width:380px}
 #s-letter{padding-bottom:calc(10px + env(safe-area-inset-bottom));scroll-padding-bottom:calc(110px + env(safe-area-inset-bottom))}
 #s-letter .inner{margin-top:auto;margin-bottom:0;padding-bottom:0}
@@ -363,7 +363,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 <div class="inner">
 <div class="brand st"><img alt="Whispers" class="brand-lockup" src="/assets/whispers-lockup-transparent.png"/></div>
 <dl class="details st">
-<div class="row"><dt>When</dt><dd>Saturday 10 October<em class="time-line">Doors open at 22:00 until 03:00</em></dd></div>
+<div class="row"><dt>When</dt><dd>Saturday 10 October<em class="time-line"><span>Doors open at 22:00</span><span>until 3 am</span></em></dd></div>
 <div class="row"><dt>Where</dt><dd>A private address in central Sofia<em>Released on 09.10 at 18:00</em></dd></div>
 <div class="row"><dt>Who</dt><dd>You, and one guest of your choosing</dd></div>
 <div class="row"><dt>Sound</dt><dd>Sammer · Lucia Kosta · Atia</dd></div>

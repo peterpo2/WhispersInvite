@@ -87,7 +87,7 @@
 - [ ] Redesign Event Details rows:
   - labels `When`, `Where`, `Who`, `Sound`, `Rules`, `Access`, `Dress code` slightly larger;
   - right-side values smaller and refined;
-  - `When` remains exactly two lines: `Saturday 10 October` and `Doors open at 22:00 until 03:00`;
+  - `When` remains stable lines: `Saturday 10 October`, `Doors open at 22:00`, and `until 3 am`;
   - no horizontal scroll at 320px.
 
 **Verification:**
