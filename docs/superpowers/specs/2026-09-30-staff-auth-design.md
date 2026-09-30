@@ -120,10 +120,10 @@ Preferred implementation:
 
 - PBKDF2 via Web Crypto;
 - random 16-byte salt;
-- at least 210,000 iterations;
+- 100,000 iterations, which is the highest Cloudflare Workers Web Crypto PBKDF2 limit currently accepted by the runtime;
 - SHA-256;
 - stored format:
-  `pbkdf2_sha256$210000$<base64url-salt>$<base64url-hash>`.
+  `pbkdf2_sha256$100000$<base64url-salt>$<base64url-hash>`.
 
 Verification must use constant-time comparison for the derived hash bytes.
 

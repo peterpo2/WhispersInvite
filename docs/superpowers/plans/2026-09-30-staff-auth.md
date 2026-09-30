@@ -143,7 +143,7 @@ import {
 
 test("staff passwords are hashed and verified without storing plaintext", async () => {
   const hash = await hashPassword("Very Strong Password 123");
-  assert.match(hash, /^pbkdf2_sha256\$210000\$/);
+  assert.match(hash, /^pbkdf2_sha256\$100000\$/);
   assert.equal(hash.includes("Very Strong Password 123"), false);
   assert.equal(await verifyPassword("Very Strong Password 123", hash), true);
   assert.equal(await verifyPassword("wrong password", hash), false);
@@ -205,7 +205,7 @@ Create `functions/_shared/staff-auth.js` with:
 
 ```js
 const STAFF_COOKIE = "whispers_staff";
-const PASSWORD_ITERATIONS = 210000;
+const PASSWORD_ITERATIONS = 100000;
 const PASSWORD_ALGO = "PBKDF2";
 const HASH_ALGO = "SHA-256";
 const SESSION_SECONDS = 60 * 60 * 12;

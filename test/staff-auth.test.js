@@ -13,10 +13,15 @@ import {
 
 test("staff passwords are hashed and verified without storing plaintext", async () => {
   const hash = await hashPassword("Very Strong Password 123");
-  assert.match(hash, /^pbkdf2_sha256\$210000\$/);
+  assert.match(hash, /^pbkdf2_sha256\$100000\$/);
   assert.equal(hash.includes("Very Strong Password 123"), false);
   assert.equal(await verifyPassword("Very Strong Password 123", hash), true);
   assert.equal(await verifyPassword("wrong password", hash), false);
+});
+
+test("staff password verification rejects unsupported legacy iteration counts without throwing", async () => {
+  const legacyHash = "pbkdf2_sha256$210000$abcdefghijklmnopqrstuv$abcdefghijklmnopqrstuvabcdefghijklmnopqrstu";
+  assert.equal(await verifyPassword("anything", legacyHash), false);
 });
 
 test("staff cookies last twelve hours and are secure http-only strict cookies", () => {

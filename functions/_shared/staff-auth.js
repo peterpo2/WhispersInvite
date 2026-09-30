@@ -4,7 +4,7 @@ import { supabaseFetch } from "./supabase.js";
 export const STAFF_COOKIE = "whispers_staff";
 export const STAFF_SESSION_SECONDS = 60 * 60 * 12;
 
-const PASSWORD_ITERATIONS = 210000;
+const PASSWORD_ITERATIONS = 100000;
 const PASSWORD_ALGO = "PBKDF2";
 const HASH_ALGO = "SHA-256";
 const ROLES = ["owner", "admin", "door"];
