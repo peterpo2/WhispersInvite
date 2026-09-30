@@ -58,11 +58,14 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
 .meta{font-size:16px;line-height:1.42;color:#D9CEC0;margin:0;padding-top:16px;border-top:1px solid var(--line)}.meta b{font-weight:400;color:#F6EFE4}
-#bringing{display:block;border-top:1px solid rgba(217,174,120,.14);padding-top:10px;margin-top:10px}#bringing:empty{display:none}
+.ticket-date{display:block;font-family:var(--sans);font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:#F4DFC0;text-shadow:0 0 22px rgba(217,174,120,.22)}
+.venue-line{display:block;margin-top:10px;font-family:var(--sans);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-hi);text-shadow:0 0 28px rgba(235,203,149,.36)}
+.venue-line:empty{display:none}.venue-line a{color:var(--gold-hi);text-decoration:none;border-bottom:1px solid rgba(235,203,149,.55)}
+#bringing{display:block;border-top:1px solid rgba(217,174,120,.14);padding-top:10px;margin-top:10px;color:#F2E8D9}#bringing:empty{display:none}
 .small{font-style:italic;font-size:15px;line-height:1.42;color:#CFC3B3;margin:18px auto 0;max-width:360px}.small:empty{display:none}
 .state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
 .meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
-.save,.pending-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:400 15px/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6);text-decoration:none}
+.save,.pending-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:500 clamp(18px,4.8vw,22px)/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6);text-decoration:none;text-shadow:0 1px 0 rgba(255,246,224,.32)}
 .save[hidden],.pending-link[hidden]{display:none}.save:focus-visible,.pending-link:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
 .saved{font-style:italic;font-size:18px;color:var(--mute);margin:10px 0 0;min-height:1em}
 .ticket + .partner-bar{position:relative;z-index:5;width:min(430px,calc(100vw - 28px));display:flex;align-items:center;justify-content:center;gap:14px;margin:22px auto 0;padding:0 0 max(8px,env(safe-area-inset-bottom));pointer-events:none;filter:drop-shadow(0 10px 22px rgba(0,0,0,.75));flex:0 0 auto}
@@ -83,7 +86,7 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
 <div class="code" id="code">—</div>
 <div class="qr" id="qr"></div>
 <p class="state" id="state"></p>
-<p class="meta" id="ticketMeta">Saturday <b>10 October</b> · Doors <b>22:00</b><br/><span id="venue"></span><span id="bringing"></span></p>
+<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October</b> · Doors <b>22:00</b></span><span class="venue-line" id="venue"></span><span id="bringing"></span></p>
 <p class="small" id="ticketNote"></p>
 <a class="pending-link" hidden id="pendingInvite" href="#">Respond</a>
 <button class="save" hidden id="save" type="button">Save your ticket</button>

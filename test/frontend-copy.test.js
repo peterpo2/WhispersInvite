@@ -87,6 +87,11 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
   assert.doesNotMatch(ticketPage, /RSVP FIRST/);
   assert.match(ticketPage, /if\(data\.inviteUrl\)\{\$\('pendingInvite'\)\.href=data\.inviteUrl;\$\('pendingInvite'\)\.hidden=false;\}/);
   assert.match(ticketPage, />Save your ticket<\/button>/);
+  assert.match(ticketPage, /<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October<\/b> · Doors <b>22:00<\/b><\/span><span class="venue-line" id="venue"><\/span><span id="bringing"><\/span><\/p>/);
+  assert.match(ticketPage, /\.venue-line\{[^}]*font-weight:500/);
+  assert.match(ticketPage, /\.venue-line\{[^}]*color:var\(--gold-hi\)/);
+  assert.match(ticketPage, /\.ticket-date\{[^}]*color:#F4DFC0/);
+  assert.match(ticketPage, /\.save,\.pending-link\{[^}]*font:500 clamp\(18px,4\.8vw,22px\)\/1\.2 var\(--sans\)/);
   assert.doesNotMatch(ticketPage, />Private ticket<\/button>/);
   assert.doesNotMatch(ticketPage, /Use your confirmation link to RSVP/);
   assert.match(ticketPage, /\$\('ticketNote'\)\.textContent=''/);

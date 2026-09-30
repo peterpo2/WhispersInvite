@@ -38,7 +38,7 @@ export async function onRequestGet({ request, env }) {
     );
     if (!details.error && details.response.ok) {
       const [row] = await details.response.json().catch(() => []);
-      venue = publicVenue(row);
+      venue = publicVenue(row, new Date(TICKET_RELEASE_AT));
     }
   }
 

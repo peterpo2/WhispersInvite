@@ -15,3 +15,7 @@ test("ticket API shows ticket links immediately, without the date release gate",
   assert.match(ticketApi, /const released = true;/);
   assert.doesNotMatch(ticketApi, /isTicketReleasedForRequest\(request\.url\)/);
 });
+
+test("ticket API reveals venue when tickets are manually unlocked", () => {
+  assert.match(ticketApi, /publicVenue\(row, new Date\(TICKET_RELEASE_AT\)\)/);
+});
