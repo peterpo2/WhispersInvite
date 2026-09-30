@@ -85,10 +85,24 @@ async function listInvites(request, env) {
 export function mergeInviteRowsForStaff(requestUrl, { invites = [], rsvps = [], companions = [] } = {}) {
   const rsvpByGuestId = new Map(rsvps.map((row) => [row.guest_id, row]));
   const inviteIds = new Set(invites.map((row) => row.id));
-  const rows = invites.map((row) => publicInvite(requestUrl, row, rsvpByGuestId.get(row.id) || null));
+  const matchedRsvpIds = new Set();
+  const rsvpsByEmail = new Map();
+  const rsvpsByPhone = new Map();
+  for (const rsvp of rsvps) {
+    const email = contactEmailKey(rsvp.guest_email);
+    const phone = contactPhoneKey(rsvp.guest_phone);
+    if (email && !rsvpsByEmail.has(email)) rsvpsByEmail.set(email, rsvp);
+    if (phone && !rsvpsByPhone.has(phone)) rsvpsByPhone.set(phone, rsvp);
+  }
+  const rows = invites.map((row) => {
+    const rsvp = rsvpByGuestId.get(row.id) || rsvpsByEmail.get(contactEmailKey(row.email)) || rsvpsByPhone.get(contactPhoneKey(row.phone)) || null;
+    if (rsvp) matchedRsvpIds.add(rsvp.id);
+    return publicInvite(requestUrl, row, rsvp);
+  });
 
   for (const rsvp of rsvps) {
     if (inviteIds.has(rsvp.guest_id)) continue;
+    if (matchedRsvpIds.has(rsvp.id)) continue;
     rows.push(publicDirectRsvp(requestUrl, rsvp));
   }
 
@@ -99,6 +113,14 @@ export function mergeInviteRowsForStaff(requestUrl, { invites = [], rsvps = [], 
   }
 
   return rows.sort((a, b) => new Date(b.submittedAt || b.createdAt || 0).getTime() - new Date(a.submittedAt || a.createdAt || 0).getTime());
+}
+
+function contactEmailKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function contactPhoneKey(value) {
+  return String(value || "").replace(/\D/g, "");
 }
 
 function publicInvite(requestUrl, row, rsvp) {

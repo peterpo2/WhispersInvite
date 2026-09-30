@@ -75,3 +75,41 @@ test("staff invite registry includes direct RSVPs and companions without duplica
   assert.equal(added.guestOf, "Direct Guest");
   assert.equal(added.source, "companion");
 });
+
+test("staff invite registry merges shared-link RSVPs into matching admin invites by contact", () => {
+  const rows = mergeInviteRowsForStaff("https://whisperssociety.com/staff/rose-door-10", {
+    invites: [
+      {
+        id: "admin-invite",
+        name: "Peter Popov",
+        email: "PeterPopov250@gmail.com",
+        phone: "",
+        ticket_token: "ticketinvite",
+        created_at: "2026-10-01T01:23:33+03:00",
+      },
+    ],
+    rsvps: [
+      {
+        id: 31,
+        guest_id: "direct-shared-flow-token",
+        status: "attending",
+        submitted_at: "2026-10-01T01:26:27+03:00",
+        guest_name: "Peter Popov",
+        guest_email: "peterpopov250@gmail.com",
+        guest_phone: "+359887925250",
+        confirmation_token: "confirmdirect",
+        ticket_token: "ticketdirect",
+      },
+    ],
+  });
+
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].id, "admin-invite");
+  assert.equal(rows[0].source, "invite");
+  assert.equal(rows[0].status, "attending");
+  assert.equal(rows[0].inviteLink, "https://whisperssociety.com/invite/admin-invite");
+  assert.equal(rows[0].confirmationLink, "https://whisperssociety.com/confirmation/confirmdirect");
+  assert.equal(rows[0].ticketLink, "https://whisperssociety.com/ticket/ticketdirect");
+  assert.equal(rows[0].rsvpEmail, "peterpopov250@gmail.com");
+  assert.equal(rows[0].rsvpPhone, "+359887925250");
+});
