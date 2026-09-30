@@ -277,18 +277,18 @@ function renderMembers(){
 }
 function confirmToggle(cb,message){if(window.confirm(message))return true;cb.checked=!cb.checked;return false;}
 async function toggleMember(cb,id,checkedIn){
-  if(!confirmToggle(cb,checkedIn?'Mark this guest as inside?':'Remove this guest check-in?'))return;
+  if(!checkedIn&&!confirmToggle(cb,'Remove this guest check-in?'))return;
   const m=members.find(x=>x.id===id);if(!m)return;
   await fetch('/api/staff/checkin-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:m.rsvpId,companionId:m.companionId,holder:m.holder,checkedIn})});
   await loadMembers();await loadList();
 }
 async function toggleRequest(cb,rsvpId,wantsTableReservation){
-  if(!confirmToggle(cb,wantsTableReservation?'Mark table request for this group?':'Remove table request for this group?'))return;
+  if(!wantsTableReservation&&!confirmToggle(cb,'Remove table request for this group?'))return;
   await fetch('/api/staff/reservation-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),wantsTableReservation})});
   await loadTables();await loadMembers();
 }
 async function toggleReservation(cb,rsvpId,reservationConfirmed){
-  if(!confirmToggle(cb,reservationConfirmed?'Confirm this table reservation?':'Remove table reservation confirmation?'))return;
+  if(!reservationConfirmed&&!confirmToggle(cb,'Remove table reservation confirmation?'))return;
   await fetch('/api/staff/reservation-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),reservationConfirmed})});
   await loadTables();await loadMembers();
 }

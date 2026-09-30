@@ -89,6 +89,12 @@ test("members table edits request, confirmation and check-in through confirmed c
   assert.match(staffPage, /function confirmToggle\(cb,message\)/);
   assert.match(staffPage, /window\.confirm\(message\)/);
   assert.match(staffPage, /cb\.checked=!cb\.checked/);
+  assert.match(staffPage, /if\(!checkedIn&&!confirmToggle\(cb,'Remove this guest check-in\?'\)\)return;/);
+  assert.match(staffPage, /if\(!wantsTableReservation&&!confirmToggle\(cb,'Remove table request for this group\?'\)\)return;/);
+  assert.match(staffPage, /if\(!reservationConfirmed&&!confirmToggle\(cb,'Remove table reservation confirmation\?'\)\)return;/);
+  assert.doesNotMatch(staffPage, /checkedIn\?'Mark this guest as inside\?':'Remove this guest check-in\?'/);
+  assert.doesNotMatch(staffPage, /wantsTableReservation\?'Mark table request for this group\?':'Remove table request for this group\?'/);
+  assert.doesNotMatch(staffPage, /reservationConfirmed\?'Confirm this table reservation\?':'Remove table reservation confirmation\?'/);
   assert.match(staffPage, /toggleRequest\(cb,cb\.dataset\.requestId,cb\.checked\)/);
   assert.match(staffPage, /toggleReservation\(cb,cb\.dataset\.reservationId,cb\.checked\)/);
   assert.match(staffPage, /toggleMember\(cb,cb\.dataset\.checkinId,cb\.checked\)/);
