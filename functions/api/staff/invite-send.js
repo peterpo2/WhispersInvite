@@ -1,6 +1,7 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { buildInviteEmail, buildRsvpConfirmationEmails, buildTicketEmail, emailConfigFromEnv } from "../../_shared/email-content.js";
 import { EVENT_KEY, buildConfirmationUrl, buildInviteUrl, buildTicketUrl } from "../../_shared/rsvp.js";
+import { retryAsync } from "../../_shared/retry.js";
 import { sendSmtpMail } from "../../_shared/smtp.js";
 import { requireStaff } from "../../_shared/staff-auth.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
@@ -92,10 +93,10 @@ async function sendBuiltEmails({ config, built, type }) {
 
   try {
     for (const email of built.emails) {
-      await sendSmtpMail(config, email);
+      await retryAsync(() => sendSmtpMail(config, email), { attempts: 2, delayMs: 350 });
     }
-  } catch {
-    return json({ error: `Could not send ${type} email` }, 502);
+  } catch (error) {
+    return json({ error: `Could not send ${type} email: ${String(error?.message || error)}` }, 502);
   }
   return null;
 }

@@ -4,8 +4,8 @@ import { buildSmtpMimeMessage } from "./smtp-message.js";
 const CRLF = "\r\n";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
-const SMTP_READ_TIMEOUT_MS = 3500;
-const SMTP_SESSION_TIMEOUT_MS = 4500;
+const SMTP_READ_TIMEOUT_MS = 8000;
+const SMTP_SESSION_TIMEOUT_MS = 20000;
 
 export async function sendSmtpMail(config, message) {
   const secureTransport = smtpTransportMode(config);

@@ -51,9 +51,12 @@ test("invite link columns can send their own email type", () => {
   assert.match(inviteSendApi, /buildInviteEmail/);
   assert.match(inviteSendApi, /buildRsvpConfirmationEmails/);
   assert.match(inviteSendApi, /buildTicketEmail/);
+  assert.match(inviteSendApi, /retryAsync/);
+  assert.match(inviteSendApi, /Could not send \$\{type\} email: \$\{String\(error\?\.message \|\| error\)\}/);
   assert.match(inviteSendApi, /id\.startsWith\("rsvp:"\)/);
   assert.match(inviteSendApi, /id\.startsWith\("companion:"\)/);
   assert.match(staffPage, /JSON\.stringify\(\{id,type\}\)/);
+  assert.match(staffPage, /alert\(data\.error\|\|'Could not send '\+type\)/);
   assert.match(staffPage, /linkActionCell\(i,'invite',i\.inviteLink\)/);
   assert.match(staffPage, /linkActionCell\(i,'confirmation',i\.confirmationLink\)/);
   assert.match(staffPage, /linkActionCell\(i,'ticket',i\.ticketLink\)/);
