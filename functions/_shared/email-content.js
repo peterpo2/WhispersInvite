@@ -5,7 +5,8 @@ const LOGO_URL = "https://whisperssociety.com/assets/whispers-lockup-transparent
 const FONT_URL = "https://whisperssociety.com/assets/aviano-contrast.ttf";
 const EMAIL_SERIF = "'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif";
 const EMAIL_SANS = "'AvianoContrast','Trebuchet MS','Helvetica Neue',Arial,sans-serif";
-const EMAIL_TEXT = "#FFE6BA";
+const EMAIL_HEADING = "#FFFFFF";
+const EMAIL_TEXT = "#FFF8EC";
 
 export function emailConfigFromEnv(env) {
   const smtpHost = String(env.SMTP_HOST || "").trim();
@@ -54,9 +55,9 @@ ${emailHead()}
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="${emailShellStyle()}">
           ${brandHeader()}
           <tr><td style="height:28px;"></td></tr>
-          <tr><td style="${nameStyle()}"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(safeName)}</span></font></td></tr>
+          <tr><td style="${nameStyle()}"><font color="${EMAIL_HEADING}"><span style="color:${EMAIL_HEADING}!important;-webkit-text-fill-color:${EMAIL_HEADING};">${escapeHtml(safeName)}</span></font></td></tr>
           <tr><td style="height:20px;"></td></tr>
-          <tr><td style="${titleStyle()}"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">Your invitation is waiting.</span></font></td></tr>
+          <tr><td style="${titleStyle()}"><font color="${EMAIL_HEADING}"><span style="color:${EMAIL_HEADING}!important;-webkit-text-fill-color:${EMAIL_HEADING};">Your invitation is waiting.</span></font></td></tr>
           <tr><td style="height:14px;"></td></tr>
           ${copyLine("Open it below.", 17)}
           <tr><td style="height:26px;"></td></tr>
@@ -179,9 +180,9 @@ ${emailHead()}
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="${emailShellStyle()}">
           ${brandHeader()}
           <tr><td style="height:28px;"></td></tr>
-          <tr><td style="${nameStyle()}"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(safeName)}</span></font></td></tr>
+          <tr><td style="${nameStyle()}"><font color="${EMAIL_HEADING}"><span style="color:${EMAIL_HEADING}!important;-webkit-text-fill-color:${EMAIL_HEADING};">${escapeHtml(safeName)}</span></font></td></tr>
           <tr><td style="height:20px;"></td></tr>
-          <tr><td style="${titleStyle()}"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(title)}</span></font></td></tr>
+          <tr><td style="${titleStyle()}"><font color="${EMAIL_HEADING}"><span style="color:${EMAIL_HEADING}!important;-webkit-text-fill-color:${EMAIL_HEADING};">${escapeHtml(title)}</span></font></td></tr>
           <tr><td style="height:14px;"></td></tr>
           ${htmlLines}
           <tr><td style="height:26px;"></td></tr>
@@ -245,9 +246,9 @@ ${emailHead()}
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="${emailShellStyle()}">
           ${brandHeader()}
           <tr><td style="height:24px;"></td></tr>
-          <tr><td style="${nameStyle()}"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(name)}</span></font></td></tr>
+          <tr><td style="${nameStyle()}"><font color="${EMAIL_HEADING}"><span style="color:${EMAIL_HEADING}!important;-webkit-text-fill-color:${EMAIL_HEADING};">${escapeHtml(name)}</span></font></td></tr>
           <tr><td style="height:20px;"></td></tr>
-          <tr><td style="${titleStyle()}"><font color="#FFE6BA"><span style="color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;">${escapeHtml(title)}</span></font></td></tr>
+          <tr><td style="${titleStyle()}"><font color="${EMAIL_HEADING}"><span style="color:${EMAIL_HEADING}!important;-webkit-text-fill-color:${EMAIL_HEADING};">${escapeHtml(title)}</span></font></td></tr>
           <tr><td style="height:14px;"></td></tr>
           ${htmlLines}
           ${actionHtml}
@@ -280,23 +281,23 @@ function emailHead() {
 }
 
 function nameStyle() {
-  return "font-size:27px;line-height:1.2;text-align:center;color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;font-weight:300;font-family:" + EMAIL_SERIF + ";";
+  return `font-size:27px;line-height:1.2;text-align:center;color:${EMAIL_HEADING}!important;-webkit-text-fill-color:${EMAIL_HEADING};font-weight:400;font-family:${EMAIL_SERIF};`;
 }
 
 function titleStyle() {
-  return "font-size:19px;line-height:1.5;text-align:center;color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA;font-weight:400;font-family:" + EMAIL_SERIF + ";";
+  return `font-size:19px;line-height:1.5;text-align:center;color:${EMAIL_HEADING}!important;-webkit-text-fill-color:${EMAIL_HEADING};font-weight:400;font-family:${EMAIL_SERIF};`;
 }
 
 function copyLine(line, fontSize) {
-  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:300;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(line)}</span></font></td></tr>`;
+  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:400;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(line)}</span></font></td></tr>`;
 }
 
 function contactLine(contact, phone, fontSize) {
-  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:300;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">For questions:</span></font><br><a href="mailto:${escapeHtml(contact)}" style="${textLinkStyle()}">${escapeHtml(contact)}</a><br><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(phone)}</span></font></td></tr>`;
+  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:400;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">For questions:</span></font><br><a href="mailto:${escapeHtml(contact)}" style="${textLinkStyle()}">${escapeHtml(contact)}</a><br><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(phone)}</span></font></td></tr>`;
 }
 
 function textLinkStyle() {
-  return `font-family:${EMAIL_SERIF};font-size:16px;line-height:1.7;text-decoration:none;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:300;`;
+  return `font-family:${EMAIL_SERIF};font-size:16px;line-height:1.7;text-decoration:none;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:400;`;
 }
 
 function buttonStyle() {

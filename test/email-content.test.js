@@ -328,9 +328,10 @@ test("email links share one visual style in Gmail-friendly inline CSS", () => {
   });
 
   for (const html of [invite.html, rsvp.html, ticket.html]) {
-    assert.match(html, /color:#FFE6BA!important;-webkit-text-fill-color:#FFE6BA/);
+    assert.match(html, /color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF/);
+    assert.match(html, /color:#FFF8EC!important;-webkit-text-fill-color:#FFF8EC;font-weight:400/);
     assert.doesNotMatch(html, /color:#F6C987!important;-webkit-text-fill-color:#F6C987/);
-    assert.match(html, /href="mailto:guestlist@whisperssociety\.com" style="[^"]*font-family:'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif[^"]*font-size:16px[^"]*text-decoration:none[^"]*color:#FFE6BA!important/);
+    assert.match(html, /href="mailto:guestlist@whisperssociety\.com" style="[^"]*font-family:'AvianoContrast','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif[^"]*font-size:16px[^"]*text-decoration:none[^"]*color:#FFF8EC!important[^"]*font-weight:400/);
   }
 
   const ctaStyles = [invite.html, rsvp.html, ticket.html].map((html) => {
