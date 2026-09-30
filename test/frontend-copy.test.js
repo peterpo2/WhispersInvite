@@ -87,7 +87,7 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
   assert.doesNotMatch(ticketPage, /RSVP FIRST/);
   assert.match(ticketPage, /if\(data\.inviteUrl\)\{\$\('pendingInvite'\)\.href=data\.inviteUrl;\$\('pendingInvite'\)\.hidden=false;\}/);
   assert.match(ticketPage, />Save your ticket<\/button>/);
-  assert.match(ticketPage, /<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October<\/b> · Doors <b>22:00<\/b><\/span><span class="venue-line" id="venue"><\/span><span id="bringing"><\/span><\/p>/);
+  assert.match(ticketPage, /<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October<\/b> &middot; Doors <b>22:00<\/b><\/span><span class="venue-line" id="venue"><\/span><\/p>/);
   assert.match(ticketPage, /\.venue-line\{[^}]*font-weight:500/);
   assert.match(ticketPage, /\.venue-line\{[^}]*color:var\(--gold-hi\)/);
   assert.match(ticketPage, /\.ticket-date\{[^}]*color:#F4DFC0/);
@@ -136,11 +136,13 @@ test("released ticket fallback does not mention the old address release copy", (
 });
 
 test("locked registered ticket avoids redundant ticket status labels", () => {
-  assert.match(ticketPage, /<div class="code" id="code">[^<]+<\/div>\s*<div class="qr" id="qr"><\/div>\s*<p class="state" id="state"><\/p>\s*<p class="meta" id="ticketMeta">/);
+  assert.match(ticketPage, /<p class="meta" id="ticketMeta">[\s\S]*<div class="qr" id="qr"><\/div>\s*<p class="state" id="state"><\/p>\s*<div class="ticket-divider" aria-hidden="true"><\/div>\s*<p class="relationship" id="bringing"><\/p>[\s\S]*<button class="save" hidden id="save" type="button">Save your ticket<\/button>\s*<div class="code" id="code">/);
   assert.match(ticketPage, /\.qr\[hidden\]\{display:none\}/);
   assert.match(ticketPage, /\$\('code'\)\.textContent='10\.10 · 22:00'/);
   assert.match(ticketPage, /\$\('qr'\)\.hidden=true/);
-  assert.match(ticketPage, /\$\('state'\)\.textContent='';\s*\$\('ticketMeta'\)\.innerHTML='Location remains sealed until 09\.10 at 18:00\.';\s*\$\('ticketNote'\)\.textContent='Your ticket will be sent to you on 09\.10 at 18:00\.'/);
+  assert.match(ticketPage, /\$\('state'\)\.textContent='';\s*\$\('ticketMeta'\)\.innerHTML='Location remains sealed until 09\.10 at 18:00\.';\s*\$\('bringing'\)\.textContent='';\s*\$\('ticketNote'\)\.textContent='Your ticket will be sent to you on 09\.10 at 18:00\.'/);
+  assert.match(ticketPage, /else if\(!t\.brought_by\)lines\.push\('Coming on your own'\)/);
+  assert.match(ticketPage, /note:'Show this seal at the door\.'/);
   assert.doesNotMatch(ticketPage, /id="ticketType"/);
   assert.doesNotMatch(ticketPage, /\.ticket-type/);
   assert.doesNotMatch(ticketPage, /\$\('state'\)\.textContent='Locked until release'/);

@@ -51,19 +51,20 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
 .rule{position:relative;width:84px;height:1px;margin:22px auto;background:linear-gradient(90deg,transparent,rgba(217,174,120,.85),transparent)}
 .rule:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;background:var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
 .code,.state{font-family:var(--sans);font-weight:300;text-transform:uppercase}
-.code{font-size:18px;letter-spacing:.22em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,174,120,.4)}
-.qr{width:min(62vw,230px);height:min(62vw,230px);margin:22px auto;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);padding:10px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.code{font-size:18px;letter-spacing:.22em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,174,120,.4);margin-top:22px}
+.qr{width:min(62vw,230px);height:min(62vw,230px);margin:20px auto;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);padding:10px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
 .qr[hidden]{display:none}
 .qr.ready{background:var(--paper);border:0}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
-.meta{font-size:16px;line-height:1.42;color:#D9CEC0;margin:0;padding-top:16px;border-top:1px solid var(--line)}.meta b{font-weight:400;color:#F6EFE4}
+.meta{font-size:16px;line-height:1.42;color:#D9CEC0;margin:18px 0 0}.meta b{font-weight:400;color:#F6EFE4}
 .ticket-date{display:block;font-family:var(--sans);font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:#F4DFC0;text-shadow:0 0 22px rgba(217,174,120,.22)}
 .venue-line{display:block;margin-top:10px;font-family:var(--sans);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-hi);text-shadow:0 0 28px rgba(235,203,149,.36)}
 .venue-line:empty{display:none}.venue-line a{color:var(--gold-hi);text-decoration:none;border-bottom:1px solid rgba(235,203,149,.55)}
-#bringing{display:block;border-top:1px solid rgba(217,174,120,.14);padding-top:10px;margin-top:10px;color:#F2E8D9}#bringing:empty{display:none}
+.relationship{display:block;color:#F2E8D9;margin:0}.relationship:empty{display:none}
 .small{font-style:italic;font-size:15px;line-height:1.42;color:#CFC3B3;margin:18px auto 0;max-width:360px}.small:empty{display:none}
 .state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
+.ticket-divider{width:100%;height:1px;margin:18px auto 16px;background:linear-gradient(90deg,transparent,rgba(217,174,120,.38),transparent)}
 .meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
 .save,.pending-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:62px;margin-top:24px;padding:12px;font:500 clamp(18px,4.8vw,22px)/1.2 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:#1C130A;border:1px solid #E6C48C;border-radius:3px;cursor:pointer;background:linear-gradient(180deg,#EBCD98 0%,#D2AA72 48%,#B58A57 100%);box-shadow:0 12px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,244,220,.6);text-decoration:none;text-shadow:0 1px 0 rgba(255,246,224,.32)}
 .save[hidden],.pending-link[hidden]{display:none}.save:focus-visible,.pending-link:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
@@ -83,13 +84,15 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
 <h1 id="guest">…</h1>
 <p class="role">Private guest</p>
 <div class="rule"></div>
-<div class="code" id="code">—</div>
+<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October</b> &middot; Doors <b>22:00</b></span><span class="venue-line" id="venue"></span></p>
 <div class="qr" id="qr"></div>
 <p class="state" id="state"></p>
-<p class="meta" id="ticketMeta"><span class="ticket-date">Saturday <b>10 October</b> · Doors <b>22:00</b></span><span class="venue-line" id="venue"></span><span id="bringing"></span></p>
+<div class="ticket-divider" aria-hidden="true"></div>
+<p class="relationship" id="bringing"></p>
 <p class="small" id="ticketNote"></p>
 <a class="pending-link" hidden id="pendingInvite" href="#">Respond</a>
 <button class="save" hidden id="save" type="button">Save your ticket</button>
+<div class="code" id="code">&mdash;</div>
 <p aria-live="polite" class="saved" id="saved"></p>
 </main>
 <aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
@@ -130,6 +133,7 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
     $('qr').hidden=true;
     $('state').textContent='';
     $('ticketMeta').innerHTML='Location remains sealed until 09.10 at 18:00.';
+    $('bringing').textContent='';
     $('ticketNote').textContent='Your ticket will be sent to you on 09.10 at 18:00.';
     reveal();
     return;
@@ -147,9 +151,9 @@ h1{font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px
   if(window.WhispersTickets){
     const lines=['Saturday 10 October · Doors 22:00'];
     if(venueText)lines.push(venueText);
-    if(t.bringing)lines.push('Bringing '+t.bringing);
+    if(t.bringing)lines.push('Bringing '+t.bringing); else if(!t.brought_by)lines.push('Coming on your own');
     if(t.table_reserved)lines.push('Your table is confirmed.');
-    const spec=[{name:t.guest_name,role,sealCode:t.seal_code,url:ticketUrl,lines,note:'Show this at the door.'}];
+    const spec=[{name:t.guest_name,role,sealCode:t.seal_code,url:ticketUrl,lines,note:'Show this seal at the door.'}];
     const prep=()=>window.WhispersTickets.prepare(spec).catch(()=>null);
     let ready=prep();
     $('save').hidden=false;

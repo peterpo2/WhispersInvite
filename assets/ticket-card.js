@@ -81,25 +81,37 @@
     ctx.fillText(t.role, W / 2, 610);
     rule(ctx, 668);
 
-    ctx.fillStyle = GOLD_HI; ctx.font = `300 52px ${SANS}`;
-    spaced(ctx, t.sealCode || "WSP·10", W / 2, 770, 12);
-
-    const qr = await qrCanvas(t.url);
-    ctx.fillStyle = "#F1E9DC"; ctx.fillRect(W / 2 - 300, 830, 600, 600);
-    ctx.drawImage(qr, W / 2 - 280, 850, 560, 560);
-
-    ctx.fillStyle = "rgba(217,174,120,.3)"; ctx.fillRect(110, 1500, W - 220, 2);
-    ctx.font = `400 44px ${SERIF}`;
-    let y = 1572;
-    for (const line of t.lines) {
+    ctx.font = `400 40px ${SERIF}`;
+    let y = 750;
+    for (const line of (t.lines || []).slice(0, 2)) {
       for (const part of wrap(ctx, line, W - 200)) {
         ctx.fillStyle = BONE; ctx.fillText(part, W / 2, y); y += 58;
       }
     }
+
+    const qr = await qrCanvas(t.url);
+    ctx.fillStyle = "#F1E9DC"; ctx.fillRect(W / 2 - 300, 880, 600, 600);
+    ctx.drawImage(qr, W / 2 - 280, 900, 560, 560);
+
+    ctx.fillStyle = GOLD_HI; ctx.font = `300 34px ${SANS}`;
+    spaced(ctx, "READY FOR THE DOOR", W / 2, 1545, 8);
+
+    ctx.fillStyle = "rgba(217,174,120,.3)"; ctx.fillRect(110, 1592, W - 220, 2);
+    ctx.font = `400 40px ${SERIF}`;
+    y = 1662;
+    for (const line of (t.lines || []).slice(2)) {
+      for (const part of wrap(ctx, line, W - 220)) {
+        ctx.fillStyle = BONE; ctx.fillText(part, W / 2, y); y += 54;
+      }
+    }
     if (t.note) {
       ctx.fillStyle = MUTE; ctx.font = `italic 400 38px ${SERIF}`;
-      ctx.fillText(t.note, W / 2, Math.min(y + 30, H - 70));
+      for (const part of wrap(ctx, t.note, W - 260)) {
+        ctx.fillText(part, W / 2, Math.min(y + 28, H - 160)); y += 48;
+      }
     }
+    ctx.fillStyle = GOLD_HI; ctx.font = `300 42px ${SANS}`;
+    spaced(ctx, t.sealCode || "WSP" + String.fromCharCode(183) + "10", W / 2, H - 86, 10);
     return c;
   }
 
