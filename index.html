@@ -477,7 +477,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
   function setFilmReady(ready){
     const ss=$('#skipseal'),hint=$('#hint');
     if(ss)ss.disabled=!ready;
-    if(hint){hint.textContent=ready?'Press and hold to break the seal':'Preparing the film...';hint.classList.toggle('pulse',ready);}
+    if(hint){hint.textContent=ready?'Press and hold to break the seal':'';hint.classList.toggle('pulse',ready);}
   }
   function preloadFilmBlob(){
     if(filmBlobPromise)return filmBlobPromise;

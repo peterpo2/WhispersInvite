@@ -60,7 +60,7 @@ test("public invite uses the new lockup as the primary brand treatment", () => {
 test("public ticket and confirmation links use the transparent lockup without a black box", () => {
   for (const source of [ticketPage, confirmationPage, staffPage, ticketCard]) {
     assert.match(source, /\/assets\/whispers-lockup-transparent\.png/);
-    assert.doesNotMatch(source, /\/assets\/whispers-lockup-dark\.png/);
+    assert.doesNotMatch(source, /<img[^>]+src="\/assets\/whispers-lockup-dark\.png"/);
   }
 });
 

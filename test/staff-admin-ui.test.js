@@ -35,6 +35,12 @@ test("staff admin includes an invite registry tab", () => {
   assert.match(staffPage, /i\.inviteLink,i\.confirmationLink,i\.ticketLink/);
 });
 
+test("staff page defines an explicit clean social preview image", () => {
+  assert.match(staffPage, /<meta property="og:image" content="https:\/\/whisperssociety\.com\/assets\/whispers-lockup-dark\.png"\/>/);
+  assert.match(staffPage, /<meta name="twitter:image" content="https:\/\/whisperssociety\.com\/assets\/whispers-lockup-dark\.png"\/>/);
+  assert.doesNotMatch(staffPage, /<meta property="og:image" content="[^"]*whispers-seal\.png"/);
+});
+
 test("invite link columns can send their own email type", () => {
   const inviteSendApi = readFileSync("functions/api/staff/invite-send.js", "utf8");
 
