@@ -6,7 +6,6 @@ const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8"
 const inviteShell = readFileSync(new URL("../invite-shell", import.meta.url), "utf8");
 const rootPage = readFileSync(new URL("../functions/index.js", import.meta.url), "utf8");
 const middleware = readFileSync(new URL("../functions/_middleware.js", import.meta.url), "utf8");
-const redirects = readFileSync(new URL("../_redirects", import.meta.url), "utf8");
 const ticketPage = readFileSync(new URL("../functions/ticket/[token].js", import.meta.url), "utf8");
 const confirmationPage = readFileSync(new URL("../functions/hi/[token].js", import.meta.url), "utf8");
 const staffPage = readFileSync(new URL("../functions/staff/rose-door-10.js", import.meta.url), "utf8");
@@ -33,7 +32,8 @@ test("invite route serves the existing invitation app shell", () => {
   assert.match(middleware, /env\.ASSETS\.fetch/);
   assert.match(middleware, /\/invite\?token=/);
   assert.match(middleware, /url\.pathname = "\/invite-shell"/);
-  assert.match(redirects, /^\/invite \/invite-shell 200/m);
+  assert.match(middleware, /headers\.set\("Content-Type", "text\/html; charset=utf-8"\)/);
+  assert.match(middleware, /headers\.delete\("Content-Disposition"\)/);
   assert.equal(inviteShell, indexHtml);
 });
 

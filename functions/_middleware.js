@@ -19,10 +19,19 @@ function plainText(body, status) {
   });
 }
 
-function inviteApp(request, env) {
+async function inviteApp(request, env) {
   const url = new URL(request.url);
   url.pathname = "/invite-shell";
-  return env.ASSETS.fetch(new Request(url.toString(), request));
+  const asset = await env.ASSETS.fetch(new Request(url.toString(), request));
+  const headers = new Headers(asset.headers);
+  headers.set("Content-Type", "text/html; charset=utf-8");
+  headers.set("Cache-Control", "no-store");
+  headers.delete("Content-Disposition");
+  return new Response(asset.body, {
+    status: asset.status,
+    statusText: asset.statusText,
+    headers,
+  });
 }
 
 function inviteTokenRedirect(request) {
