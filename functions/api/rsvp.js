@@ -2,6 +2,7 @@ import { json, methodNotAllowed } from "../_shared/responses.js";
 import { buildRsvpConfirmationEmails, emailConfigFromEnv } from "../_shared/email-content.js";
 import { retryAsync } from "../_shared/retry.js";
 import { applyInviteToRsvpRow, buildCompanionRow, buildConfirmationUrl, buildRsvpRow, buildTicketUrl, companionMatchesRsvp, isDuplicateSealCode, tableReservationForUpdate, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
+import { loadRsvpPolicy } from "../_shared/rsvp-settings.js";
 import { sendSmtpMail } from "../_shared/smtp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
@@ -41,6 +42,10 @@ export async function onRequestPost({ request, env, waitUntil }) {
 
   const valid = validateRsvpPayload(body);
   if (valid.error) return json({ error: valid.error }, 400);
+
+  const availability = await loadRsvpPolicy(env);
+  if (availability.error) return availability.error;
+  if (!availability.policy.isOpen) return json({ error: "RSVP is closed." }, 403);
 
   let row = buildRsvpRow(body);
   if (body.guestId) {

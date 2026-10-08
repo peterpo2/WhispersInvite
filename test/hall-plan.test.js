@@ -1,0 +1,179 @@
+import { existsSync, readFileSync } from "node:fs";
+import test from "node:test";
+import assert from "node:assert/strict";
+
+const read = (path) => (existsSync(path) ? readFileSync(path, "utf8") : "");
+const migration = read("sql/2026-10-08-hall-map-positions.sql");
+const schema = read("sql/schema.sql");
+const api = read("functions/api/staff/hall-map.js");
+const markupSource = read("functions/_shared/hall-plan-markup.js");
+const sourceHtml = read("docs/floor-plan/whispers-floor-plan-rev-d.html");
+const sourceLines = sourceHtml.split(/\r?\n/);
+const lines = (from, to) => sourceLines.slice(from - 1, to).join("\n");
+const asset = read("assets/hall-plan.js");
+const staffPage = read("functions/staff/rose-door-10.js");
+const fallback = read("assets/staff-admin-fallback.js");
+
+function seeds(sql) {
+  return [...sql.matchAll(/\('t(\d+)', ([\d.]+), ([\d.]+)\)/g)].map((m) => [Number(m[1]), Number(m[2]), Number(m[3])]);
+}
+
+test("hall map migration adds separate nullable positions", () => {
+  assert.match(migration, /add column if not exists hall_x numeric\(5,2\) check \(hall_x between 0 and 100\)/);
+  assert.match(migration, /add column if not exists hall_y numeric\(5,2\) check \(hall_y between 0 and 100\)/);
+  assert.doesNotMatch(migration, /map_x|map_y/);
+  assert.match(migration, /where t\.id = v\.id and \(t\.hall_x is null or t\.hall_y is null\)/);
+});
+
+test("hall map seeds match the floor plan for tables 1-30 only", () => {
+  const rows = seeds(migration);
+  assert.equal(rows.length, 30);
+  assert.deepEqual(rows.map((r) => r[0]), Array.from({ length: 30 }, (_, i) => i + 1));
+  assert.deepEqual(rows[0], [1, 10.31, 14.49]);
+  assert.deepEqual(rows[15], [16, 21.68, 30.45]);
+  assert.deepEqual(rows[29], [30, 83.77, 59.54]);
+});
+
+test("schema has hall positions and the same seeds", () => {
+  assert.match(schema, /hall_x numeric\(5,2\) check \(hall_x between 0 and 100\)/);
+  assert.match(schema, /hall_y numeric\(5,2\) check \(hall_y between 0 and 100\)/);
+  assert.deepEqual(seeds(schema.slice(schema.indexOf("update public.staff_tables as t"))), seeds(migration));
+});
+
+test("hall map API reads with service and writes with door, only hall columns", () => {
+  assert.match(api, /export async function onRequestGet[\s\S]*requireStaff\(request, env, "service"\)/);
+  assert.match(api, /export async function onRequestPatch[\s\S]*requireStaff\(request, env, "door"\)/);
+  assert.match(api, /select=id,label,sort_order,hall_x,hall_y&order=sort_order\.asc/);
+  assert.match(api, /validateHallPositionPayload\(body\)/);
+  assert.match(api, /JSON\.stringify\(\{ hall_x: position\.hallX, hall_y: position\.hallY, updated_at:/);
+  assert.match(api, /id=eq\.\$\{encodeURIComponent\(position\.tableId\)\}/);
+  assert.doesNotMatch(api, /map_x|map_y|minimum_spend/);
+  assert.match(api, /catch \{\s*return json\(\{ error: "Invalid table position" \}, 400\);/);
+  assert.match(api, /return json\(\{ error: "Table not found" \}, 404\)/);
+});
+
+test("MAP fonts are self-hosted", () => {
+  for (const file of ["assets/hm-ibm-plex-mono-400.ttf", "assets/hm-ibm-plex-mono-500.ttf", "assets/hm-cormorant-garamond.ttf"]) {
+    assert.ok(existsSync(file), file);
+  }
+});
+
+test("MAP markup copies the floor plan verbatim", async () => {
+  const { renderHallPlanView } = await import("../functions/_shared/hall-plan-markup.js");
+  const html = renderHallPlanView().replace(/\r\n/g, "\n");
+  for (const [from, to] of [[99, 173], [384, 395], [397, 444], [446, 447]]) {
+    assert.ok(html.includes(lines(from, to)), `source lines ${from}-${to}`);
+  }
+  // Owner decision: the sheet header (title, venue line, totals) is left out.
+  assert.doesNotMatch(html, /<header>|<h1>|class="sub"|class="rev"/);
+  assert.match(html, /<div class="view" id="view-hallmap">/);
+  assert.match(html, /<svg id="hmPlan" viewBox="-56 -52 849 895"/);
+  assert.match(html, /<g id="hmTables"><\/g>/);
+  assert.match(html, /id="hmState" aria-live="polite"/);
+  assert.match(html, /id="hmOffPlan" hidden/);
+  assert.match(html, /<section class="hm-detail" id="hmDetail" aria-live="polite" hidden>/);
+  assert.doesNotMatch(html, /class="occ"|class="stool|class="t( prem)?"|class="tn"/);
+  assert.ok(html.indexOf('<g id="hmTables">') < html.indexOf('class="wall"'), "wall drawn on top of tables");
+});
+
+test("MAP right column sits behind a collapsed Legend button", async () => {
+  const { renderHallPlanView } = await import("../functions/_shared/hall-plan-markup.js");
+  const html = renderHallPlanView().replace(/\r\n/g, "\n");
+  assert.match(html, /<button type="button" class="hm-legend-toggle" id="hmLegendToggle" aria-expanded="false" aria-controls="hmLegend">Legend<\/button>/);
+  assert.match(html, /<div class="hm-legend" id="hmLegend" hidden>\n\s*<aside>/);
+  assert.match(html, /<div class="cols" id="hmCols">/);
+  assert.match(asset, /legendToggle\.setAttribute\('aria-expanded',String\(open\)\)/);
+  assert.match(asset, /legend\.hidden=!open/);
+  assert.match(asset, /cols\.classList\.toggle\('hm-legend-open',open\)/);
+});
+
+test("MAP CSS is scoped and uses MAP-only font names", async () => {
+  const { HALL_PLAN_STYLE } = await import("../functions/_shared/hall-plan-markup.js");
+  const rules = HALL_PLAN_STYLE.replace(/@font-face\{[^}]*\}/g, "").split("}").map((r) => r.trim()).filter(Boolean);
+  for (const rule of rules) {
+    const selectors = rule.split("{")[0];
+    if (selectors.startsWith("@")) continue;
+    for (const selector of selectors.split(",")) assert.match(selector.trim(), /^\.hm\b/, selector);
+  }
+  assert.match(HALL_PLAN_STYLE, /font-family:"HM Cormorant";src:url\("\/assets\/hm-cormorant-garamond\.ttf"\)/);
+  assert.match(HALL_PLAN_STYLE, /font-family:"HM Plex Mono";src:url\("\/assets\/hm-ibm-plex-mono-400\.ttf"\)/);
+  assert.match(HALL_PLAN_STYLE, /font-family:"HM Plex Mono";src:url\("\/assets\/hm-ibm-plex-mono-500\.ttf"\)/);
+  assert.doesNotMatch(HALL_PLAN_STYLE, /fonts\.googleapis|font-family:"Cormorant Garamond"|font-family:"IBM Plex Mono"/);
+  assert.match(HALL_PLAN_STYLE, /\.hm table\{min-width:0;/);
+  assert.match(HALL_PLAN_STYLE, /\.hm \.draw svg\{display:block;width:100%;height:auto;min-width:580px\}/);
+  assert.match(HALL_PLAN_STYLE, /\.hm\.hm-drag \.hm-t\{touch-action:none\}/);
+  assert.match(markupSource, /docs\/floor-plan\/whispers-floor-plan-rev-d\.html/);
+});
+
+test("MAP asset draws tables like the floor plan", () => {
+  assert.match(asset, /const VB=\{x:-56,y:-52,w:849,h:895\}/);
+  assert.match(asset, /width="63" height="63" class="occ"/);
+  assert.match(asset, /width="29\.4" height="29\.4" class="t'\+p\+'"/);
+  assert.match(asset, /n>=1&&n<=7\?' prem':''/);
+  assert.match(asset, /class="tn" text-anchor="middle"/);
+  assert.match(asset, /esc\(/);
+});
+
+test("MAP asset drags with pointer events and saves to its own API", () => {
+  assert.match(asset, /const DRAG_THRESHOLD=6/);
+  assert.match(asset, /setPointerCapture/);
+  assert.match(asset, /addEventListener\('pointercancel'/);
+  assert.match(asset, /getScreenCTM\(\)\.inverse\(\)/);
+  assert.match(asset, /fetch\('\/api\/staff\/hall-map',\{method:'PATCH'/);
+  assert.match(asset, /JSON\.stringify\(\{tableId:t\.id,hallX:t\.hallX,hallY:t\.hallY\}\)/);
+  assert.doesNotMatch(asset, /\/api\/staff\/tables',\{method:'PATCH'|mapX|mapY/);
+  assert.match(asset, /const CAN_DRAG=\['owner','admin','door'\]\.includes\(app\.dataset\.staffRole\)/);
+  assert.match(asset, /if\(CAN_DRAG\)root\.classList\.add\('hm-drag'\)/);
+});
+
+test("MAP asset opens a closable detail panel under the map", () => {
+  assert.match(asset, /fetch\('\/api\/staff\/tables'\)/);
+  assert.match(asset, /class="hm-close" id="hmClose" aria-label="Close"/);
+  assert.match(asset, /function closeDetail\(\)/);
+  assert.match(asset, /detail\.scrollIntoView\(\{behavior:smooth\(\),block:'start'\}\)/);
+  assert.match(asset, /prefers-reduced-motion: reduce/);
+  assert.match(asset, /Not on the plan/);
+  assert.match(asset, /'€'\+Number\(v\|\|0\)\.toLocaleString\('en-US'\)/);
+});
+
+test("MAP asset loads when its view becomes active", () => {
+  assert.match(asset, /new MutationObserver/);
+  assert.match(asset, /attributeFilter:\['class'\]/);
+  assert.match(asset, /addEventListener\('hashchange'/);
+});
+
+test("MAP polish: hint, hover, selection, detail motion, saved fade", async () => {
+  const { HALL_PLAN_STYLE, renderHallPlanView } = await import("../functions/_shared/hall-plan-markup.js");
+  assert.match(renderHallPlanView(), /<div class="hm-bar"><p class="hm-hint" id="hmHint">Tap a table for details<\/p><button type="button" class="hm-legend-toggle"/);
+  assert.match(asset, /hint\.textContent=CAN_DRAG\?'Drag a table to move it · tap for details':'Tap a table for details'/);
+  assert.match(asset, /setTimeout\(\(\)=>\{if\(state\.textContent==='Saved\.'\)setState\(''\);\},2000\)/);
+  assert.match(HALL_PLAN_STYLE, /@media \(hover:hover\)\{\.hm \.hm-t:hover \.t\{stroke:var\(--parch\)\}/);
+  assert.match(HALL_PLAN_STYLE, /\.hm\.hm-drag \.hm-t\{touch-action:none\}\r?\n\.hm\.hm-drag \.hm-t \*\{cursor:grab\}/);
+  assert.match(HALL_PLAN_STYLE, /\.hm \.hm-t\.hm-sel \.t\{[^}]*filter:drop-shadow/);
+  assert.match(HALL_PLAN_STYLE, /@keyframes hm-in\{from\{opacity:0;transform:translateY\(6px\)\}\}/);
+  assert.match(HALL_PLAN_STYLE, /@media \(prefers-reduced-motion:reduce\)\{\.hm \.hm-detail:not\(\[hidden\]\)\{animation:none\}\}/);
+});
+
+test("opening MAP keeps the staff tabs in view", () => {
+  assert.match(asset, /function toTop\(\)\{requestAnimationFrame\(\(\)=>window\.scrollTo\(0,0\)\);\}/);
+  assert.match(asset, /if\(active&&!wasActive\)\{load\(\);toTop\(\);\}/);
+  assert.match(asset, /window\.addEventListener\('load',\(\)=>\{if\(isActive\(\)\)toTop\(\);\},\{once:true\}\)/);
+});
+
+test("admin shows a MAP tab right after Tables", () => {
+  assert.match(staffPage, /data-view="tables">Tables<\/a><a class="tab" href="#view-hallmap" data-view="hallmap">MAP<\/a>/);
+  assert.match(staffPage, /import \{ HALL_PLAN_STYLE, renderHallPlanView \} from "\.\.\/_shared\/hall-plan-markup\.js";/);
+  assert.match(staffPage, /<\/style>\r?\n<style>#view-hallmap:target\{display:block\}main:has\(#view-hallmap:target\) #view-scanner\{display:none\}\$\{HALL_PLAN_STYLE\}<\/style>/);
+  assert.match(staffPage, /\$\{renderHallPlanView\(\)\}\r?\n<div class="view" id="view-invite">/);
+  assert.match(staffPage, /location\.hash==='#hallmap'\|\|location\.hash==='#view-hallmap'\?'hallmap'/);
+  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261008-map3"><\/script>/);
+});
+
+test("fallback admin knows the MAP view", () => {
+  assert.match(fallback, /location\.hash==="#view-hallmap"\|\|location\.hash==="#hallmap"\?"hallmap"/);
+});
+
+test("Tables and Show map are untouched by MAP", () => {
+  assert.match(staffPage, /id="toggleHallMap" type="button">Open map/);
+  assert.doesNotMatch(staffPage.slice(staffPage.indexOf('<div class="view" id="view-tables">'), staffPage.indexOf('<div class="view" id="view-invite">')), /hm-|hallPlan|view-hallmap/);
+});

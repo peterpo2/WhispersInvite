@@ -21,6 +21,10 @@ All SQL you may need: [`sql/useful-queries.sql`](sql/useful-queries.sql)
 - Scanner: hold the QR 20–40 cm away; tap the picture to refocus; **Switch** cycles the back cameras
   if the picture stays blurry.
 
+## MAP tab
+- [x] Run `sql/2026-10-08-hall-map-positions.sql` in Supabase before the MAP tab goes live.
+- [x] Run `sql/2026-10-08-owner-rsvp-settings.sql` in Supabase before owner Settings goes live.
+
 ## Still open (development)
 - [ ] Intro video from the client (the film screen shows text scenes until then).
 - [ ] Cap at 150 people.

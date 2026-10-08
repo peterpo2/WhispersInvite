@@ -1,5 +1,6 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
 import { TICKET_RELEASE_AT, buildConfirmationUpdateUrl, buildTicketUrl, confirmationCanUpdate, tokenFromValue } from "../_shared/rsvp.js";
+import { loadRsvpPolicy } from "../_shared/rsvp-settings.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 const PRIMARY_COLUMNS = "id,guest_id,guest_name,guest_email,guest_phone,status,confirmation_token,ticket_token,plus_one_name,plus_one_email,wants_table_reservation,reservation_confirmed,submitted_at";
@@ -22,7 +23,9 @@ export async function onRequestGet({ request, env }) {
   }
 
   if (!ticket) return json({ error: "Confirmation not found" }, 404);
-  const canUpdate = confirmationCanUpdate(ticket);
+  const availability = await loadRsvpPolicy(env);
+  if (availability.error) return availability.error;
+  const canUpdate = availability.policy.isOpen && confirmationCanUpdate(ticket);
 
   return json({
     ok: true,

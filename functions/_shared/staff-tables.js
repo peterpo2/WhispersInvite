@@ -36,3 +36,11 @@ export function validateTablePositionPayload(body) {
     mapY: Math.round(mapY * 100) / 100,
   };
 }
+
+export function validateHallPositionPayload(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  if (body.hallX === null || body.hallY === null) return null;
+  const position = validateTablePositionPayload({ tableId: body.tableId, mapX: body.hallX, mapY: body.hallY });
+  if (!position) return null;
+  return { tableId: position.tableId, hallX: position.mapX, hallY: position.mapY };
+}

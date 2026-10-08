@@ -4,14 +4,15 @@ import assert from "node:assert/strict";
 
 const rsvpApi = readFileSync("functions/api/rsvp.js", "utf8");
 
-test("existing RSVP updates stay open after ticket release", () => {
+test("existing RSVP updates are not tied to ticket release", () => {
   assert.doesNotMatch(rsvpApi, /if \(isTicketReleased\(\)\)/);
   assert.doesNotMatch(rsvpApi, /Guest-list changes are closed\./);
 });
 
-test("RSVP submissions stay open without a date-based deadline", () => {
+test("RSVP submissions use the owner setting instead of a fixed deadline", () => {
   assert.doesNotMatch(rsvpApi, /isRsvpClosed/);
-  assert.doesNotMatch(rsvpApi, /RSVP is closed\./);
+  assert.match(rsvpApi, /loadRsvpPolicy\(env\)/);
+  assert.match(rsvpApi, /if \(!availability\.policy\.isOpen\) return json\(\{ error: "RSVP is closed\." \}, 403\)/);
 });
 
 test("a saved RSVP succeeds even when its confirmation email fails", () => {

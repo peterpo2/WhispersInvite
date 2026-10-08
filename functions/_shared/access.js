@@ -18,6 +18,8 @@ const PUBLIC_PATHS = new Set([
   "/api/staff/invite-send",
   "/api/staff/tables",
   "/api/staff/table-assignment",
+  "/api/staff/hall-map",
+  "/api/staff/settings",
   "/api/staff/users",
   "/api/staff/users/password",
   "/staff/rose-door-10",

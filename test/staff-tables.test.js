@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validateMinimumSpendPayload, validateTablePositionPayload } from "../functions/_shared/staff-tables.js";
+import { validateHallPositionPayload, validateMinimumSpendPayload, validateTablePositionPayload } from "../functions/_shared/staff-tables.js";
 
 test("minimum spend accepts whole non-negative euro amounts", () => {
   assert.deepEqual(validateMinimumSpendPayload({ tableId: "table-1", minimumSpendEur: 2500 }), {
@@ -59,5 +59,38 @@ test("table positions reject invalid IDs and out-of-bounds coordinates", () => {
     { tableId: "t1", mapX: "", mapY: 10 },
   ]) {
     assert.equal(validateTablePositionPayload(body), null);
+  }
+});
+
+test("hall position accepts percentages and rounds to two decimals", () => {
+  assert.deepEqual(validateHallPositionPayload({ tableId: "t1", hallX: 10.314, hallY: "14.49" }), {
+    tableId: "t1",
+    hallX: 10.31,
+    hallY: 14.49,
+  });
+  assert.deepEqual(validateHallPositionPayload({ tableId: "t35", hallX: 0, hallY: 100 }), {
+    tableId: "t35",
+    hallX: 0,
+    hallY: 100,
+  });
+});
+
+test("hall position rejects missing, null and out-of-range values", () => {
+  for (const body of [
+    null,
+    [],
+    {},
+    { tableId: "t1" },
+    { tableId: "t1", hallX: null, hallY: 10 },
+    { tableId: "t1", hallX: 10, hallY: null },
+    { tableId: "t1", hallX: "", hallY: 10 },
+    { tableId: "t1", hallX: -1, hallY: 10 },
+    { tableId: "t1", hallX: 10, hallY: 100.01 },
+    { tableId: "t1", hallX: "abc", hallY: 10 },
+    { tableId: "t1", hallX: Infinity, hallY: 10 },
+    { tableId: "bad id", hallX: 10, hallY: 10 },
+    { tableId: "t1", mapX: 10, mapY: 10 },
+  ]) {
+    assert.equal(validateHallPositionPayload(body), null, JSON.stringify(body));
   }
 });

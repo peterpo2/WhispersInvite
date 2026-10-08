@@ -68,7 +68,7 @@ test("staff admin starts with scanner and exports each operational table separat
   assert.match(staffPage, /if\(exportMembersButton\)exportMembersButton\.onclick=exportMembersCsv/);
   assert.match(staffPage, /if\(exportInvitesButton\)exportInvitesButton\.onclick=exportInvitesCsv/);
   assert.match(staffPage, /if\(exportTablesButton\)exportTablesButton\.onclick=exportTablesCsv/);
-  assert.match(staffPage, /ROLE_VIEWS=\{owner:\['scanner','members','tables','invite','menu','staff'\],admin:\['scanner','members','tables','invite','menu'\],door:\['scanner','members','tables','invite','menu'\],service:\['tables'\]\}/);
+  assert.match(staffPage, /ROLE_VIEWS=\{owner:\['scanner','members','tables','invite','menu','staff','settings','hallmap'\],admin:\['scanner','members','tables','invite','menu','hallmap'\],door:\['scanner','members','tables','invite','menu','hallmap'\],service:\['tables','hallmap'\]\}/);
 });
 
 test("owner, admin and door can share the public menu QR", () => {
@@ -81,9 +81,9 @@ test("owner, admin and door can share the public menu QR", () => {
   assert.match(staffPage, /https:\/\/whisperssociety\.com\/menu/);
   assert.match(staffPage, /QRCode\.toCanvas/);
   assert.match(staffPage, /navigator\.share/);
-  assert.match(staffPage, /owner:\['scanner','members','tables','invite','menu','staff'\]/);
-  assert.match(staffPage, /admin:\['scanner','members','tables','invite','menu'\]/);
-  assert.match(staffPage, /door:\['scanner','members','tables','invite','menu'\]/);
+  assert.match(staffPage, /owner:\['scanner','members','tables','invite','menu','staff','settings','hallmap'\]/);
+  assert.match(staffPage, /admin:\['scanner','members','tables','invite','menu','hallmap'\]/);
+  assert.match(staffPage, /door:\['scanner','members','tables','invite','menu','hallmap'\]/);
 });
 
 test("all staff roles can download print-ready menu QR files", () => {
@@ -192,7 +192,7 @@ test("staff admin navigation and controls have compact phone layouts", () => {
   assert.match(staffPage, /<a class="tab active" href="#view-scanner" data-view="scanner">Scanner<\/a>/);
   assert.match(staffPage, /<a class="tab" href="#view-members" data-view="members">Members<\/a>/);
   assert.match(staffPage, /<a id="logout" href="\/api\/staff\/logout">Logout<\/a>/);
-  assert.match(staffPage, /#view-scanner:target,#view-members:target,#view-tables:target,#view-invite:target,#view-menu:target,#view-staff:target\{display:block\}/);
+  assert.match(staffPage, /#view-scanner:target,#view-members:target,#view-tables:target,#view-invite:target,#view-menu:target,#view-staff:target,#view-settings:target\{display:block\}/);
   assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*body\{font-size:14px;[\s\S]*calc\(118px \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.top\{display:grid;grid-template-columns:minmax\(0,1fr\) auto/);
   assert.match(staffPage, /@media\(max-width:520px\)\{[\s\S]*\.staff-meta\{display:grid;grid-template-columns:auto auto/);
@@ -229,10 +229,10 @@ test("staff fallback keeps scanner camera and manual check usable", () => {
 });
 
 test("staff fallback keeps the menu QR usable for every staff role", () => {
-  assert.match(staffFallback, /owner:\["scanner","members","tables","invite","menu","staff"\]/);
-  assert.match(staffFallback, /admin:\["scanner","members","tables","invite","menu"\]/);
-  assert.match(staffFallback, /door:\["scanner","members","tables","invite","menu"\]/);
-  assert.match(staffFallback, /service:\["tables"\]/);
+  assert.match(staffFallback, /owner:\["scanner","members","tables","invite","menu","staff","settings","hallmap"\]/);
+  assert.match(staffFallback, /admin:\["scanner","members","tables","invite","menu","hallmap"\]/);
+  assert.match(staffFallback, /door:\["scanner","members","tables","invite","menu","hallmap"\]/);
+  assert.match(staffFallback, /service:\["tables","hallmap"\]/);
   assert.match(staffFallback, /function renderMenuQr\(\)/);
   assert.match(staffFallback, /byId\("copyMenuLink"\)/);
   assert.match(staffFallback, /byId\("shareMenuLink"\)/);
@@ -251,7 +251,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261008-spend1/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261008-settings1/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -342,7 +342,7 @@ test("staff page renders login and owner staff management controls", () => {
 });
 
 test("door staff can use operational views without exports or owner actions", () => {
-  assert.match(staffPage, /door:\['scanner','members','tables','invite','menu'\]/);
+  assert.match(staffPage, /door:\['scanner','members','tables','invite','menu','hallmap'\]/);
   assert.match(staffPage, /if\(!allowedViews\.includes\(btn\.dataset\.view\)\)btn\.hidden=true/);
   assert.match(staffPage, /if\(name==='tables'\)loadTables\(\)/);
   assert.match(staffPage, /if\(currentView==='members'\)loadMembers\(\);else if\(currentView==='tables'\)loadTables\(\)/);
@@ -352,12 +352,12 @@ test("door staff can use operational views without exports or owner actions", ()
 });
 
 test("service staff sees only a read-only tables view", () => {
-  assert.match(staffPage, /service:\['tables'\]/);
+  assert.match(staffPage, /service:\['tables','hallmap'\]/);
   assert.match(staffPage, /\.tab\[hidden\]\{display:none!important\}/);
   assert.match(staffPage, /const TABLES_READ_ONLY=STAFF_USER\.role==='service'/);
   assert.match(staffPage, /const controls=TABLES_READ_ONLY\?'':/);
   assert.match(staffPage, /current\.id&&!TABLES_READ_ONLY\?/);
-  assert.match(staffFallback, /service:\["tables"\]/);
+  assert.match(staffFallback, /service:\["tables","hallmap"\]/);
   assert.match(staffFallback, /const tablesReadOnly=role==="service"/);
   assert.match(staffFallback, /const controls=tablesReadOnly\?"":/);
   assert.match(staffFallback, /current\.id&&!tablesReadOnly\?/);
@@ -406,6 +406,8 @@ test("table minimum spend is editable for operational staff and read-only for se
     assert.match(source, /Saved\./);
     assert.match(source, /Minimum spend EUR/);
   }
+  assert.ok(staffPage.includes("if(!/^\\\\d*$/.test(raw)"));
+  assert.ok(staffFallback.includes("if(!/^\\d*$/.test(raw)"));
   assert.match(staffPage, /TABLES_READ_ONLY\?minimumSpendReadOnly/);
   assert.match(staffFallback, /tablesReadOnly\?minimumSpendReadOnly/);
 });

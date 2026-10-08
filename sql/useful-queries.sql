@@ -191,3 +191,10 @@ where status = 'attending' and plus_one_name is not null and plus_one_ticket_tok
 -- Columns the site expects on rsvps
 select column_name from information_schema.columns
 where table_schema = 'public' and table_name = 'rsvps' order by ordinal_position;
+
+-- MAP tab positions (percent of the floor plan); null = not on the plan.
+select id, label, hall_x, hall_y from staff_tables order by sort_order;
+
+-- Reset MAP positions to the Rev D floor plan: clear them, then re-run
+-- sql/2026-10-08-hall-map-positions.sql.
+-- update staff_tables set hall_x = null, hall_y = null;

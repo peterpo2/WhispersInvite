@@ -53,8 +53,16 @@ functions/
   api/ticket.js                    GET  /api/ticket?token=
   api/checkin.js                   GET  /api/checkin?token=   (legacy link: 302 to the ticket)
   api/door.js                      GET/POST /api/door          (staff scanner API)
+  api/staff/settings.js            GET/PATCH /api/staff/settings (owner RSVP availability)
+  _shared/rsvp-settings.js         Sofia-time schedule validation and effective RSVP policy
   ticket/[token].js                GET  /ticket/:token         (ticket page)
   staff/rose-door-10.js            GET  /staff/rose-door-10    (camera QR scanner)
+  api/staff/hall-map.js            GET/PATCH /api/staff/hall-map (MAP tab table positions)
+  _shared/hall-plan-markup.js      MAP tab: 1:1 copy of the floor plan + CSS scoped under .hm
+assets/hall-plan.js                MAP tab: draws tables, drag/save, tap → detail, Legend toggle
+docs/floor-plan/                   Organizer's floor plan Rev D (html/md/pdf): source for the MAP tab
+sql/2026-10-08-hall-map-positions.sql  staff_tables.hall_x / hall_y + seeds for tables 1–30
+sql/2026-10-08-owner-rsvp-settings.sql  event_details RSVP availability and optional schedule
 sql/schema.sql                     Full schema for a fresh Supabase project
 sql/2026-09-24-door-scanner.sql    Migration for the existing production DB (ticket_token)
 sql/2026-09-24-rsvp-columns.sql    Idempotent migration: missing rsvps columns and unique indexes
@@ -107,6 +115,10 @@ the active invitation flow lives at `/invite` and `/invite/<id>` (see End-to-end
 | POST | `/api/door` | `functions/api/door.js` | Body `{token\|value\|url}` (parsed by `tokenFromValue`) → finds the guest or plus-one ticket → PATCHes `checked_in_at` or `plus_one_checked_in_at` (`is.null` guard) → `checked_in` / `already_checked_in`; the ticket object never includes tokens or ids |
 | GET | `/ticket/:token` | `functions/ticket/[token].js` | Server-rendered ticket page |
 | GET | `/staff/rose-door-10` | `functions/staff/rose-door-10.js` | Server-rendered camera scanner |
+| GET | `/api/staff/hall-map` | `functions/api/staff/hall-map.js` | Staff `service`+. `{ ok, tables: [{ id, label, sortOrder, hallX, hallY }] }`; `hallX`/`hallY` are percentages of the floor plan viewBox, `null` = not on the plan |
+| PATCH | `/api/staff/hall-map` | `functions/api/staff/hall-map.js` | Staff `door`+. Body `{ tableId, hallX, hallY }` (`validateHallPositionPayload`, 0–100) → updates only `hall_x`, `hall_y`; `404` for an unknown table |
+| GET | `/api/staff/settings` | `functions/api/staff/settings.js` | Owner only. Returns the effective RSVP availability and an optional scheduled change in `Europe/Sofia` |
+| PATCH | `/api/staff/settings` | `functions/api/staff/settings.js` | Owner only. Locks/unlocks RSVP immediately, schedules the opposite state for a future Sofia date/time, or cancels the schedule |
 
 Handlers export `onRequestGet` / `onRequestPost`, plus a catch-all `onRequest` that returns
 `methodNotAllowed()` (405).
@@ -335,4 +347,13 @@ first, so the result is "already checked in".
 - Git-ignored local paths: `.wrangler/`, `.dev.vars`, `.env*`, `.superpowers/`. Never commit
   `.superpowers/`, which is local brainstorming scratch space.
 - Ignore the stray `New Text Document (2).txt` (gitignored).
+- MAP tab (`#view-hallmap`) and Tables → Show map are separate: MAP uses `hall_x`/`hall_y` via
+  `/api/staff/hall-map`, Show map uses `map_x`/`map_y` via `/api/staff/tables`. If the floor plan
+  changes, replace `docs/floor-plan/` and regenerate `hall-plan-markup.js` from the same source
+  lines (static layers 99–173, overlay 384–395, aside 397–444, footer 446–447; the sheet header 91–96 is left out on purpose);
+  `test/hall-plan.test.js` checks the copy is verbatim. Its fonts are self-hosted under MAP-only
+  names (`HM Cormorant`, `HM Plex Mono`) so the other staff tabs keep their fonts.
+- Owner Settings controls both new RSVP submissions and `Update details`. Ticket release remains
+  independent. The database defaults to open; scheduled local values are converted as
+  `Europe/Sofia` by `functions/_shared/rsvp-settings.js`.
 - Stage specific files rather than `git add .`, and never skip hooks with `--no-verify`.

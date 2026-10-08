@@ -6,12 +6,12 @@
   const tablesReadOnly=role==="service";
   const MENU_URL="https://whisperssociety.com/menu";
   const PRINT_SIZE=2400;
-  const allowed={owner:["scanner","members","tables","invite","menu","staff"],admin:["scanner","members","tables","invite","menu"],door:["scanner","members","tables","invite","menu"],service:["tables"]}[role]||["scanner"];
+  const allowed={owner:["scanner","members","tables","invite","menu","staff","settings","hallmap"],admin:["scanner","members","tables","invite","menu","hallmap"],door:["scanner","members","tables","invite","menu","hallmap"],service:["tables","hallmap"]}[role]||["scanner"];
   const PAGE_SIZE=20;
-  let members=[],membersPage=1,invites=[],invitesPage=1,inviteEditId="",staffUsers=[],tablesData={tables:[],groups:[]},selectedTableId=null,tableSearch="",tablePeopleSearch="",tableSpendNotice=null,hallMapOpen=false,mapDrag=null,stream=null,loop=null,ctx=null,currentView="";
+  let members=[],membersPage=1,invites=[],invitesPage=1,inviteEditId="",staffUsers=[],rsvpSetting=null,tablesData={tables:[],groups:[]},selectedTableId=null,tableSearch="",tablePeopleSearch="",tableSpendNotice=null,hallMapOpen=false,mapDrag=null,stream=null,loop=null,ctx=null,currentView="";
   const MAP_DRAG_THRESHOLD=6;
   const esc=(s)=>String(s??"").replace(/[&<>'"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
-  const viewFromHash=()=>location.hash==="#view-members"||location.hash==="#members"?"members":location.hash==="#view-tables"||location.hash==="#tables"?"tables":location.hash==="#view-invite"||location.hash==="#invite"?"invite":location.hash==="#view-menu"||location.hash==="#menu"?"menu":location.hash==="#view-staff"||location.hash==="#staff"?"staff":location.hash==="#view-scanner"||location.hash==="#scanner"?"scanner":allowed[0]||"scanner";
+  const viewFromHash=()=>location.hash==="#view-members"||location.hash==="#members"?"members":location.hash==="#view-tables"||location.hash==="#tables"?"tables":location.hash==="#view-invite"||location.hash==="#invite"?"invite":location.hash==="#view-menu"||location.hash==="#menu"?"menu":location.hash==="#view-staff"||location.hash==="#staff"?"staff":location.hash==="#view-settings"||location.hash==="#settings"?"settings":location.hash==="#view-hallmap"||location.hash==="#hallmap"?"hallmap":location.hash==="#view-scanner"||location.hash==="#scanner"?"scanner":allowed[0]||"scanner";
   const byId=(id)=>document.getElementById(id);
   const qs=(sel,root=document)=>root.querySelector(sel);
   const qsa=(sel,root=document)=>Array.from(root.querySelectorAll(sel));
@@ -26,6 +26,7 @@
     if(name==="invite")loadInvites();
     if(name==="menu")renderMenuQr();
     if(name==="staff")loadStaff();
+    if(name==="settings")loadSettings();
     updateTablesToTop();
   }
   function updateTablesToTop(){const button=byId("tablesToTop");if(button)button.hidden=!(currentView==="tables"&&window.scrollY>400);}
@@ -344,6 +345,29 @@
     try{await postJson("/api/staff/users",{id},"DELETE");setNotice("staffState","Deleted.",false);await loadStaff();}
     catch(err){setNotice("staffState",err.message||"Could not delete staff user",true);}
   }
+  function setRsvpSettingsBusy(busy){const input=byId("rsvpChangeAt"),apply=byId("applyRsvpSetting"),cancel=byId("cancelRsvpSchedule");if(input)input.disabled=busy;if(apply)apply.disabled=busy||!rsvpSetting;if(cancel)cancel.disabled=busy;}
+  function updateRsvpActionLabel(){const button=byId("applyRsvpSetting"),input=byId("rsvpChangeAt");if(!button||!rsvpSetting)return;const action=rsvpSetting.isOpen?"lock":"unlock";button.textContent=input?.value?"Schedule "+action:(rsvpSetting.isOpen?"Lock now":"Unlock now");}
+  function renderRsvpSetting(policy){
+    rsvpSetting=policy;const status=byId("rsvpSettingsStatus"),scheduled=byId("rsvpScheduledChange"),cancel=byId("cancelRsvpSchedule");if(!status||!scheduled||!cancel)return;
+    status.textContent=policy.isOpen?"OPEN":"LOCKED";status.className="settings-status"+(policy.isOpen?"":" locked");const change=policy.scheduledChange;
+    if(change){const at=new Date(change.at).toLocaleString("en-GB",{timeZone:"Europe/Sofia",dateStyle:"medium",timeStyle:"short"});scheduled.textContent=(change.open?"Unlocks":"Locks")+" automatically on "+at+" (Europe/Sofia).";scheduled.hidden=false;cancel.hidden=false;}else{scheduled.textContent="";scheduled.hidden=true;cancel.hidden=true;}
+    setRsvpSettingsBusy(false);updateRsvpActionLabel();
+  }
+  async function loadSettings(){
+    if(role!=="owner")return;setNotice("rsvpSettingsState","Loading...",false);setRsvpSettingsBusy(true);
+    try{const data=await getJson("/api/staff/settings");renderRsvpSetting(data.rsvp);setNotice("rsvpSettingsState","",false);}catch(err){setNotice("rsvpSettingsState",err.message||"Could not load RSVP settings",true);setRsvpSettingsBusy(false);}
+  }
+  async function saveRsvpSetting(targetOpen){
+    setNotice("rsvpSettingsState","Saving...",false);setRsvpSettingsBusy(true);const input=byId("rsvpChangeAt");
+    try{const data=await postJson("/api/staff/settings",{targetOpen,changeAtLocal:input?.value||null},"PATCH");if(input)input.value="";renderRsvpSetting(data.rsvp);setNotice("rsvpSettingsState",data.rsvp.scheduledChange?"Scheduled.":"Saved.",false);}catch(err){setNotice("rsvpSettingsState",err.message||"Could not save RSVP settings",true);setRsvpSettingsBusy(false);}
+  }
+  async function cancelRsvpSchedule(){
+    setNotice("rsvpSettingsState","Cancelling...",false);setRsvpSettingsBusy(true);
+    try{const data=await postJson("/api/staff/settings",{cancelScheduledChange:true},"PATCH");renderRsvpSetting(data.rsvp);setNotice("rsvpSettingsState","Scheduled change cancelled.",false);}catch(err){setNotice("rsvpSettingsState",err.message||"Could not cancel scheduled change",true);setRsvpSettingsBusy(false);}
+  }
+  byId("rsvpChangeAt")&&(byId("rsvpChangeAt").oninput=updateRsvpActionLabel);
+  byId("applyRsvpSetting")&&(byId("applyRsvpSetting").onclick=()=>{if(rsvpSetting)saveRsvpSetting(!rsvpSetting.isOpen);});
+  byId("cancelRsvpSchedule")&&(byId("cancelRsvpSchedule").onclick=cancelRsvpSchedule);
   async function loadTables(){
     const box=byId("tablesView");if(!box)return;
     box.innerHTML='<div class="empty-state">Loading...</div>';

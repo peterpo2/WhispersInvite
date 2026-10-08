@@ -49,6 +49,7 @@ test("existing staff APIs require staff roles", () => {
     ["functions/api/staff/invites.js", "door"],
     ["functions/api/staff/invite-send.js", "door"],
     ["functions/api/staff/tables.js", "service"],
+    ["functions/api/staff/hall-map.js", "service"],
     ["functions/api/staff/table-assignment.js", "door"],
   ];
   for (const [file, role] of files) {

@@ -24,7 +24,7 @@ Postgres through the REST API. There is no framework, no bundler and no build st
 | `/` | Logo-only public calling card. No RSVP controls. |
 | `/invite` | Public invitation. The guest goes through the full RSVP flow without a token. |
 | `/invite/<token>` | Personal invitation. The invited name is shown, and missing email/phone are collected before RSVP. |
-| `/confirmation/<token>` | Confirmation/status page after RSVP. May offer `Update details` only before ticket release. |
+| `/confirmation/<token>` | Confirmation/status page after RSVP. Offers `Update details` while RSVP changes are open in owner Settings. |
 | `/ticket/<token>` | Real ticket page for a guest or plus-one. It stays locked until `09.10 18:00`. |
 | `/staff/rose-door-10` | Staff scanner. Keep private and do not link from public pages. |
 
@@ -49,9 +49,9 @@ ticket page; only the staff scanner checks people in. Before ticket release, tic
 locked state without QR, seal code or location.
 
 Repeat RSVPs from the same personal identity or the same email+phone keep the guest ticket.
-`Update details` remains available before ticket release, including when a guest already has an
-added guest; the latest update replaces the previous added guest. After ticket release
-(`2026-10-09T18:00:00+03:00`), guest-facing changes are closed.
+`Update details` remains available while RSVP changes are open in owner Settings, including when
+a guest already has an added guest; the latest update replaces the previous added guest. Ticket
+release (`2026-10-09T18:00:00+03:00`) is independent from RSVP availability.
 
 ## Invite Admin
 
@@ -70,9 +70,29 @@ Invite shows all invited primary guests, including people who have not answered 
 only people with an RSVP response. Invite statuses are `Not responded`, `Attending` and `Declined`.
 Invite / Confirmation / Ticket columns each have their own copy/send action. Invite email sends
 `/invite/<token>`, RSVP confirmation email sends `/confirmation/<confirmation_token>`, and ticket release
-email sends `/ticket/<ticket_token>`. Automatic emails are sent from `noreply@whisperssociety.com`, use
-`guestlist@whisperssociety.com` as the reply-to address, and include the guest-list email plus
+email sends `/ticket/<ticket_token>`. Automatic emails are sent from
+`WHISPERS <guestlist@whisperssociety.com>`, use `guestlist@whisperssociety.com` as the reply-to
+address, and include the guest-list email plus
 `+359 888 012 380` as contact details.
+
+## MAP Tab
+
+The staff page has a **MAP** tab right after Tables. It shows the venue floor plan (Rev D,
+`docs/floor-plan/`) exactly as drawn, with the tables on top. Owner, admin and door staff can drag
+a table to a new spot; it saves automatically. Service staff can look and tap but not move tables.
+Tapping a table opens its details under the map (guests, groups, minimum spend); the × closes them.
+The **Legend** button opens the plan's key, rows, joining notes and minimum-spend notes.
+
+MAP positions are separate from Tables → Show map: moving a table on one never moves it on the
+other. Tables 31–35 are not on the floor plan and appear under "Not on the plan".
+
+## Owner Settings
+
+The staff page renders **Settings** only for the owner role. The RSVP control applies to both new
+confirmations and `Update details`. The owner can lock or unlock immediately, or schedule the
+opposite state for a future `Europe/Sofia` date and time. A scheduled change can be cancelled;
+ticket release remains independent. The production migration defaults the setting to open, so
+applying it before the matching deploy does not interrupt registrations.
 
 ## Door Flow
 
@@ -100,6 +120,8 @@ The scanner keeps guest and plus-one check-ins separate and shows the latest arr
 | `GET` | `/api/staff/invites` | Lists primary invites and generated links. |
 | `POST` | `/api/staff/invites` | Creates a primary invite. |
 | `POST` | `/api/staff/invite-send` | Records confirmation invite send/send-again state. |
+| `GET` | `/api/staff/settings` | Owner-only RSVP availability and optional scheduled change. |
+| `PATCH` | `/api/staff/settings` | Owner-only immediate/scheduled RSVP lock or unlock. |
 
 ## Setup
 
@@ -119,8 +141,9 @@ SUPABASE_SERVICE_ROLE_KEY=...
 Never commit `.dev.vars`, `.env*`, tokens or Supabase keys. In production these variables live
 only in the Cloudflare Pages project settings.
 
-For a fresh Supabase project, run `sql/schema.sql`. For the existing production database, the
-dated migrations in `sql/2026-09-*.sql` are already represented in the current schema.
+For a fresh Supabase project, run `sql/schema.sql`. For the existing production database, apply
+the dated migrations in `sql/` before deploying code that reads their new columns. The current
+schema includes the hall-plan migration and owner RSVP settings migration dated `2026-10-08`.
 
 ## Commands
 
