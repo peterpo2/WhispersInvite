@@ -43,6 +43,12 @@ opens under the map). Nothing in the other tabs or pages changes.
 - Seed positions = the drawing's positions for tables 1–30 (computed from the artifact, see the
   migration). Tables 31–35 exist in the database but not in the drawing: they are not drawn on
   the plan and appear in a "Not on the plan" list under the map; tapping one opens its detail.
+  Owner, admin and door get a **Place on map** button there: the table is put on the first free
+  spot (bottom row of the floor upwards, left to right, seating zones not touching) and saved;
+  then it can be dragged like any other table.
+- Tables are drawn in four layers (zones, stools, tops, numbers), so a neighbour's stool never
+  covers a table number. While dragging, a table stops before its top would overlap another
+  table's top (centres stay at least 36 units apart on one axis).
 - The "JOIN FOR 6" brackets are part of the static drawing and do not follow moved tables.
 
 ## Interaction
@@ -59,7 +65,12 @@ opens under the map). Nothing in the other tabs or pages changes.
   (same `€1,234` format as Tables), each assigned group with its people and a "Reserved" pill when
   the reservation is confirmed. An `×` button closes it, removes the outline and scrolls back to
   the map.
-- The panel is read-only. Assigning guests stays in Tables.
+- **At this table** lists the assigned groups; owner, admin and door get **Remove**.
+- **Add guests** (service: "Find a guest"): a search box (name, email, phone; 3+ digits match
+  phone numbers ignoring spaces). Empty: groups waiting for a table. Typing: every attending group
+  not at this table, with "At Table N" and **Move here** for groups seated elsewhere, otherwise
+  **Add**. Changes go through the existing `POST /api/staff/table-assignment` (unchanged) and the
+  panel reloads `GET /api/staff/tables`.
 
 ## Data
 

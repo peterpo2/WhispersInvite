@@ -669,7 +669,7 @@ async function deleteStaffUser(id){
 if(currentView==='scanner')loadList();
 window.__WHISPERS_STAFF_MAIN_READY=true;
 </script>
-    <script defer src="/assets/hall-plan.js?v=20261008-map3"></script>
+    <script defer src="/assets/hall-plan.js?v=20261008-map5"></script>
     <script defer src="/assets/staff-admin-fallback.js?v=20261008-settings2"></script>
 <script async src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </body>

@@ -353,6 +353,10 @@ first, so the result is "already checked in".
   lines (static layers 99–173, overlay 384–395, aside 397–444, footer 446–447; the sheet header 91–96 is left out on purpose);
   `test/hall-plan.test.js` checks the copy is verbatim. Its fonts are self-hosted under MAP-only
   names (`HM Cormorant`, `HM Plex Mono`) so the other staff tabs keep their fonts.
+  `assets/hall-plan.js` draws each table over four layers (zones, stools, tops, numbers) so numbers
+  are never covered, blocks drops where tops would overlap (`TOP_GAP`), and offers "Place on map"
+  for tables with no position (31–35) via the same PATCH. Its detail panel also assigns guests
+  (Add / Move here / Remove + search) through the existing `POST /api/staff/table-assignment`.
 - Owner Settings controls both new RSVP submissions and `Update details`. Ticket release remains
   independent. The database defaults to open; scheduled local values are converted as
   `Europe/Sofia` by `functions/_shared/rsvp-settings.js`.

@@ -81,10 +81,16 @@ The staff page has a **MAP** tab right after Tables. It shows the venue floor pl
 `docs/floor-plan/`) exactly as drawn, with the tables on top. Owner, admin and door staff can drag
 a table to a new spot; it saves automatically. Service staff can look and tap but not move tables.
 Tapping a table opens its details under the map (guests, groups, minimum spend); the × closes them.
+Under **At this table** owner, admin and door can **Remove** a group; under **Add guests** a search
+box (name, email or phone) lists guests still waiting for a table, or any matching guest, with
+**Add** or **Move here** (when the guest already sits at another table). Service only sees the lists.
+These use the same assignment API as the Tables tab, so both tabs always agree.
 The **Legend** button opens the plan's key, rows, joining notes and minimum-spend notes.
 
 MAP positions are separate from Tables → Show map: moving a table on one never moves it on the
-other. Tables 31–35 are not on the floor plan and appear under "Not on the plan".
+other. Tables 31–35 are not on the floor plan and appear under "Not on the plan"; tap one and
+press **Place on map** to put it on the plan, then drag it into place. Tables cannot be dropped on
+top of each other, and table numbers always stay visible.
 
 ## Owner Settings
 
