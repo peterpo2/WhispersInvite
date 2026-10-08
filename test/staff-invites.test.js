@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mergeInviteRowsForStaff } from "../functions/api/staff/invites.js";
+import { mergeInviteRowsForStaff, validateInviteUpdatePayload } from "../functions/api/staff/invites.js";
 
 test("staff invite registry includes direct RSVPs and companions without duplicating existing invites", () => {
   const rows = mergeInviteRowsForStaff("https://whisperssociety.com/staff/rose-door-10", {
@@ -112,4 +112,28 @@ test("staff invite registry merges shared-link RSVPs into matching admin invites
   assert.equal(rows[0].ticketLink, "https://whisperssociety.com/ticket/ticketdirect");
   assert.equal(rows[0].rsvpEmail, "peterpopov250@gmail.com");
   assert.equal(rows[0].rsvpPhone, "+359887925250");
+});
+
+test("staff invite edit payload only accepts editable invite contact fields", () => {
+  assert.deepEqual(validateInviteUpdatePayload({
+    id: "invite-a",
+    name: "Jordan",
+    email: " Jordan@Example.com ",
+    phone: "0882926438",
+    ticketToken: "should-not-be-saved",
+  }), {
+    ok: true,
+    id: "invite-a",
+    patch: {
+      name: "Jordan",
+      email: "jordan@example.com",
+      phone: "+359 882926438",
+    },
+  });
+
+  assert.equal(validateInviteUpdatePayload({ id: "rsvp:10", name: "Jordan" }).error, "Invalid invite");
+  assert.equal(validateInviteUpdatePayload({ id: "companion:10", name: "Jordan" }).error, "Invalid invite");
+  assert.equal(validateInviteUpdatePayload({ id: "invite-a", name: "J" }).error, "Please give their name.");
+  assert.equal(validateInviteUpdatePayload({ id: "invite-a", email: "not-an-email" }).error, "Please give a valid email.");
+  assert.equal(validateInviteUpdatePayload({ id: "invite-a" }).error, "Nothing to update");
 });

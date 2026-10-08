@@ -30,21 +30,25 @@ test("staff login route hashes passwords and sets the secure cookie", () => {
 test("staff logout and me routes use server-side sessions", () => {
   const logout = readFileSync("functions/api/staff/logout.js", "utf8");
   const me = readFileSync("functions/api/staff/me.js", "utf8");
+  assert.match(logout, /export async function onRequestGet/);
+  assert.match(logout, /new Response\(null, \{ status: 302, headers: \{ Location: new URL\("\/staff\/rose-door-10", request\.url\)\.toString\(\) \} \}\)/);
   assert.match(logout, /requireStaff/);
+  assert.match(logout, /requireStaff\(request, env, "service"\)/);
   assert.match(logout, /clearStaffCookie/);
   assert.match(me, /requireStaff/);
+  assert.match(me, /requireStaff\(request, env, "service"\)/);
   assert.match(me, /user/);
 });
 
 test("existing staff APIs require staff roles", () => {
   const files = [
     ["functions/api/door.js", "door"],
-    ["functions/api/staff/members.js", "admin"],
-    ["functions/api/staff/checkin-state.js", "admin"],
+    ["functions/api/staff/members.js", "door"],
+    ["functions/api/staff/checkin-state.js", "door"],
     ["functions/api/staff/reservation-state.js", "door"],
-    ["functions/api/staff/invites.js", "admin"],
-    ["functions/api/staff/invite-send.js", "admin"],
-    ["functions/api/staff/tables.js", "door"],
+    ["functions/api/staff/invites.js", "door"],
+    ["functions/api/staff/invite-send.js", "door"],
+    ["functions/api/staff/tables.js", "service"],
     ["functions/api/staff/table-assignment.js", "door"],
   ];
   for (const [file, role] of files) {
@@ -52,6 +56,57 @@ test("existing staff APIs require staff roles", () => {
     assert.match(source, /requireStaff/);
     assert.match(source, new RegExp(`requireStaff\\(request, env, "${role}"\\)`));
   }
+});
+
+test("staff shell allows service while non-table operational APIs stay above service", () => {
+  const staffPage = readFileSync("functions/staff/rose-door-10.js", "utf8");
+  assert.match(staffPage, /requireStaff\(request, env, "service"\)/);
+  for (const file of [
+    "functions/api/door.js",
+    "functions/api/staff/members.js",
+    "functions/api/staff/checkin-state.js",
+    "functions/api/staff/reservation-state.js",
+    "functions/api/staff/invites.js",
+    "functions/api/staff/invite-send.js",
+    "functions/api/staff/table-assignment.js",
+  ]) {
+    assert.match(readFileSync(file, "utf8"), /requireStaff\(request, env, "door"\)/);
+  }
+});
+
+test("tables API lets service read but requires door to update minimum spend", () => {
+  const tables = readFileSync("functions/api/staff/tables.js", "utf8");
+  assert.match(tables, /export async function onRequestGet/);
+  assert.match(tables, /requireStaff\(request, env, "service"\)/);
+  assert.match(tables, /minimum_spend_eur/);
+  assert.match(tables, /minimumSpendEur/);
+  assert.match(tables, /export async function onRequestPatch/);
+  assert.match(tables, /requireStaff\(request, env, "door"\)/);
+  assert.match(tables, /validateMinimumSpendPayload/);
+  assert.match(tables, /staff_tables\?id=eq\./);
+});
+
+test("tables API includes contact details for the main people search", () => {
+  const tables = readFileSync("functions/api/staff/tables.js", "utf8");
+  assert.match(tables, /guest_email/);
+  assert.match(tables, /guest_phone/);
+  assert.match(tables, /plus_one_email/);
+  assert.match(tables, /plus_one_phone/);
+  assert.match(tables, /peopleDetails/);
+  assert.match(tables, /email: row\.guest_email/);
+  assert.match(tables, /phone: row\.guest_phone/);
+});
+
+test("tables API returns and updates normalized hall map positions", () => {
+  const tables = readFileSync("functions/api/staff/tables.js", "utf8");
+  assert.match(tables, /map_x,map_y/);
+  assert.match(tables, /mapX:/);
+  assert.match(tables, /mapY:/);
+  assert.match(tables, /validateTablePositionPayload/);
+  assert.match(tables, /map_x: value\.mapX/);
+  assert.match(tables, /map_y: value\.mapY/);
+  assert.doesNotMatch(tables, /select=id,label,capacity/);
+  assert.doesNotMatch(tables, /capacity: table\.capacity/);
 });
 
 test("owner-only staff user APIs can create, edit, delete and reset generated passwords", () => {

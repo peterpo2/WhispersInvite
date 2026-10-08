@@ -1,6 +1,7 @@
 const PUBLIC_PATHS = new Set([
   "/",
   "/invite",
+  "/menu",
   "/api/rsvp",
   "/api/ticket",
   "/api/checkin",

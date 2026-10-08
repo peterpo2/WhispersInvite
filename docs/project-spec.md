@@ -66,8 +66,8 @@ in place.
   is rejected.
 - A checked-in guest cannot change their RSVP.
 - A checked-in plus-one cannot be replaced.
-- RSVP closes at `2026-10-07T18:00:00+03:00`. After that, no new registrations, no added guest
-  changes, no guest-list data changes and no cancellation/decline changes are allowed.
+- RSVP submissions have no date-based deadline. Existing safety rules still prevent changes after
+  ticket release or after a ticket has been used at the door.
 
 ## Tickets and QR Codes
 

@@ -7,13 +7,15 @@ export async function onRequestGet() {
 <meta name="theme-color" content="#070605"/>
 <title>WHISPERS</title>
 <meta property="og:title" content="WHISPERS"/>
+<meta property="og:description" content="Invitation only event · Saturday 10 October"/>
 <meta property="og:type" content="website"/>
-<meta property="og:image" content="https://whisperssociety.com/assets/whispers-lockup-dark.png"/>
-<meta property="og:image:width" content="4191"/>
-<meta property="og:image:height" content="1923"/>
+<meta property="og:image" content="https://whisperssociety.com/assets/whispers-preview-logo.png?v=20261001-logo1"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="WHISPERS"/>
-<meta name="twitter:image" content="https://whisperssociety.com/assets/whispers-lockup-dark.png"/>
+<meta name="twitter:description" content="Invitation only event · Saturday 10 October"/>
+<meta name="twitter:image" content="https://whisperssociety.com/assets/whispers-preview-logo.png?v=20261001-logo1"/>
 <link href="/assets/whispers-favicon.png" rel="icon" type="image/png"/>
 <link href="/assets/whispers-favicon.png" rel="apple-touch-icon"/>
 <link as="image" href="/assets/whispers-lockup-transparent.png" rel="preload"/>
@@ -24,6 +26,7 @@ export async function onRequestGet() {
 body:before{content:"";position:fixed;inset:0;background:url("/assets/whispers-rose.png") 50% 50%/min(150vw,920px) auto no-repeat;opacity:.08;filter:blur(1px);pointer-events:none}body:after{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 42%,rgba(0,0,0,.68) 100%);pointer-events:none}
 main{position:relative;z-index:1;width:100%;display:grid;place-items:center}.brand-lockup{display:block;width:min(360px,82vw);height:auto;filter:drop-shadow(0 0 24px rgba(163,22,33,.26));opacity:.96}
 </style>
+<script src="/assets/analytics.js" defer></script>
 </head>
 <body>
 <main aria-label="WHISPERS">

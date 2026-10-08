@@ -1,7 +1,7 @@
 import { json, methodNotAllowed } from "../_shared/responses.js";
 import { buildRsvpConfirmationEmails, emailConfigFromEnv } from "../_shared/email-content.js";
 import { retryAsync } from "../_shared/retry.js";
-import { applyInviteToRsvpRow, buildCompanionRow, buildConfirmationUrl, buildRsvpRow, buildTicketUrl, companionMatchesRsvp, isDuplicateSealCode, isRsvpClosed, isTicketReleased, tableReservationForUpdate, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
+import { applyInviteToRsvpRow, buildCompanionRow, buildConfirmationUrl, buildRsvpRow, buildTicketUrl, companionMatchesRsvp, isDuplicateSealCode, tableReservationForUpdate, validateRsvpPayload, TICKET_RELEASE_AT } from "../_shared/rsvp.js";
 import { sendSmtpMail } from "../_shared/smtp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
@@ -31,7 +31,7 @@ const LOOKUP_COLUMNS = [
   "reservation_confirmed",
 ].join(",");
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   let body;
   try {
     body = await request.json();
@@ -41,7 +41,6 @@ export async function onRequestPost({ request, env }) {
 
   const valid = validateRsvpPayload(body);
   if (valid.error) return json({ error: valid.error }, 400);
-  if (isRsvpClosed()) return json({ error: "RSVP is closed." }, 409);
 
   let row = buildRsvpRow(body);
   if (body.guestId) {
@@ -51,7 +50,7 @@ export async function onRequestPost({ request, env }) {
   }
   const existing = await findExistingRsvp(env, row);
   if (existing.error) return existing.error;
-  if (existing.row) return updateExistingRsvp(env, request.url, row, existing.row);
+  if (existing.row) return updateExistingRsvp(env, request.url, row, existing.row, waitUntil);
 
   for (let attempt = 1; ; attempt += 1) {
     const saved = await supabaseFetch(env, "/rest/v1/rsvps", {
@@ -69,7 +68,7 @@ export async function onRequestPost({ request, env }) {
         const insertedCompanion = await insertCompanion(env, inserted.id, row);
         if (insertedCompanion.error) return insertedCompanion.error;
       }
-      const emailDelivery = await sendRsvpConfirmation(env, request.url, row);
+      const emailDelivery = queueRsvpConfirmation(waitUntil, env, request.url, row);
       return confirmationResponse(request.url, row, emailDelivery);
     }
 
@@ -115,9 +114,8 @@ async function findExistingRsvp(env, row) {
   return { row: contactMatch || null };
 }
 
-async function updateExistingRsvp(env, requestUrl, row, existing) {
+async function updateExistingRsvp(env, requestUrl, row, existing, waitUntil) {
   if (existing.checked_in_at) return json({ error: ALREADY_INSIDE }, 409);
-  if (isTicketReleased()) return json({ error: "Guest-list changes are closed." }, 409);
 
   const patch = {
     guest_name: row.guest_name,
@@ -163,7 +161,7 @@ async function updateExistingRsvp(env, requestUrl, row, existing) {
     confirmation_token: rows[0].confirmation_token || existing.confirmation_token || row.confirmation_token,
     ticket_token: rows[0].ticket_token || existing.ticket_token,
   };
-  const emailDelivery = await sendRsvpConfirmation(env, requestUrl, responseRow);
+  const emailDelivery = queueRsvpConfirmation(waitUntil, env, requestUrl, responseRow);
   return confirmationResponse(requestUrl, responseRow, emailDelivery);
 }
 
@@ -265,6 +263,13 @@ async function sendRsvpConfirmation(env, requestUrl, row) {
     }
   }
   return { attempted: emails.length > 0, sent };
+}
+
+function queueRsvpConfirmation(waitUntil, env, requestUrl, row) {
+  if (row.status !== "attending") return { attempted: false, queued: false, sent: 0 };
+  if (typeof waitUntil !== "function") return { attempted: false, queued: false, sent: 0 };
+  waitUntil(sendRsvpConfirmation(env, requestUrl, row).catch(() => ({ attempted: true, sent: 0 })));
+  return { attempted: true, queued: true, sent: 0 };
 }
 
 function confirmationResponse(requestUrl, row, emailDelivery = { attempted: false, sent: 0 }) {

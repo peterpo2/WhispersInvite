@@ -832,7 +832,6 @@ These are returned by API routes and may be shown by the public site or staff pa
 - Please give their full name.
 - Please give their email.
 - Please give a valid phone.
-- RSVP is closed.
 - Guest-list changes are closed.
 - This invitation already has a registered guest.
 - This invitation has already been used at the door.

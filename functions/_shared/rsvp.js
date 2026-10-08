@@ -8,7 +8,6 @@ const LOCAL_PREVIEW_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
 export const EVENT_KEY = "whispers-2026-10-10";
 export const TICKET_RELEASE_AT = "2026-10-09T18:00:00+03:00";
-export const RSVP_DEADLINE_AT = "2026-10-07T18:00:00+03:00";
 export const MAX_ADDED_GUESTS = 1;
 // The brief's unambiguous alphabet: no 0/O, 1/I/L, 5/S, 8/B.
 export const SEAL_ALPHABET = "ACDEFGHJKMNPQRTUVWXYZ234679";
@@ -38,6 +37,10 @@ function hasFullName(value) {
   return String(value || "").trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
+function hasInviteName(value) {
+  return String(value || "").trim().length >= 2;
+}
+
 function validEmail(value) {
   const email = normalizeEmail(value);
   return email.length > 0 && email.length <= MAX_EMAIL && EMAIL_RE.test(email);
@@ -52,13 +55,12 @@ export function isTicketReleased(now = new Date()) {
   return now >= new Date(TICKET_RELEASE_AT);
 }
 
-export function confirmationCanUpdate(ticket, now = new Date()) {
+export function confirmationCanUpdate(ticket) {
   return Boolean(
     ticket &&
     ticket.holder === "guest" &&
     ticket.status === "attending" &&
-    ticket.guest_id &&
-    !isTicketReleased(now)
+    ticket.guest_id
   );
 }
 
@@ -73,10 +75,6 @@ export function isLocalTicketReleasePreview(requestUrl) {
 
 export function isTicketReleasedForRequest(requestUrl, now = new Date()) {
   return isTicketReleased(now) || isLocalTicketReleasePreview(requestUrl);
-}
-
-export function isRsvpClosed(now = new Date()) {
-  return now >= new Date(RSVP_DEADLINE_AT);
 }
 
 export function validateRsvpPayload(body) {
@@ -195,7 +193,7 @@ export function validateInvitePayload(body) {
 
   const name = body.name.trim();
   if (name.length > MAX_NAME) return { error: "Please give a shorter name." };
-  if (!hasFullName(name)) return { error: "Please give their full name." };
+  if (!hasInviteName(name)) return { error: "Please give their name." };
   if (normalizeEmail(body.email) && !validEmail(body.email)) return { error: "Please give a valid email." };
   if (normalizePhone(body.phone) && !validPhone(body.phone)) return { error: "Please give a valid phone." };
   return { ok: true };

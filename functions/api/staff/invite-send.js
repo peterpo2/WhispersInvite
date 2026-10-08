@@ -14,7 +14,7 @@ const EVENT_DETAILS_COLUMNS = "venue_name,venue_address";
 const SEND_TYPES = new Set(["invite", "confirmation", "ticket"]);
 
 export async function onRequestPost({ request, env }) {
-  const staff = await requireStaff(request, env, "admin");
+  const staff = await requireStaff(request, env, "door");
   if (staff.error) return staff.error;
 
   let body;

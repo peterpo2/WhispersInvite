@@ -4,12 +4,25 @@ import {
   buildStaffCookie,
   clearStaffCookie,
   hashPassword,
+  isValidRole,
   makeTemporaryPassword,
   parseCookies,
+  roleAllows,
   safeStaffUser,
   validateStaffUsername,
   verifyPassword,
 } from "../functions/_shared/staff-auth.js";
+
+test("service is a valid read-only role below door", () => {
+  assert.equal(isValidRole("service"), true);
+  assert.equal(roleAllows("service", "service"), true);
+  assert.equal(roleAllows("service", "door"), false);
+  assert.equal(roleAllows("service", "admin"), false);
+  assert.equal(roleAllows("service", "owner"), false);
+  assert.equal(roleAllows("door", "service"), true);
+  assert.equal(roleAllows("admin", "service"), true);
+  assert.equal(roleAllows("owner", "service"), true);
+});
 
 test("staff passwords are hashed and verified without storing plaintext", async () => {
   const hash = await hashPassword("Very Strong Password 123");

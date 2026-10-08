@@ -24,8 +24,8 @@ All SQL you may need: [`sql/useful-queries.sql`](sql/useful-queries.sql)
 ## Still open (development)
 - [ ] Intro video from the client (the film screen shows text scenes until then).
 - [ ] Cap at 150 people.
-- [x] Enforce RSVP deadline: 07.10.2026 at 18:00 Europe/Sofia.
-- [x] Confirm no cancellation/decline changes after deadline/release.
+- [x] Keep RSVP submissions open without a date-based deadline.
+- [x] Keep guest-list changes protected after ticket release.
 - [x] Wire SMTP delivery for admin invitation emails.
 - [ ] Wire the 09.10 ticket-release email blast.
 - [ ] Add staff auth after domain/email are ready: username/password + email confirmation code.

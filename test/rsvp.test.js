@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import {
   EVENT_KEY,
   MAX_ADDED_GUESTS,
-  RSVP_DEADLINE_AT,
   SEAL_ALPHABET,
   TICKET_RELEASE_AT,
   addedGuestLimitReached,
@@ -20,7 +19,6 @@ import {
   buildRsvpRow,
   buildRsvpUpdate,
   confirmationCanUpdate,
-  isRsvpClosed,
   isLocalTicketReleasePreview,
   isTicketReleased,
   isTicketReleasedForRequest,
@@ -53,6 +51,7 @@ test("attending RSVP requires full name, email and phone", () => {
   assert.equal(validateRsvpPayload({ guestName: "Peter Popov", status: "attending", guestPhone: "+359 88 123 4567" }).error, "Please give a valid email.");
   assert.equal(validateRsvpPayload({ guestName: "Peter Popov", status: "attending", guestEmail: "peter@example.com" }).error, "Please give your phone.");
   assert.equal(validateRsvpPayload({ guestName: "Peter Popov", status: "attending", guestEmail: "peter@example.com", guestPhone: "+359 88 123 4567" }).ok, true);
+  assert.equal(validateRsvpPayload({ guestName: "Иван Петров", status: "attending", guestEmail: "ivan@example.com", guestPhone: "+359 88 123 4567" }).ok, true);
 });
 
 test("normalizes Bulgarian local phone numbers while preserving international numbers", () => {
@@ -104,8 +103,9 @@ test("builds contact and reservation fields for the primary RSVP", () => {
   assert.equal(row.wants_table_reservation, true);
 });
 
-test("invite payload requires only a full name, with optional valid contact details", () => {
-  assert.equal(validateInvitePayload({ name: "Peter", email: "peter@example.com", phone: "+359 88 123 4567" }).error, "Please give their full name.");
+test("invite payload allows a short admin name, with optional valid contact details", () => {
+  assert.equal(validateInvitePayload({ name: "Peter", email: "peter@example.com", phone: "+359 88 123 4567" }).ok, true);
+  assert.equal(validateInvitePayload({ name: " P ", email: "peter@example.com" }).error, "Please give their name.");
   assert.equal(validateInvitePayload({ name: "Peter Popov", email: "bad", phone: "+359 88 123 4567" }).error, "Please give a valid email.");
   assert.equal(validateInvitePayload({ name: "Peter Popov", email: "peter@example.com", phone: "" }).ok, true);
   assert.equal(validateInvitePayload({ name: "Peter Popov" }).ok, true);
@@ -227,11 +227,11 @@ test("ticket release gate opens exactly at 09.10 18:00 Sofia time", () => {
   assert.equal(isTicketReleased(new Date("2026-10-09T15:00:00.000Z")), true);
 });
 
-test("confirmation update is available before ticket release even with an added guest", () => {
+test("confirmation update stays available after ticket release even with an added guest", () => {
   assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T14:59:59.000Z")), true);
   assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: "Michelle G" }, new Date("2026-10-09T14:59:59.000Z")), true);
   assert.equal(confirmationCanUpdate({ holder: "companion", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T14:59:59.000Z")), false);
-  assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T15:00:00.000Z")), false);
+  assert.equal(confirmationCanUpdate({ holder: "guest", status: "attending", guest_id: "invite1", bringing: null }, new Date("2026-10-09T15:00:00.000Z")), true);
 });
 
 test("builds a confirmation update URL without exposing ticket links", () => {
@@ -255,12 +255,6 @@ test("ticket request release helper keeps production locked before release", () 
   assert.equal(isTicketReleasedForRequest("https://whisperssociety.com/ticket/abc?preview=released", before), false);
   assert.equal(isTicketReleasedForRequest("http://127.0.0.1:8788/ticket/abc?preview=released", before), true);
   assert.equal(isTicketReleasedForRequest("https://whisperssociety.com/ticket/abc", new Date("2026-10-09T15:00:00.000Z")), true);
-});
-
-test("RSVP closes at 07.10 18:00 Sofia time", () => {
-  assert.equal(RSVP_DEADLINE_AT, "2026-10-07T18:00:00+03:00");
-  assert.equal(isRsvpClosed(new Date("2026-10-07T14:59:59.000Z")), false);
-  assert.equal(isRsvpClosed(new Date("2026-10-07T15:00:00.000Z")), true);
 });
 
 test("only one added guest is allowed per primary RSVP", () => {

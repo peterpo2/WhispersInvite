@@ -5,6 +5,17 @@
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#070605" name="theme-color"/>
 <title>Whispers</title>
+<meta property="og:title" content="WHISPERS"/>
+<meta property="og:description" content="Invitation only event · Saturday 10 October"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://whisperssociety.com/invite"/>
+<meta property="og:image" content="https://whisperssociety.com/assets/whispers-preview-logo.png?v=20261001-logo1"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="WHISPERS"/>
+<meta name="twitter:description" content="Invitation only event · Saturday 10 October"/>
+<meta name="twitter:image" content="https://whisperssociety.com/assets/whispers-preview-logo.png?v=20261001-logo1"/>
 <link href="/assets/whispers-favicon.png" rel="icon" type="image/png"/>
 <link href="/assets/whispers-favicon.png" rel="apple-touch-icon"/>
 <link as="image" fetchpriority="high" href="/assets/whispers-seal.png" rel="preload"/>
@@ -155,7 +166,7 @@ h1,h2{font-family:var(--serif);font-weight:300;margin:0}
 #s-seal .rule{margin:22px auto}
 .issued{margin:0;color:var(--mute)}
 .generic-issued{font-size:13px;letter-spacing:.28em;text-transform:uppercase;line-height:1.9;color:#CDB693}
-.personalized-issued{font-family:var(--text-serif);font-style:italic;font-size:20px;line-height:1.4;color:#D2C4B2}
+.personalized-issued{font-family:var(--serif);font-style:italic;font-size:20px;line-height:1.4;color:#D2C4B2}.cyrillic-text{font-family:var(--text-serif)!important;letter-spacing:0!important;text-transform:none!important}
 .personalized-issued b{display:block;font-style:normal;font-weight:300;font-size:clamp(34px,10vw,44px);line-height:1.1;color:#F6EFE4;letter-spacing:.02em;margin-top:6px;overflow-wrap:anywhere}
 .skip{position:fixed;z-index:70;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--skip-action-clearance) + env(safe-area-inset-bottom));
   min-width:34px;min-height:34px;padding:0 8px;background:rgba(7,6,5,.28);border:1px solid rgba(217,174,120,.22);border-radius:999px;cursor:pointer;
@@ -194,10 +205,10 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 .row dd em{display:block;font-size:12px;color:var(--mute)}
 .row dd .time-line{display:block;font-size:12px;color:var(--mute);font-style:italic;white-space:normal}.row dd .time-line span{display:block}
 .note{font-family:var(--serif);font-style:italic;font-size:20px;line-height:1.55;color:#CFC3B3;margin:24px auto 4px;max-width:380px}
-#s-letter{padding-bottom:calc(10px + env(safe-area-inset-bottom));scroll-padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+#s-letter{padding-bottom:calc(104px + env(safe-area-inset-bottom));scroll-padding-bottom:calc(126px + env(safe-area-inset-bottom))}
 #s-letter .inner{margin-top:auto;margin-bottom:0;padding-bottom:0}
 #s-letter .partner-bar{margin-top:14px;padding-bottom:max(0px,env(safe-area-inset-bottom))}
-#toRsvp{position:relative;z-index:20;width:100%;margin:24px auto 0;overflow:hidden;isolation:isolate;transform:none;
+#toRsvp{position:sticky;bottom:calc(-104px + env(safe-area-inset-bottom));z-index:80;width:100%;margin:24px auto 0;overflow:hidden;isolation:isolate;transform:none;
   border-color:#F2CE93;background:linear-gradient(135deg,#F2D6A0 0%,#D7AC72 42%,#B8874F 74%,#F1CF95 100%);
   font-size:clamp(18px,4.8vw,22px);font-weight:500;letter-spacing:.32em;text-shadow:0 1px 0 rgba(255,246,224,.32);
   box-shadow:0 0 0 1px rgba(255,236,197,.22),0 18px 48px rgba(0,0,0,.72),0 0 34px rgba(217,174,120,.32),0 0 76px rgba(163,22,33,.18),inset 0 1px 0 rgba(255,246,224,.7),inset 0 -1px 0 rgba(82,50,24,.38);
@@ -223,7 +234,7 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 .plus-toggle input:checked + .toggle-box{background:var(--gold)}
 .plus-toggle input:checked + .toggle-box::after{content:"";position:absolute;left:8px;top:3px;width:7px;height:13px;border:solid #140D06;border-width:0 1.8px 1.8px 0;transform:rotate(45deg)}
 .plus-toggle input:focus-visible + .toggle-box{outline:1px solid var(--gold);outline-offset:3px}
-.plus-toggle b{display:block;font:400 18px var(--text-serif);color:#F1EAE0}
+.plus-toggle b{display:block;font:300 18px var(--serif);color:#F1EAE0}
 .plus-toggle small{display:block;color:var(--mute);margin-top:4px;font-size:14px;line-height:1.45}
 .plus-fields{animation:fadeIn .45s ease both}
 .privacy{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.55;color:var(--mute);text-align:left;margin:16px 0 0}
@@ -232,15 +243,15 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 /* ── 6. ticket: printed on the screen, no frame ── */
 .pass{position:relative;padding:4px 0 0}
 .pass .brand{margin-bottom:18px}.pass .brand-lockup{width:min(172px,54vw)}.pass .mark{width:56px;height:56px}.pass .wordmark{font-size:21px}
-.pass .nm{font-family:var(--text-serif);font-weight:400;font-size:clamp(28px,8vw,40px);line-height:1.08;color:#F7F0E6;margin:4px 0 6px;overflow-wrap:anywhere}
-.pass .rl{font-family:var(--text-serif);font-style:italic;font-size:16px;color:#CDB894;margin:0}
+.pass .nm{font-family:var(--serif);font-weight:300;font-size:clamp(28px,8vw,40px);line-height:1.08;color:#F7F0E6;margin:4px 0 6px;overflow-wrap:anywhere}
+.pass .rl{font-family:var(--serif);font-style:italic;font-size:16px;color:#CDB894;margin:0}
 .pass .rule{margin:20px auto}
 .code{font-size:17px;letter-spacing:.2em;color:var(--gold-hi);margin:0 0 6px;text-shadow:0 0 24px rgba(217,174,120,.4)}
 .codelabel{font-size:10px;letter-spacing:.26em;color:var(--mute);text-transform:uppercase;margin:0}
 .qr{width:min(58vw,210px);height:min(58vw,210px);margin:20px auto 22px;background:#F1E9DC;padding:9px;border-radius:2px;display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55)}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
-.qr.release-note{width:auto;height:auto;min-height:132px;padding:22px;font:300 18px/1.5 var(--text-serif);color:#E8DCCC;text-transform:none;letter-spacing:0;background:rgba(8,6,5,.42);border:1px solid rgba(217,174,120,.34);box-shadow:0 14px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(217,174,120,.08)}
-.passfoot{font-family:var(--text-serif);font-size:15px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}
+.qr.release-note{width:auto;height:auto;min-height:132px;padding:22px;font:300 18px/1.5 var(--serif);color:#E8DCCC;text-transform:none;letter-spacing:0;background:rgba(8,6,5,.42);border:1px solid rgba(217,174,120,.34);box-shadow:0 14px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(217,174,120,.08)}
+.passfoot{font-family:var(--serif);font-size:15px;line-height:1.55;color:#D9CEC0;margin:0;padding-top:18px;border-top:1px solid var(--line)}
 .passfoot b{font-weight:400;color:#F6EFE4}
 .passfoot .date-line,.passfoot .doors-line{display:block}.passfoot .doors-line{margin-top:3px}
 .venue-map{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
@@ -251,9 +262,9 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 .screen > .partner-bar{position:relative;z-index:65;width:min(430px,calc(100vw - 28px));display:flex;align-items:center;justify-content:center;gap:14px;margin:22px auto 0;padding:0 0 max(8px,env(safe-area-inset-bottom));pointer-events:none;filter:drop-shadow(0 10px 22px rgba(0,0,0,.75));flex:0 0 auto}
 .partner-bar span{font:300 10px/1 var(--sans);letter-spacing:.26em;text-transform:uppercase;color:rgba(237,230,218,.62);white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,.8)}
 .partner-logos{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0}
-.partner-logo{display:flex;align-items:center;justify-content:center;overflow:visible}
+.partner-logo{display:flex;align-items:center;justify-content:center;overflow:visible;flex:0 0 auto}
 .partner-logo.beluga{width:100px;height:37px}
-.partner-logo.rothschild{width:118px;height:45px}
+.partner-logo.rothschild{width:132px;height:50px}
 .partner-logo img{display:block;width:100%;height:100%;object-fit:contain;opacity:.92}
 .tickets-carousel{width:100%}
 .ticket-slide{display:none}
@@ -280,7 +291,7 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
   .btn.caps{font-size:14px;letter-spacing:.24em}.wordmark{font-size:23px}
   .screen > .partner-bar{width:calc(100vw - 18px);gap:9px;padding-bottom:max(6px,env(safe-area-inset-bottom))}
   .partner-bar span{font-size:8px;letter-spacing:.18em}
-  .partner-logos{gap:8px}.partner-logo.beluga{width:86px;height:32px}.partner-logo.rothschild{width:100px;height:38px}
+  .partner-logos{gap:8px}.partner-logo.beluga{width:86px;height:32px}.partner-logo.rothschild{width:112px;height:43px}
 }
 @media (max-width:430px){
   .lede{font-size:clamp(30px,8.6vw,38px);line-height:1.12}
@@ -326,6 +337,7 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
   .screen.out{display:none}
 }
 </style>
+<script src="/assets/analytics.js" defer></script>
 </head>
 <body data-scene="seal">
 <div aria-hidden="true" class="atmos"><div class="a-glow"></div><div class="a-beam"></div><div class="a-rose"></div><div class="a-haze"></div></div>
@@ -339,7 +351,7 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 </div>
 <p class="hint pulse" id="hint">Press and hold to break the seal</p>
 <div class="rule"></div>
-<p class="issued generic-issued">Private invitation · Saturday 10 October</p>
+<p class="issued generic-issued">Invitation only event · Saturday 10 October</p>
 </div>
 </section>
 <button class="skip" id="skipseal">Enter ›</button>
@@ -386,11 +398,11 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 <div class="brand st"><img alt="Whispers" class="brand-lockup" src="/assets/whispers-lockup-transparent.png"/></div>
 <h2 class="lede st" hidden id="identifyTitle"></h2>
 <p class="sub st" id="identifySub">Your name goes on the door.<em class="script-line">Your ticket is issued in this name<br/>and reaches you by email on 09.10 at 18:00.</em></p>
-<div class="field st"><label for="guestName">Full name</label><input autocomplete="name" enterkeyhint="go" id="guestName" maxlength="120" placeholder="First and last name" type="text"/></div>
-<div class="field st"><label for="guestEmail">Email</label><input autocomplete="email" enterkeyhint="next" id="guestEmail" inputmode="email" maxlength="254" placeholder="name@example.com" type="email"/></div>
-<div class="field st"><label for="guestPhone">Phone</label><input autocomplete="tel" enterkeyhint="go" id="guestPhone" inputmode="tel" maxlength="40" placeholder="+359 ..." type="tel"/></div>
+<div class="field st" id="guestNameField"><label for="guestName">Full name</label><input autocomplete="name" enterkeyhint="go" id="guestName" maxlength="120" placeholder="First and last name" type="text"/></div>
+<div class="field st" id="guestEmailField"><label for="guestEmail">Email</label><input autocomplete="email" enterkeyhint="next" id="guestEmail" inputmode="email" maxlength="254" placeholder="name@example.com" type="email"/></div>
+<div class="field st" id="guestPhoneField"><label for="guestPhone">Phone</label><input autocomplete="tel" enterkeyhint="go" id="guestPhone" inputmode="tel" maxlength="40" placeholder="+359 ..." type="tel"/></div>
 <p class="err" id="guestErr" role="alert"></p>
-<button class="btn primary caps st" disabled="" id="continueGuest">Continue</button>
+<button class="btn primary caps st" id="continueGuest">Continue</button>
 <button class="btn caps st" id="backLetter">Back</button>
 </div>
 <aside aria-label="Event partners" class="partner-bar"><span>Powered by</span><div class="partner-logos"><div class="partner-logo rothschild"><img alt="Barons de Rothschild" src="/assets/partner-rothschild.png"/></div><div class="partner-logo beluga"><img alt="Beluga" src="/assets/partner-beluga.png"/></div></div></aside>
@@ -453,6 +465,7 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
 <p class="passfoot"><span class="date-line">Saturday <b>10 October</b></span><span class="doors-line">Doors open at <b>22:00</b></span><span class="bringing" id="bringingLine">Coming on your own</span></p>
 </div>
 <p class="sub st" id="doneCopy">Your registration is confirmed. On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.</p>
+<p class="sub st spam-note">If the email is missing, check your spam folder.</p>
 <button class="btn primary caps st" hidden id="saveTickets">Save your ticket</button>
 <p aria-live="polite" class="save-state st" id="saveState"></p>
 <button class="btn caps small st" id="cancelAttendance" style="margin-top:14px">I can no longer come</button>
@@ -508,16 +521,21 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
         if (!data || !data.found || state.guestName) return;
         state.guestName = data.name;
         state.guestId   = data.id || urlToken;
+        state.guestEmail = data.email || null;
+        state.guestPhone = data.phone || null;
         state.alreadyRegistered = data.alreadyRegistered === true;
         state.confirmationUrl = data.confirmationUrl || null;
         if (nameInput) nameInput.value = data.name;
+        if (emailInput && state.guestEmail) emailInput.value = state.guestEmail;
+        if (phoneInput && state.guestPhone) phoneInput.value = state.guestPhone;
+        applyPersonalContactFields();
         if ($('#identifyTitle')) { $('#identifyTitle').textContent = 'Confirm your details.'; $('#identifyTitle').hidden = false; }
-        if ($('#identifySub')) $('#identifySub').textContent = 'Your name is already on the list. Please leave your email and phone so we can send you your ticket.';
+        if ($('#identifySub')) $('#identifySub').textContent = 'Confirm your name, email and phone. You can edit anything before you continue.';
         // Show name on seal screen
         const el = document.querySelector('.issued.generic-issued');
         if (el) {
           document.body.classList.add('named-invite');
-          el.className = 'issued personalized-issued';
+          el.className = 'issued personalized-issued' + fontClass(data.name);
           el.innerHTML = 'This invitation belongs to:<b>' + escapeHtml(data.name) + '</b>';
         }
       })
@@ -534,14 +552,23 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
         state.guestId=t.guest_id||null;
         state.guestEmail=t.guest_email||null;
         state.guestPhone=t.guest_phone||null;
+        state.plusOne=t.companion&&t.companion.guest_name?{name:t.companion.guest_name,email:t.companion.email||''}:null;
+        state.wantsTableReservation=t.table_requested===true;
         state.confirmationUrl='/confirmation/' + encodeURIComponent(confirmationToken);
         if (nameInput && state.guestName) nameInput.value=state.guestName;
         if (emailInput && state.guestEmail) emailInput.value=state.guestEmail;
         if (phoneInput && state.guestPhone) phoneInput.value=state.guestPhone;
+        $('#bringPlusOne').checked=Boolean(state.plusOne);
+        $('#plusFields').hidden=!state.plusOne;
+        $('#confirm').textContent=state.plusOne?'Confirm both places':'Confirm my place';
+        $('#p1name').value=state.plusOne?.name||'';
+        $('#p1mail').value=state.plusOne?.email||'';
+        $('#reserveTable').checked=state.wantsTableReservation;
+        $('#reserveTableHelp').hidden=!state.wantsTableReservation;
         const el = document.querySelector('.issued.generic-issued');
         if (el && state.guestName) {
           document.body.classList.add('named-invite');
-          el.className = 'issued personalized-issued';
+          el.className = 'issued personalized-issued' + fontClass(state.guestName);
           el.innerHTML = 'This invitation belongs to:<b>' + escapeHtml(state.guestName) + '</b>';
         }
       })
@@ -607,15 +634,17 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
   }
   $('#skipfilm').addEventListener('click',()=>{stopFilmPlayback();show('#s-letter')});
 
-  // RESPOND: personal links already know the name; the shared link asks for it
-  $('#toRsvp').addEventListener('click',()=>{if(state.updateMode){show('#s-plus');return;}if(state.alreadyRegistered&&state.confirmationUrl){window.location.assign(state.confirmationUrl);return;}show(state.guestEmail&&state.guestPhone?'#s-rsvp':'#s-identify')});
+  // RESPOND: personal links confirm contact details before RSVP
+  $('#toRsvp').addEventListener('click',()=>{if(state.updateMode){show('#s-plus');return;}if(state.alreadyRegistered&&state.confirmationUrl){window.location.assign(state.confirmationUrl);return;}show(urlToken?'#s-identify':(state.guestEmail&&state.guestPhone?'#s-rsvp':'#s-identify'))});
 
-  // Name (shared link only)
+  // Contact details
   const nameInput=$('#guestName'),emailInput=$('#guestEmail'),phoneInput=$('#guestPhone'),nameOk=v=>v.split(/\s+/).filter(Boolean).length>=2&&v.length<=120,emailOk=v=>/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v.trim()),phoneNorm=v=>{const p=String(v||'').trim().replace(/\s+/g,' ');if(!p)return'';if(p[0]==='+')return p;if(/^00\d/.test(p))return'+'+p.slice(2).trim();const c=p.replace(/[^\d]/g,'');if(/^0[87]\d{8}$/.test(c))return'+359 '+c.slice(1);if(/^[87]\d{8}$/.test(c))return'+359 '+c;return p;};
-  function identifyOk(){return nameOk(nameInput.value.trim())&&emailOk(emailInput.value)&&phoneInput.value.trim();}
-  [nameInput,emailInput,phoneInput].forEach(el=>el.addEventListener('input',()=>{$('#continueGuest').disabled=!identifyOk();$('#guestErr').textContent=''}));
+  function applyPersonalContactFields(){const btn=$('#continueGuest');if(btn)btn.removeAttribute('disabled');}
+  function identifyOk(){return !contactError();}
+  function contactError(){const n=nameInput.value.trim(),m=emailInput.value.trim(),p=phoneNorm(phoneInput.value);if(!nameOk(n))return'Please give your full name.';if(!m)return'Please give your email.';if(!emailOk(m))return'Please give a valid email.';if(!p)return'Please give your phone.';return'';}
+  [nameInput,emailInput,phoneInput].forEach(el=>el.addEventListener('input',()=>{$('#continueGuest').removeAttribute('disabled');$('#guestErr').textContent=''}));
   phoneInput.addEventListener('blur',()=>{phoneInput.value=phoneNorm(phoneInput.value)});
-  function continueGuest(){const v=nameInput.value.trim().replace(/\s+/g,' '),m=emailInput.value.trim(),p=phoneNorm(phoneInput.value);phoneInput.value=p;if(!nameOk(v)){$('#guestErr').textContent='Please give your full name.';return;}if(!emailOk(m)){$('#guestErr').textContent='Please give a valid email.';return;}if(!p){$('#guestErr').textContent='Please give your phone.';return;}state.guestName=v;state.guestEmail=m;state.guestPhone=p;show('#s-rsvp')}
+  function continueGuest(){const v=nameInput.value.trim().replace(/\s+/g,' '),m=emailInput.value.trim(),p=phoneNorm(phoneInput.value);phoneInput.value=p;const err=contactError();if(err){$('#guestErr').textContent=err;return;}state.guestName=v;state.guestEmail=m;state.guestPhone=p;show('#s-rsvp')}
   $('#continueGuest').addEventListener('click',continueGuest);
   nameInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();continueGuest()}});
   $('#backLetter').addEventListener('click',()=>show('#s-letter'));
@@ -672,10 +701,11 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
     state.plusOne=plusName?{name:plusName}:null;state.wantsTableReservation=result.data?.wantsTableReservation===true;
     state.confirmationUrl=result.data?.confirmationUrl||null;state.ticketUrl=result.data?.ticketUrl||null;state.plusTicketUrl=result.data?.plusOneTicketUrl||null;
     if(state.confirmationUrl){window.location.assign(state.confirmationUrl);return;}
-    $('#passname').textContent=state.guestName;$('#passcode').textContent='10.10 · 22:00';
+    $('#passname').textContent=state.guestName;markFont($('#passname'),state.guestName);$('#passcode').textContent='10.10 · 22:00';
     const statusLines=[state.plusOne?'Registered with <b>'+escapeHtml(state.plusOne.name)+'</b>':'Registered for one'];
     if(state.wantsTableReservation)statusLines.push('<b>Table reservation requested.</b>');
     $('#bringingLine').innerHTML=statusLines.map(line=>'<span class="status-line">'+line+'</span>').join('');
+    markFont($('#bringingLine'),state.plusOne?.name||'');
     $('#qr').classList.add('release-note');$('#qr').textContent=state.plusOne?'On 09.10 at 18:00, you and your registered guest will each receive an email with the confirmed location and your private ticket.':'On 09.10 at 18:00, you will receive an email with the confirmed location and your private ticket.';
     $('#doneCopy').textContent='';
     $('#saveTickets').hidden=true;$('#saveState').textContent='';imagesReady=null;
@@ -737,8 +767,8 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
     const s2=document.createElement('div');s2.className='ticket-slide';s2.id='plusOneSlide';
     s2.innerHTML='<div class="pass">'
       +'<div class="brand"><img alt="" class="brand-lockup" src="/assets/whispers-lockup-transparent.png"/></div>'
-      +'<p class="nm">'+escapeHtml(state.plusOne.name)+'</p>'
-      +'<p class="rl">Guest of '+escapeHtml(state.guestName)+'</p>'
+      +'<p class="nm'+fontClass(state.plusOne.name)+'">'+escapeHtml(state.plusOne.name)+'</p>'
+      +'<p class="rl'+fontClass(state.guestName)+'">Guest of '+escapeHtml(state.guestName)+'</p>'
       +'<div class="rule"></div>'
       +'<p class="code">'+escapeHtml(state.plusSealCode||'—')+'</p>'
       +'<p class="codelabel">Their seal</p>'
@@ -756,6 +786,9 @@ body.named-invite #skipseal{bottom:calc(14px + env(safe-area-inset-bottom))}
     document.getElementById('tickPrev').onclick=()=>{if(cur>0)goTo(0);};
     document.getElementById('tickNext').onclick=()=>{if(cur<1)goTo(1);};
   }
+  function hasCyrillic(s){return /[\u0400-\u04FF]/.test(String(s||''))}
+  function fontClass(s){return hasCyrillic(s)?' cyrillic-text':''}
+  function markFont(el,s){if(el)el.classList.toggle('cyrillic-text',hasCyrillic(s))}
   function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
   function reset(){window.location.assign(startUrl)}

@@ -6,6 +6,14 @@ export function renderStaffLoginPage() {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#070605"/>
 <title>WHISPERS Staff</title>
+<meta property="og:title" content="WHISPERS Staff"/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://whisperssociety.com/assets/whispers-preview-logo.png?v=20261001-logo1"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="WHISPERS Staff"/>
+<meta name="twitter:image" content="https://whisperssociety.com/assets/whispers-preview-logo.png?v=20261001-logo1"/>
 <link href="/assets/whispers-favicon.png" rel="icon" type="image/png"/>
 <style>
 :root{--bg:#070605;--gold:#D9AE78;--bone:#EDE6DA;--muted:#B4A99D;--line:rgba(217,174,120,.24);--sans:'Jost','Helvetica Neue',Arial,sans-serif;color-scheme:dark}

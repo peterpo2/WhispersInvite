@@ -1,11 +1,13 @@
-const DEFAULT_FROM = "WHISPERS <noreply@whisperssociety.com>";
+const DEFAULT_FROM = "WHISPERS <guestlist@whisperssociety.com>";
 const DEFAULT_REPLY_TO = "guestlist@whisperssociety.com";
 const DEFAULT_PHONE = "+359 888 012 380";
 const LOGO_URL = "https://whisperssociety.com/assets/whispers-lockup-transparent.png";
 const EMAIL_SERIF = "Georgia,'Times New Roman',serif";
 const EMAIL_SANS = "'Trebuchet MS','Helvetica Neue',Arial,sans-serif";
-const EMAIL_HEADING = "#FFFFFF";
-const EMAIL_TEXT = "#FFF8EC";
+const EMAIL_BG = "#100D0B";
+const EMAIL_PANEL = "#130F0C";
+const EMAIL_HEADING = "#FFF4E0";
+const EMAIL_TEXT = "#F8E7C8";
 
 export function emailConfigFromEnv(env) {
   const smtpHost = String(env.SMTP_HOST || "").trim();
@@ -45,12 +47,12 @@ export function buildInviteEmail({ to, name, inviteLink, confirmationLink, confi
     phone,
   ].join("\n");
   const html = `<!doctype html>
-<html style="margin:0;padding:0;background:#0B0908;">
+<html style="margin:0;padding:0;background:${EMAIL_BG};">
 ${emailHead()}
-<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:${EMAIL_SERIF};border:0;outline:0;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0B0908" style="width:100%;background:#0B0908;color:#EDE6DA;border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+<body bgcolor="${EMAIL_BG}" style="margin:0;padding:0;background:${EMAIL_BG};color:${EMAIL_TEXT};font-family:${EMAIL_SERIF};border:0;outline:0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${EMAIL_BG}" style="${emailBackdropStyle(EMAIL_BG)};color:${EMAIL_TEXT};border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
-      <td align="center" bgcolor="#0B0908" style="padding:0;background:#0B0908;border:0;outline:0;">
+      <td align="center" bgcolor="${EMAIL_BG}" style="padding:0;${emailBackdropStyle(EMAIL_BG)};border:0;outline:0;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="${emailShellStyle()}">
           ${brandHeader()}
           <tr><td style="height:28px;"></td></tr>
@@ -170,12 +172,12 @@ export function buildTicketEmail({ to, name, ticketLink, guestOf, bringing, venu
   ].join("\n");
   const htmlLines = lines.map((line) => copyLine(line, 17)).join("");
   const html = `<!doctype html>
-<html style="margin:0;padding:0;background:#0B0908;">
+<html style="margin:0;padding:0;background:${EMAIL_BG};">
 ${emailHead()}
-<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:${EMAIL_SERIF};border:0;outline:0;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0B0908" style="width:100%;background:#0B0908;color:#EDE6DA;border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+<body bgcolor="${EMAIL_BG}" style="margin:0;padding:0;background:${EMAIL_BG};color:${EMAIL_TEXT};font-family:${EMAIL_SERIF};border:0;outline:0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${EMAIL_BG}" style="${emailBackdropStyle(EMAIL_BG)};color:${EMAIL_TEXT};border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
-      <td align="center" bgcolor="#0B0908" style="padding:0;background:#0B0908;border:0;outline:0;">
+      <td align="center" bgcolor="${EMAIL_BG}" style="padding:0;${emailBackdropStyle(EMAIL_BG)};border:0;outline:0;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="${emailShellStyle()}">
           ${brandHeader()}
           <tr><td style="height:28px;"></td></tr>
@@ -236,12 +238,12 @@ function rsvpEmail({ to, name, title, lines, actionLink, actionLabel, contact, p
             </td>
           </tr>` : "";
   const html = `<!doctype html>
-<html style="margin:0;padding:0;background:#0B0908;">
+<html style="margin:0;padding:0;background:${EMAIL_BG};">
 ${emailHead()}
-<body bgcolor="#0B0908" style="margin:0;padding:0;background:#0B0908;color:#EDE6DA;font-family:${EMAIL_SERIF};border:0;outline:0;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0B0908" style="width:100%;background:#0B0908;color:#EDE6DA;border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+<body bgcolor="${EMAIL_BG}" style="margin:0;padding:0;background:${EMAIL_BG};color:${EMAIL_TEXT};font-family:${EMAIL_SERIF};border:0;outline:0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${EMAIL_BG}" style="${emailBackdropStyle(EMAIL_BG)};color:${EMAIL_TEXT};border-collapse:collapse;border-spacing:0;border:0;outline:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
-      <td align="center" bgcolor="#0B0908" style="padding:0;background:#0B0908;border:0;outline:0;">
+      <td align="center" bgcolor="${EMAIL_BG}" style="padding:0;${emailBackdropStyle(EMAIL_BG)};border:0;outline:0;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="${emailShellStyle()}">
           ${brandHeader()}
           <tr><td style="height:24px;"></td></tr>
@@ -276,7 +278,7 @@ function brandHeader() {
 }
 
 function emailHead() {
-  return `<head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head>`;
+  return `<head><meta name="color-scheme" content="only light"><meta name="supported-color-schemes" content="only light"></head>`;
 }
 
 function nameStyle() {
@@ -288,15 +290,15 @@ function titleStyle() {
 }
 
 function copyLine(line, fontSize) {
-  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:400;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(line)}</span></font></td></tr>`;
+  return `<tr><td style="font-size:${fontSize}px;line-height:1.82;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:400;font-family:${EMAIL_SERIF};padding:0 0 18px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(line)}</span></font></td></tr>`;
 }
 
 function contactLine(contact, phone, fontSize) {
-  return `<tr><td style="font-size:${fontSize}px;line-height:1.7;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:400;font-family:${EMAIL_SERIF};padding:0 0 14px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">For questions:</span></font><br><a href="mailto:${escapeHtml(contact)}" style="${textLinkStyle()}">${escapeHtml(contact)}</a><br><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(phone)}</span></font></td></tr>`;
+  return `<tr><td style="font-size:${fontSize}px;line-height:1.82;text-align:center;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:400;font-family:${EMAIL_SERIF};padding:0 0 18px;"><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">For questions:</span></font><br><a href="mailto:${escapeHtml(contact)}" style="${textLinkStyle()}">${escapeHtml(contact)}</a><br><font color="${EMAIL_TEXT}"><span style="color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};">${escapeHtml(phone)}</span></font></td></tr>`;
 }
 
 function textLinkStyle() {
-  return `font-family:${EMAIL_SERIF};font-size:16px;line-height:1.7;text-decoration:none;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:400;`;
+  return `font-family:${EMAIL_SERIF};font-size:16px;line-height:1.82;text-decoration:none;color:${EMAIL_TEXT}!important;-webkit-text-fill-color:${EMAIL_TEXT};font-weight:400;`;
 }
 
 function buttonStyle() {
@@ -305,15 +307,32 @@ function buttonStyle() {
 
 function emailShellStyle() {
   return [
-    "max-width:560px",
-    "background:#100D0B",
-    "background-image:radial-gradient(circle at center 120px, #21140F 0, #130E0C 44%, #070605 100%)",
-    "background-repeat:no-repeat",
-    "background-position:center top",
-    "background-size:100% 100%",
+    "width:100%",
+    "min-width:100%",
+    `background-color:${EMAIL_PANEL}`,
+    emailBackgroundImage(),
+    "background-repeat:no-repeat,no-repeat,no-repeat",
+    "background-position:center bottom,center top,center center",
+    "background-size:100% 100%,100% 100%,100% 100%",
     "border:0",
     "box-shadow:none",
   ].join(";");
+}
+
+function emailBackdropStyle(color) {
+  return [
+    "width:100%",
+    "min-width:100%",
+    `background-color:${color}`,
+    emailBackgroundImage(),
+    "background-repeat:no-repeat,no-repeat,no-repeat",
+    "background-position:center bottom,center top,center center",
+    "background-size:100% 100%,100% 100%,100% 100%",
+  ].join(";");
+}
+
+function emailBackgroundImage() {
+  return "background-image:radial-gradient(120% 72% at 50% 116%,rgba(80,43,24,.34) 0%,rgba(31,20,14,.22) 42%,transparent 68%),radial-gradient(92% 58% at 50% -12%,rgba(217,174,120,.12) 0%,rgba(217,174,120,.04) 42%,transparent 68%),linear-gradient(180deg,#18120E 0%,#100D0B 48%,#0B0908 100%)";
 }
 
 function normalizeEmailForSend(value) {

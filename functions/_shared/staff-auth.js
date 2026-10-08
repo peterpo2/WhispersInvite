@@ -7,7 +7,7 @@ export const STAFF_SESSION_SECONDS = 60 * 60 * 12;
 const PASSWORD_ITERATIONS = 100000;
 const PASSWORD_ALGO = "PBKDF2";
 const HASH_ALGO = "SHA-256";
-const ROLES = ["owner", "admin", "door"];
+const ROLES = ["owner", "admin", "door", "service"];
 
 function binaryFromBytes(bytes) {
   let value = "";
@@ -110,8 +110,9 @@ export function safeStaffUser(row) {
 
 export function roleAllows(role, required) {
   if (role === "owner") return true;
-  if (role === "admin") return required === "admin" || required === "door";
-  if (role === "door") return required === "door";
+  if (role === "admin") return required === "admin" || required === "door" || required === "service";
+  if (role === "door") return required === "door" || required === "service";
+  if (role === "service") return required === "service";
   return false;
 }
 

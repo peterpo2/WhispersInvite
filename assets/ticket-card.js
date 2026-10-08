@@ -6,6 +6,7 @@
   const DISPLAY_SERIF = "'AvianoContrast', Georgia, serif";
   const DISPLAY_SANS = "'AvianoContrast', 'Helvetica Neue', Arial, sans-serif";
   const TEXT_SERIF = "Georgia, 'Times New Roman', serif";
+  const hasCyrillic = (value) => /[\u0400-\u04FF]/.test(String(value || ""));
   const GOLD = "#D9AE78", GOLD_HI = "#EBCB95", BONE = "#F4EDE2", MUTE = "#BDB2A5";
 
   function loadImage(src) {
@@ -76,7 +77,8 @@
     else if (art.mark) ctx.drawImage(art.mark, W / 2 - 85, 120, 170, 170);
     ctx.fillStyle = "rgba(217,174,120,.7)"; ctx.fillRect(W / 2 - 50, 408, 100, 2);
 
-    ctx.fillStyle = BONE; fit(ctx, t.name, `400 {s}px ${TEXT_SERIF}`, 104, W - 160);
+    const nameFont = hasCyrillic(t.name) ? TEXT_SERIF : DISPLAY_SERIF;
+    ctx.fillStyle = BONE; fit(ctx, t.name, `400 {s}px ${nameFont}`, 104, W - 160);
     ctx.fillText(t.name, W / 2, 540);
     ctx.fillStyle = "#CDB894"; ctx.font = `italic 400 46px ${TEXT_SERIF}`;
     ctx.fillText(t.role, W / 2, 610);

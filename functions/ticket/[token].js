@@ -25,12 +25,12 @@ export async function onRequestGet({ params, request }) {
 <meta name="theme-color" content="#070605"/>
 <meta property="og:title" content="WHISPERS"/>
 <meta property="og:type" content="website"/>
-<meta property="og:image" content="https://whisperssociety.com/assets/whispers-lockup-dark.png"/>
-<meta property="og:image:width" content="4191"/>
-<meta property="og:image:height" content="1923"/>
+<meta property="og:image" content="https://whisperssociety.com/assets/whispers-preview-logo.png?v=20261001-logo1"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="WHISPERS"/>
-<meta name="twitter:image" content="https://whisperssociety.com/assets/whispers-lockup-dark.png"/>
+<meta name="twitter:image" content="https://whisperssociety.com/assets/whispers-preview-logo.png?v=20261001-logo1"/>
 <title>WHISPERS Ticket</title>
 <link href="/assets/whispers-favicon.png" rel="icon" type="image/png"/>
 <link href="/assets/whispers-favicon.png" rel="apple-touch-icon"/>
@@ -46,8 +46,8 @@ body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;backg
 .ticket.loading{opacity:0}
 .brand-lockup{display:block;width:min(210px,62vw);height:auto;margin:0 auto;filter:drop-shadow(0 0 22px rgba(163,22,33,.3))}
 .brand-rule{display:block;width:48px;height:1px;margin:16px auto 0;background:rgba(217,174,120,.65)}
-h1{font-family:var(--text-serif);font-weight:400;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px 0 6px;color:#F7F0E6;overflow-wrap:anywhere}
-.role{font-family:var(--text-serif);font-style:italic;color:#CDB894;margin:0;font-size:18px}
+h1{font-family:var(--serif);font-weight:300;font-size:clamp(32px,8.6vw,42px);line-height:1.08;margin:18px 0 6px;color:#F7F0E6;overflow-wrap:anywhere}
+.role{font-family:var(--serif);font-style:italic;color:#CDB894;margin:0;font-size:18px}
 .rule{position:relative;width:84px;height:1px;margin:22px auto;background:linear-gradient(90deg,transparent,rgba(217,174,120,.85),transparent)}
 .rule:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;background:var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
 .code,.state{font-family:var(--sans);font-weight:300;text-transform:uppercase}
@@ -57,13 +57,13 @@ h1{font-family:var(--text-serif);font-weight:400;font-size:clamp(32px,8.6vw,42px
 .qr.ready{background:var(--paper);border:0}
 .qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
 .qr.fallback{width:100%;max-width:430px;height:auto;min-height:0;background:rgba(8,6,5,.46);border:1px solid rgba(217,174,120,.28);color:#D8CEC2;font:400 14px/1.6 var(--sans);overflow-wrap:anywhere;text-align:center;box-shadow:0 16px 42px rgba(0,0,0,.32)}
-.meta{font-size:16px;line-height:1.42;font-family:var(--text-serif);color:#D9CEC0;margin:18px 0 0}.meta b{font-weight:400;color:#F6EFE4}
+.meta{font-size:16px;line-height:1.42;font-family:var(--serif);color:#D9CEC0;margin:18px 0 0}.meta b{font-weight:400;color:#F6EFE4}
 .status-line,.relationship .status-line,.small span{display:block}.relationship .status-line + .status-line,.small span + span{margin-top:16px}
 .ticket-date,.ticket-time{display:block;font-family:var(--sans);font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:#F4DFC0;text-shadow:0 0 22px rgba(217,174,120,.22)}.ticket-time{margin-top:3px}
 .venue-line{display:block;margin-top:10px;font-family:var(--sans);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-hi);text-shadow:0 0 28px rgba(235,203,149,.36)}
 .venue-line:empty{display:none}.venue-line a{color:var(--gold-hi);text-decoration:none;border-bottom:1px solid rgba(235,203,149,.55)}
-.relationship{display:block;color:#F2E8D9;margin:0}.relationship:empty{display:none}
-.small{font-style:italic;font-size:15px;line-height:1.42;color:#CFC3B3;margin:26px auto 0;max-width:360px}.small:empty{display:none}
+.relationship{display:block;font-family:var(--serif);color:#F2E8D9;margin:0}.relationship:empty{display:none}
+.small{font-family:var(--serif);font-style:italic;font-size:15px;line-height:1.42;color:#CFC3B3;margin:26px auto 0;max-width:360px}.small:empty{display:none}.cyrillic-text{font-family:var(--text-serif)!important;letter-spacing:0!important;text-transform:none!important}
 .state{font-size:13px;letter-spacing:.3em;color:var(--gold);margin-top:16px;min-height:16px}
 .ticket-divider{width:100%;height:1px;margin:18px auto 16px;background:linear-gradient(90deg,transparent,rgba(217,174,120,.38),transparent)}
 .meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(217,174,120,.45)}
@@ -73,9 +73,10 @@ h1{font-family:var(--text-serif);font-weight:400;font-size:clamp(32px,8.6vw,42px
 .ticket + .partner-bar{position:relative;z-index:5;width:min(430px,calc(100vw - 28px));display:flex;align-items:center;justify-content:center;gap:14px;margin:22px auto 0;padding:0 0 max(8px,env(safe-area-inset-bottom));pointer-events:none;filter:drop-shadow(0 10px 22px rgba(0,0,0,.75));flex:0 0 auto}
 .partner-bar span{font:300 10px/1 var(--sans);letter-spacing:.26em;text-transform:uppercase;color:rgba(237,230,218,.62);white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,.8)}
 .partner-logos{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0}
-.partner-logo{display:flex;align-items:center;justify-content:center;overflow:visible}.partner-logo.beluga{width:100px;height:37px}.partner-logo.rothschild{width:118px;height:45px}.partner-logo img{display:block;width:100%;height:100%;object-fit:contain;opacity:.92}
-@media (max-width:360px){.ticket + .partner-bar{width:calc(100vw - 18px);gap:9px;padding-bottom:max(6px,env(safe-area-inset-bottom))}.partner-bar span{font-size:8px;letter-spacing:.18em}.partner-logos{gap:8px}.partner-logo.beluga{width:86px;height:32px}.partner-logo.rothschild{width:100px;height:38px}}
+.partner-logo{display:flex;align-items:center;justify-content:center;overflow:visible;flex:0 0 auto}.partner-logo.beluga{width:100px;height:37px}.partner-logo.rothschild{width:132px;height:50px}.partner-logo img{display:block;width:100%;height:100%;object-fit:contain;opacity:.92}
+@media (max-width:360px){.ticket + .partner-bar{width:calc(100vw - 18px);gap:9px;padding-bottom:max(6px,env(safe-area-inset-bottom))}.partner-bar span{font-size:8px;letter-spacing:.18em}.partner-logos{gap:8px}.partner-logo.beluga{width:86px;height:32px}.partner-logo.rothschild{width:112px;height:43px}}
 </style>
+<script src="/assets/analytics.js" defer></script>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
@@ -105,6 +106,7 @@ h1{font-family:var(--text-serif);font-weight:400;font-size:clamp(32px,8.6vw,42px
   const $=(id)=>document.getElementById(id);
   const shell=document.querySelector('.ticket'),reveal=()=>shell.classList.remove('loading');
   const escapeHtml=(s)=>String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const hasCyrillic=s=>/[\u0400-\u04FF]/.test(String(s||'')),markFont=(el,text)=>el.classList.toggle('cyrillic-text',hasCyrillic(text));
   const darkQr=(message)=>{$('qr').classList.remove('ready');$('qr').classList.add('fallback');$('qr').textContent=message;};
   const failed=()=>{$('guest').textContent='We could not load your seal.';darkQr('Your ticket could not be loaded. Please refresh to try again.');$('state').textContent='Refresh to try again.';reveal();};
   let res,data;
@@ -115,8 +117,8 @@ h1{font-family:var(--text-serif);font-weight:400;font-size:clamp(32px,8.6vw,42px
   if(!t){failed();return;}
   if(data.locked||t.locked){
     if(t.pending){
-      $('guest').textContent=t.guest_name||'Your ticket';
-      document.querySelector('.role').textContent='Invited guest';
+      $('guest').textContent=t.guest_name||'Your ticket';markFont($('guest'),t.guest_name);
+      document.querySelector('.role').textContent='Invited guest';markFont(document.querySelector('.role'),'');
       $('code').textContent='Not yet answered';
       $('qr').classList.add('fallback');
       $('qr').textContent="Your ticket appears here once you've responded and tickets are released on 09.10 at 18:00.";
@@ -128,8 +130,8 @@ h1{font-family:var(--text-serif);font-weight:400;font-size:clamp(32px,8.6vw,42px
       reveal();
       return;
     }
-    $('guest').textContent=t.guest_name||'Your ticket';
-    document.querySelector('.role').textContent='Invited guest';
+    $('guest').textContent=t.guest_name||'Your ticket';markFont($('guest'),t.guest_name);
+    document.querySelector('.role').textContent='Invited guest';markFont(document.querySelector('.role'),'');
     $('code').textContent='10.10 · 22:00';
     $('qr').hidden=true;
     $('state').textContent='';
@@ -137,16 +139,16 @@ h1{font-family:var(--text-serif);font-weight:400;font-size:clamp(32px,8.6vw,42px
     const extras=[];
     if(t.bringing)extras.push('Registered with '+escapeHtml(t.bringing)+'.');
     if(t.table_reserved||t.table_requested)extras.push('Table reservation requested.');
-    $('bringing').innerHTML=extras.map((line)=>'<span class="status-line">'+escapeHtml(line)+'</span>').join('');
+    $('bringing').innerHTML=extras.map((line)=>'<span class="status-line">'+escapeHtml(line)+'</span>').join('');markFont($('bringing'),extras.join(' '));
     $('ticketNote').innerHTML='<span>Your ticket will be sent to you</span><span>on 09.10 at 18:00.</span>';
     reveal();
     return;
   }
   const role=t.brought_by?'Guest of '+t.brought_by:'Invited guest';
-  $('guest').textContent=t.guest_name;
-  document.querySelector('.role').textContent=role;
+  $('guest').textContent=t.guest_name;markFont($('guest'),t.guest_name);
+  document.querySelector('.role').textContent=role;markFont(document.querySelector('.role'),role);
   $('code').textContent=t.seal_code||'—';
-  $('bringing').innerHTML=t.bringing?'Bringing <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'':'Coming on your own');
+  $('bringing').innerHTML=t.bringing?'Bringing <b>'+escapeHtml(t.bringing)+'</b>':(t.brought_by?'':'Coming on your own');markFont($('bringing'),t.bringing||t.brought_by||'');
   const v=data.venue,venueText=v?[v.name,v.address].filter(Boolean).join(' · '):'';
   if(v)$('venue').innerHTML=v.mapUrl?'<a href="'+escapeHtml(v.mapUrl)+'" rel="noopener" target="_blank">'+escapeHtml(venueText)+'</a>':escapeHtml(venueText);
   if(t.table_reserved)$('bringing').innerHTML += '<br/><b>Your table is confirmed.</b>';

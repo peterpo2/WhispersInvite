@@ -111,7 +111,9 @@ on conflict (event_key) do nothing;
 create table if not exists staff_tables (
   id text primary key,
   label text not null,
-  capacity integer not null check (capacity > 0),
+  minimum_spend_eur integer not null default 0 check (minimum_spend_eur >= 0),
+  map_x numeric(5,2) not null default 50 check (map_x between 0 and 100),
+  map_y numeric(5,2) not null default 50 check (map_y between 0 and 100),
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -131,7 +133,7 @@ create table if not exists staff_users (
   id uuid primary key default gen_random_uuid(),
   username text not null,
   password_hash text not null,
-  role text not null check (role in ('owner', 'admin', 'door')),
+  role text not null check (role in ('owner', 'admin', 'door', 'service')),
   active boolean not null default true,
   failed_login_count integer not null default 0,
   locked_until timestamptz,
@@ -159,17 +161,42 @@ create index if not exists staff_sessions_expires_idx
   on staff_sessions (expires_at);
 alter table staff_sessions enable row level security;
 
-insert into staff_tables (id, label, capacity, sort_order) values
-  ('t1', 'Table 1', 6, 1),
-  ('t2', 'Table 2', 6, 2),
-  ('t3', 'Table 3', 6, 3),
-  ('t4', 'Table 4', 6, 4),
-  ('t5', 'Table 5', 6, 5),
-  ('t6', 'Table 6', 4, 6),
-  ('t7', 'Table 7', 4, 7),
-  ('t8', 'Table 8', 4, 8),
-  ('t9', 'Table 9', 4, 9),
-  ('t10', 'Table 10', 4, 10)
+insert into staff_tables (id, label, sort_order, map_x, map_y) values
+  ('t1', 'Table 1', 1, 10, 7),
+  ('t2', 'Table 2', 2, 30, 7),
+  ('t3', 'Table 3', 3, 50, 7),
+  ('t4', 'Table 4', 4, 70, 7),
+  ('t5', 'Table 5', 5, 90, 7),
+  ('t6', 'Table 6', 6, 10, 21),
+  ('t7', 'Table 7', 7, 30, 21),
+  ('t8', 'Table 8', 8, 50, 21),
+  ('t9', 'Table 9', 9, 70, 21),
+  ('t10', 'Table 10', 10, 90, 21),
+  ('t11', 'Table 11', 11, 10, 35),
+  ('t12', 'Table 12', 12, 30, 35),
+  ('t13', 'Table 13', 13, 50, 35),
+  ('t14', 'Table 14', 14, 70, 35),
+  ('t15', 'Table 15', 15, 90, 35),
+  ('t16', 'Table 16', 16, 10, 49),
+  ('t17', 'Table 17', 17, 30, 49),
+  ('t18', 'Table 18', 18, 50, 49),
+  ('t19', 'Table 19', 19, 70, 49),
+  ('t20', 'Table 20', 20, 90, 49),
+  ('t21', 'Table 21', 21, 10, 63),
+  ('t22', 'Table 22', 22, 30, 63),
+  ('t23', 'Table 23', 23, 50, 63),
+  ('t24', 'Table 24', 24, 70, 63),
+  ('t25', 'Table 25', 25, 90, 63),
+  ('t26', 'Table 26', 26, 10, 77),
+  ('t27', 'Table 27', 27, 30, 77),
+  ('t28', 'Table 28', 28, 50, 77),
+  ('t29', 'Table 29', 29, 70, 77),
+  ('t30', 'Table 30', 30, 90, 77),
+  ('t31', 'Table 31', 31, 10, 91),
+  ('t32', 'Table 32', 32, 30, 91),
+  ('t33', 'Table 33', 33, 50, 91),
+  ('t34', 'Table 34', 34, 70, 91),
+  ('t35', 'Table 35', 35, 90, 91)
 on conflict (id) do nothing;
 
 insert into guest_list (id, name, email) values

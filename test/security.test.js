@@ -21,20 +21,22 @@ test("every response carries the security headers, including the CSP", () => {
   assert.equal(SECURITY_HEADERS["Content-Security-Policy"], CONTENT_SECURITY_POLICY);
 });
 
-test("scripts load only from the site and jsDelivr (QR libraries), never eval", () => {
+test("scripts load only from approved sources, never eval", () => {
   const d = directives(CONTENT_SECURITY_POLICY);
   assert.deepEqual(d["default-src"], ["'self'"]);
   assert.ok(d["script-src"].includes("'self'"));
   assert.ok(d["script-src"].includes("https://cdn.jsdelivr.net"));
+  assert.ok(d["script-src"].includes("https://www.googletagmanager.com"));
   assert.ok(!d["script-src"].includes("'unsafe-eval'"));
   assert.ok(!d["script-src"].includes("*"));
 });
 
-test("fonts, API calls and framing are locked down", () => {
+test("fonts, analytics API calls and framing are locked down", () => {
   const d = directives(CONTENT_SECURITY_POLICY);
   assert.deepEqual(d["style-src"], ["'self'", "'unsafe-inline'"]);
   assert.deepEqual(d["font-src"], ["'self'"]);
-  assert.deepEqual(d["connect-src"], ["'self'"]);
+  assert.deepEqual(d["connect-src"], ["'self'", "https://www.google-analytics.com", "https://region1.google-analytics.com"]);
+  assert.deepEqual(d["img-src"], ["'self'", "data:", "blob:", "https://www.google-analytics.com"]);
   assert.deepEqual(d["frame-ancestors"], ["'none'"]);
   assert.deepEqual(d["object-src"], ["'none'"]);
   assert.deepEqual(d["base-uri"], ["'none'"]);

@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 const html = readFileSync("index.html", "utf8");
+const inviteShell = readFileSync("invite-shell", "utf8");
 const ticketPage = readFileSync("functions/ticket/[token].js", "utf8");
 const confirmationPage = readFileSync("functions/confirmation/[token].js", "utf8");
 const staffPage = readFileSync("functions/staff/rose-door-10.js", "utf8");
@@ -40,14 +41,42 @@ test("pre-release confirmation avoids repeated location release copy", () => {
   assert.doesNotMatch(html, /Saturday <b>10 October<\/b> · Doors <b>22:00<\/b>/);
 });
 
-test("personal invite contact step does not keep the shared name prompt", () => {
+test("final confirmation quietly reminds guests to check spam", () => {
+  const done = sectionHtml("s-done");
+  assert.match(done, /Your registration is confirmed\./);
+  assert.match(done, /<p class="sub st spam-note">If the email is missing, check your spam folder\.<\/p>/);
+  assert.ok(done.indexOf('id="doneCopy"') < done.indexOf("spam-note"));
+  assert.ok(done.indexOf("spam-note") < done.indexOf('id="saveTickets"'));
+});
+
+test("confirmation page quietly reminds guests to check spam", () => {
+  assert.match(confirmationPage, /<p class="note" id="note"><span>Your ticket will be sent to you<\/span><span>on 09\.10 at 18:00\.<\/span><\/p>/);
+  assert.match(confirmationPage, /<p class="note spam-note" id="spamNote">If the email is missing, check your spam folder\.<\/p>/);
+  assert.match(confirmationPage, /\.spam-note\{margin-top:14px;color:#BDB2A5\}/);
+  assert.ok(confirmationPage.indexOf('id="note"') < confirmationPage.indexOf('id="spamNote"'));
+  assert.ok(confirmationPage.indexOf('id="spamNote"') < confirmationPage.indexOf('id="updateDetails"'));
+});
+
+test("personal invite contact step asks guests to confirm editable contact details", () => {
   assert.match(html, /id="identifyTitle"/);
   assert.match(html, /id="identifySub"/);
   assert.match(html, /<h2 class="lede st" hidden id="identifyTitle"><\/h2>/);
   assert.doesNotMatch(html, />Write your name\.<\/h2>/);
   assert.match(html, /Confirm your details\./);
   assert.match(html, /\$\('#identifyTitle'\)\.hidden = false/);
-  assert.match(html, /Your name is already on the list\. Please leave your email and phone so we can send you your ticket\./);
+  assert.match(html, /Confirm your name, email and phone\. You can edit anything before you continue\./);
+  assert.doesNotMatch(html, /Your name is already on the list\. Please leave your email and phone so we can send you your ticket\./);
+});
+
+test("personal invite continue button stays clickable and explains missing details", () => {
+  assert.match(html, /<button class="btn primary caps st" id="continueGuest">Continue<\/button>/);
+  assert.doesNotMatch(html, /<button class="btn primary caps st" disabled="" id="continueGuest">Continue<\/button>/);
+  assert.match(html, /function contactError\(\)/);
+  assert.match(html, /return'Please give your full name\.'/);
+  assert.match(html, /return'Please give your email\.'/);
+  assert.match(html, /return'Please give a valid email\.'/);
+  assert.match(html, /return'Please give your phone\.'/);
+  assert.match(html, /const err=contactError\(\);if\(err\)\{\$\(\'#guestErr\'\)\.textContent=err;return;\}/);
 });
 
 test("phone input normalizes Bulgarian local numbers but preserves international numbers", () => {
@@ -102,9 +131,10 @@ test("ticket fallback and pending states are dark, not paper-white QR cards", ()
 test("ticket and confirmation links define clean social previews", () => {
   for (const source of [ticketPage, confirmationPage]) {
     assert.match(source, /<meta property="og:title" content="WHISPERS"\/>/);
-    assert.match(source, /<meta property="og:image" content="https:\/\/whisperssociety\.com\/assets\/whispers-lockup-dark\.png"\/>/);
-    assert.match(source, /<meta name="twitter:image" content="https:\/\/whisperssociety\.com\/assets\/whispers-lockup-dark\.png"\/>/);
+    assert.match(source, /<meta property="og:image" content="https:\/\/whisperssociety\.com\/assets\/whispers-preview-logo\.png\?v=20261001-logo1"\/>/);
+    assert.match(source, /<meta name="twitter:image" content="https:\/\/whisperssociety\.com\/assets\/whispers-preview-logo\.png\?v=20261001-logo1"\/>/);
     assert.doesNotMatch(source, /<meta property="og:image" content="[^"]*whispers-seal\.png"/);
+    assert.doesNotMatch(source, /<meta property="og:image" content="[^"]*whispers-lockup-dark\.png"/);
   }
 });
 
@@ -190,6 +220,13 @@ test("confirmation update mode skips primary contact and goes to plus and table 
   assert.match(html, /confirmationToken = new URLSearchParams\(window\.location\.search\)\.get\('confirmation'\)/);
   assert.match(html, /state\.updateMode=true/);
   assert.match(html, /fetch\('\/api\/confirmation\?token=' \+ encodeURIComponent\(confirmationToken\)/);
+  assert.match(html, /state\.plusOne=t\.companion&&t\.companion\.guest_name\?\{name:t\.companion\.guest_name,email:t\.companion\.email\|\|''\}:null/);
+  assert.match(html, /\$\('#bringPlusOne'\)\.checked=Boolean\(state\.plusOne\)/);
+  assert.match(html, /\$\('#plusFields'\)\.hidden=!state\.plusOne/);
+  assert.match(html, /\$\('#p1name'\)\.value=state\.plusOne\?\.name\|\|''/);
+  assert.match(html, /\$\('#p1mail'\)\.value=state\.plusOne\?\.email\|\|''/);
+  assert.match(html, /state\.wantsTableReservation=t\.table_requested===true/);
+  assert.match(html, /\$\('#reserveTable'\)\.checked=state\.wantsTableReservation/);
   assert.match(html, /if\(state\.updateMode\)\{show\('#s-plus'\);return;\}/);
   assert.match(html, /state\.alreadyRegistered&&state\.confirmationUrl/);
   assert.doesNotMatch(html, /state\.updateMode\)\{show\('#s-identify'\)/);
@@ -199,8 +236,11 @@ test("confirmation page shows update details only when the API allows it", () =>
   assert.match(confirmationPage, /id="updateDetails"/);
   assert.match(confirmationPage, /\.update-link\{[\s\S]*font:500 clamp\(18px,4\.8vw,22px\)\/1\.2 var\(--sans\)/);
   assert.match(confirmationPage, /if\(data\.canUpdate&&data\.updateUrl\)/);
-  assert.match(confirmationPage, /\$\('updateDetails'\)\.href=data\.updateUrl/);
-  assert.match(confirmationPage, /\$\('updateDetails'\)\.hidden=false/);
+  assert.match(confirmationPage, /update\.href=data\.updateUrl/);
+  assert.match(confirmationPage, /updateNeedsConfirm=Boolean\(t\.bringing\|\|t\.table_requested\)/);
+  assert.match(confirmationPage, /Сигурен ли си че искаш да промениш вече запазените данни \?/);
+  assert.match(confirmationPage, /if\(updateNeedsConfirm&&!window\.confirm/);
+  assert.match(confirmationPage, /update\.hidden=false/);
 });
 
 test("confirmation page avoids redundant ticket status labels", () => {
@@ -230,8 +270,15 @@ test("public invitation shells use in-flow partner bars with real logo assets", 
   assert.doesNotMatch(sectionHtml("s-film"), /class="partner-bar"/);
   assert.doesNotMatch(html, /<body data-scene="seal">[\s\S]*<aside aria-label="Event partners" class="partner-bar">[\s\S]*<section class="screen on" id="s-seal">/);
   assert.match(html, /\.partner-logos\{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0\}/);
-  assert.match(html, /\.partner-logo\.rothschild\{width:118px;height:45px\}/);
-  assert.match(ticketPage, /\.partner-logo\.rothschild\{width:118px;height:45px\}/);
+  for (const source of [html, inviteShell, ticketPage, confirmationPage]) {
+    assert.match(source, /\.partner-logo\{[^}]*flex:0 0 auto/);
+  }
+  for (const source of [html, inviteShell, ticketPage, confirmationPage]) {
+    assert.match(source, /\.partner-logo\.rothschild\{width:132px;height:50px\}/);
+  }
+  for (const source of [html, inviteShell, ticketPage, confirmationPage]) {
+    assert.match(source, /\.partner-logo\.rothschild\{width:112px;height:43px\}/);
+  }
   assert.doesNotMatch(html, /\/assets\/partner-beluga-bv\.png/);
   assert.doesNotMatch(html, /\/assets\/partner-beluga\.jpg/);
   assert.doesNotMatch(html, /\/assets\/partner-rothschild\.jpg/);
@@ -256,11 +303,14 @@ test("public floating actions sit lower on seal and film screens", () => {
   assert.match(html, /document\.body\.classList\.add\('named-invite'\)/);
 });
 
-test("letter respond CTA stays in flow without covering the closing copy", () => {
-  assert.match(html, /#s-letter\{padding-bottom:calc\(10px \+ env\(safe-area-inset-bottom\)\);scroll-padding-bottom:calc\(110px \+ env\(safe-area-inset-bottom\)\)\}/);
+test("letter respond CTA is sticky and scrolls away to reveal the closing copy", () => {
+  assert.match(html, /#s-letter\{padding-bottom:calc\(104px \+ env\(safe-area-inset-bottom\)\);scroll-padding-bottom:calc\(126px \+ env\(safe-area-inset-bottom\)\)\}/);
   assert.match(html, /#s-letter \.inner\{margin-top:auto;margin-bottom:0;padding-bottom:0\}/);
-  assert.match(html, /#toRsvp\{position:relative;z-index:20;width:100%;margin:24px auto 0/);
-  assert.doesNotMatch(html, /#toRsvp\{position:sticky/);
+  assert.match(html, /#toRsvp\{position:sticky;bottom:calc\(-104px \+ env\(safe-area-inset-bottom\)\);z-index:80;width:100%;margin:24px auto 0/);
+  assert.match(html, /#toRsvp\{[\s\S]*transform:none/);
+  assert.doesNotMatch(html, /#toRsvp\{[^}]*translateY\(96px\)/);
+  assert.doesNotMatch(html, /#toRsvp\{[^}]*-72px/);
+  assert.doesNotMatch(html, /#toRsvp\{position:relative/);
   assert.match(html, /#toRsvp\{[\s\S]*animation:respondGlow 3\.6s ease-in-out infinite/);
   assert.match(html, /#toRsvp\{[\s\S]*font-size:clamp\(18px,4\.8vw,22px\);font-weight:500;letter-spacing:\.32em/);
   assert.match(html, /#continueGuest,#confirm\{font-size:clamp\(18px,4\.8vw,22px\);font-weight:500;letter-spacing:\.32em/);

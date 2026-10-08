@@ -1,15 +1,15 @@
 // Sent on every response by functions/_middleware.js.
 // The pages use inline <style>/<script> (no build step), so 'unsafe-inline' stays; what the
-// policy blocks is loading code or sending data anywhere except this site and jsDelivr (the QR
-// libraries). Fonts and media are served locally from /assets.
+// policy blocks is loading code or sending data anywhere except this site, jsDelivr (the QR
+// libraries) and the privacy-scoped Google Analytics endpoints. Fonts and media are served locally from /assets.
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://www.google-analytics.com",
   "media-src 'self' blob:",
-  "connect-src 'self'",
+  "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com",
   "object-src 'none'",
   "base-uri 'none'",
   "form-action 'none'",

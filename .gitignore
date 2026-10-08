@@ -7,6 +7,8 @@ node_modules/
 dist/
 coverage/
 output/
+tmp/
+.playwright-cli/
 .DS_Store
 Thumbs.db
 New Text Document (2).txt
@@ -21,3 +23,7 @@ VECTOR_TYPE.eps
 viber_image_*.png
 viber_image_*.jpg
 viber_image_*.jpeg
+whispers-organizer-spec-and-questions-2026-09-26.md - Google Документи.pdf
+
+# Local menu source/export PDFs; public menu images live in assets/
+menu/

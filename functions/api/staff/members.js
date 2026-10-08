@@ -23,7 +23,7 @@ const RSVP_COLUMNS = [
 ].join(",");
 
 export async function onRequestGet({ request, env }) {
-  const staff = await requireStaff(request, env, "admin");
+  const staff = await requireStaff(request, env, "door");
   if (staff.error) return staff.error;
 
   const rsvps = await supabaseFetch(

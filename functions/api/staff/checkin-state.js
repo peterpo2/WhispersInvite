@@ -3,7 +3,7 @@ import { requireStaff } from "../../_shared/staff-auth.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 export async function onRequestPost({ request, env }) {
-  const staff = await requireStaff(request, env, "admin");
+  const staff = await requireStaff(request, env, "door");
   if (staff.error) return staff.error;
 
   let body;

@@ -2,7 +2,7 @@ import { json, methodNotAllowed } from "../_shared/responses.js";
 import { TICKET_RELEASE_AT, buildConfirmationUpdateUrl, buildTicketUrl, confirmationCanUpdate, tokenFromValue } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
-const PRIMARY_COLUMNS = "id,guest_id,guest_name,guest_email,guest_phone,status,confirmation_token,ticket_token,plus_one_name,wants_table_reservation,reservation_confirmed,submitted_at";
+const PRIMARY_COLUMNS = "id,guest_id,guest_name,guest_email,guest_phone,status,confirmation_token,ticket_token,plus_one_name,plus_one_email,wants_table_reservation,reservation_confirmed,submitted_at";
 const COMPANION_COLUMNS = "id,rsvp_id,guest_name,confirmation_token,ticket_token,rsvps!inner(id,guest_name,status,wants_table_reservation,reservation_confirmed,submitted_at)";
 
 export async function onRequestGet({ request, env }) {
@@ -48,6 +48,15 @@ async function findPrimaryConfirmation(env, token) {
   const companions = await findCompanions(env, row.id);
   if (companions.error) return { error: companions.error };
   const firstCompanion = companions.rows[0] || null;
+  const companion = firstCompanion ? {
+    id: firstCompanion.id,
+    guest_name: firstCompanion.guest_name,
+    email: firstCompanion.email || "",
+  } : row.plus_one_name ? {
+    id: null,
+    guest_name: row.plus_one_name,
+    email: row.plus_one_email || "",
+  } : null;
   return {
     ticket: {
       holder: "guest",
@@ -59,8 +68,9 @@ async function findPrimaryConfirmation(env, token) {
       ticket_token: row.ticket_token || null,
       seal_code: null,
       checked_in_at: null,
-      bringing: firstCompanion?.guest_name || row.plus_one_name || null,
+      bringing: companion?.guest_name || null,
       brought_by: null,
+      companion,
       table_label: null,
       table_reserved: row.reservation_confirmed === true,
       table_requested: row.wants_table_reservation === true,
@@ -72,7 +82,7 @@ async function findPrimaryConfirmation(env, token) {
 async function findCompanions(env, rsvpId) {
   const lookup = await supabaseFetch(
     env,
-    `/rest/v1/rsvp_companions?select=id,guest_name&rsvp_id=eq.${encodeURIComponent(rsvpId)}&limit=2`
+    `/rest/v1/rsvp_companions?select=id,guest_name,email&rsvp_id=eq.${encodeURIComponent(rsvpId)}&limit=2`
   );
   if (lookup.error) return { error: lookup.error };
   if (!lookup.response.ok) return { error: json({ error: "Could not load confirmation" }, 502) };

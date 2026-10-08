@@ -3,7 +3,7 @@ import { buildConfirmationUrl } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
 async function findGuest(env, id) {
-  const result = await supabaseFetch(env, `/rest/v1/guest_list?id=eq.${encodeURIComponent(id)}&select=id,name&limit=1`);
+  const result = await supabaseFetch(env, `/rest/v1/guest_list?id=eq.${encodeURIComponent(id)}&select=id,name,email,phone&limit=1`);
   if (result.error) return { error: result.error };
   if (!result.response.ok) return { error: json({ error: "Lookup failed" }, 502) };
   const [row] = await result.response.json();
@@ -25,6 +25,8 @@ export async function onRequestGet({ request, env }) {
     return json({
       found: true,
       name: row?.guest_name || personal.row.name,
+      email: row?.guest_email || personal.row.email || null,
+      phone: row?.guest_phone || personal.row.phone || null,
       id: personal.row.id,
       alreadyRegistered: row?.status === "attending",
       confirmationUrl: row?.status === "attending" && row.confirmation_token ? buildConfirmationUrl(request.url, row.confirmation_token) : null,
@@ -35,7 +37,7 @@ export async function onRequestGet({ request, env }) {
 }
 
 async function findRsvp(env, guestId) {
-  const result = await supabaseFetch(env, `/rest/v1/rsvps?guest_id=eq.${encodeURIComponent(guestId)}&select=guest_name,status,confirmation_token&limit=1`);
+  const result = await supabaseFetch(env, `/rest/v1/rsvps?guest_id=eq.${encodeURIComponent(guestId)}&select=guest_name,guest_email,guest_phone,status,confirmation_token&limit=1`);
   if (result.error) return { error: result.error };
   if (!result.response.ok) return { error: json({ error: "Lookup failed" }, 502) };
   const [row] = await result.response.json();
