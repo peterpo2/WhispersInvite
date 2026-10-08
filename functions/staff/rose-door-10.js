@@ -13,12 +13,23 @@ export async function onRequestGet({ request, env }) {
   const settingsTab = staff.user.role === "owner" ? '<a class="tab" href="#view-settings" data-view="settings">Settings</a>' : '';
   const settingsView = staff.user.role === "owner" ? `<div class="view" id="view-settings">
 <section class="panel settings-panel">
-<div class="settings-heading"><div><div class="k">RSVP &amp; details updates</div><p class="small">Controls new confirmations and Update details. Ticket release stays independent.</p></div><strong class="settings-status" id="rsvpSettingsStatus">Loading</strong></div>
-<div class="settings-schedule" id="rsvpScheduledChange" hidden></div>
-<label class="settings-field" for="rsvpChangeAt"><span>Optional automatic change</span><input id="rsvpChangeAt" type="datetime-local" aria-describedby="rsvpTimezone"/></label>
-<p class="small settings-timezone" id="rsvpTimezone">Date and time use Europe/Sofia. Leave empty to apply immediately.</p>
-<div class="settings-actions"><button class="primary" id="applyRsvpSetting" type="button" disabled>Save</button><button id="cancelRsvpSchedule" type="button" hidden>Cancel scheduled change</button></div>
-<p class="invite-state" id="rsvpSettingsState" aria-live="polite"></p>
+<div class="k">RSVP access</div><p class="small settings-intro">Control new confirmations and later detail changes independently. Ticket release stays independent.</p>
+<div class="settings-control">
+<div class="settings-heading"><div><h2>New confirmations</h2><p class="small">Allow or stop guests who have not confirmed yet.</p></div><strong class="settings-status" id="confirmationSettingsStatus">Loading</strong></div>
+<div class="settings-schedule" id="confirmationScheduledChange" hidden></div>
+<label class="settings-field" for="confirmationChangeAt"><span>Optional automatic change</span><input id="confirmationChangeAt" type="datetime-local" aria-describedby="confirmationTimezone"/></label>
+<p class="small settings-timezone" id="confirmationTimezone">Date and time use Europe/Sofia. Leave empty to apply immediately.</p>
+<div class="settings-actions"><button class="primary" id="applyConfirmationSetting" type="button" disabled>Save</button><button id="cancelConfirmationSchedule" type="button" hidden>Cancel scheduled change</button></div>
+<p class="invite-state" id="confirmationSettingsState" aria-live="polite"></p>
+</div>
+<div class="settings-control">
+<div class="settings-heading"><div><h2>Update details</h2><p class="small">Allow or stop changes to an existing confirmation.</p></div><strong class="settings-status" id="updatesSettingsStatus">Loading</strong></div>
+<div class="settings-schedule" id="updatesScheduledChange" hidden></div>
+<label class="settings-field" for="updatesChangeAt"><span>Optional automatic change</span><input id="updatesChangeAt" type="datetime-local" aria-describedby="updatesTimezone"/></label>
+<p class="small settings-timezone" id="updatesTimezone">Date and time use Europe/Sofia. Leave empty to apply immediately.</p>
+<div class="settings-actions"><button class="primary" id="applyUpdatesSetting" type="button" disabled>Save</button><button id="cancelUpdatesSchedule" type="button" hidden>Cancel scheduled change</button></div>
+<p class="invite-state" id="updatesSettingsState" aria-live="polite"></p>
+</div>
 </section>
 </div>` : '';
   const menuView = `<div class="view" id="view-menu">
@@ -88,7 +99,7 @@ button:focus-visible,input:focus-visible,.tabs .tab:focus-visible{outline:1px so
 .invite-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:12px}.invite-form input{text-transform:none;letter-spacing:0;font:400 15px var(--sans);cursor:text;min-width:0}.invite-form button{white-space:nowrap}.link-cell{max-width:260px;overflow-wrap:anywhere;color:#D8CEC2}.copy-btn{min-height:38px;padding:0 9px;letter-spacing:.1em;font-size:11px}.invite-state{min-height:20px;color:var(--muted);font-size:13px;margin:0 0 10px}.invite-state:empty{min-height:0;margin:0 0 8px}.invite-state.err{color:#E8808A}@media(max-width:900px){.invite-form{grid-template-columns:1fr}.link-cell{max-width:unset}}
 .staff-create{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px}.staff-create input{text-transform:none;letter-spacing:0;font:400 15px var(--sans);cursor:text}.password-reveal{display:none;border:1px solid rgba(217,174,120,.35);background:rgba(217,174,120,.08);padding:12px;margin:0 0 12px}.password-reveal.on{display:grid;gap:8px}.password-reveal code{display:block;font-size:18px;overflow-wrap:anywhere;color:#F6EFE4}.staff-row-actions{display:flex;gap:6px;flex-wrap:wrap}.staff-row-actions button{min-height:36px;padding:0 8px;font-size:10px;letter-spacing:.1em}.staff-control{width:100%;min-height:38px;text-transform:none;letter-spacing:0;font:400 13px var(--sans);cursor:text}.staff-select{min-height:38px;background:#090706;color:var(--bone);border:1px solid rgba(217,174,120,.5);border-radius:3px}
 .menu-panel{display:grid;justify-items:center;max-width:520px;margin:0 auto;text-align:center}.menu-qr{width:min(100%,336px);aspect-ratio:1;display:grid;place-items:center;padding:8px;border:1px solid rgba(217,174,120,.5);border-radius:6px;background:#000000;color:#FFFFFF;overflow:hidden}.menu-qr canvas{display:block;width:100%!important;height:auto!important}.menu-url{display:block;max-width:100%;margin:18px 0 14px;color:var(--gold-hi);font-size:15px;line-height:1.5;overflow-wrap:anywhere}.menu-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(100%,336px)}.menu-actions button{width:100%}@media(max-width:520px){.menu-actions{grid-template-columns:1fr}}
-.settings-panel{max-width:680px}.settings-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:18px;border-bottom:1px solid rgba(217,174,120,.2)}.settings-heading .small{margin-top:8px}.settings-status{flex:0 0 auto;border:1px solid rgba(217,174,120,.5);padding:9px 12px;color:var(--gold-hi);font-size:12px;font-weight:400;letter-spacing:.2em}.settings-status.locked{color:#E8808A;border-color:rgba(224,112,122,.55)}.settings-schedule{margin:16px 0 0;padding:12px;border-left:2px solid var(--gold);background:rgba(217,174,120,.06);color:#D8CEC2;font-size:14px;line-height:1.5}.settings-field{display:grid;gap:8px;margin-top:18px}.settings-field span{color:var(--gold);font-size:11px;letter-spacing:.18em;text-transform:uppercase}.settings-field input{width:100%;max-width:360px;text-transform:none;letter-spacing:0;font-size:16px;cursor:text;color-scheme:dark}.settings-timezone{margin-top:8px}.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.settings-actions button{min-width:190px}.settings-actions button[hidden]{display:none}@media(max-width:520px){.settings-heading{display:grid}.settings-status{justify-self:start}.settings-field input{max-width:none}.settings-actions{display:grid}.settings-actions button{width:100%;min-width:0}}
+.settings-panel{max-width:680px}.settings-intro{margin-bottom:0}.settings-control{padding:22px 0;border-bottom:1px solid rgba(217,174,120,.2)}.settings-control:last-child{border-bottom:0;padding-bottom:0}.settings-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:18px;border-bottom:1px solid rgba(217,174,120,.2)}.settings-heading h2{margin:0;font:300 28px/1.1 var(--serif);color:#F6EFE4}.settings-heading .small{margin-top:8px}.settings-status{flex:0 0 auto;border:1px solid rgba(217,174,120,.5);padding:9px 12px;color:var(--gold-hi);font-size:12px;font-weight:400;letter-spacing:.2em}.settings-status.locked{color:#E8808A;border-color:rgba(224,112,122,.55)}.settings-schedule{margin:16px 0 0;padding:12px;border-left:2px solid var(--gold);background:rgba(217,174,120,.06);color:#D8CEC2;font-size:14px;line-height:1.5}.settings-field{display:grid;gap:8px;margin-top:18px}.settings-field span{color:var(--gold);font-size:11px;letter-spacing:.18em;text-transform:uppercase}.settings-field input{width:100%;max-width:360px;text-transform:none;letter-spacing:0;font-size:16px;cursor:text;color-scheme:dark}.settings-timezone{margin-top:8px}.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.settings-actions button{min-width:190px}.settings-actions button[hidden]{display:none}@media(max-width:520px){.settings-heading{display:grid}.settings-status{justify-self:start}.settings-field input{max-width:none}.settings-actions{display:grid}.settings-actions button{width:100%;min-width:0}}
 @media(max-width:520px){body{font-size:14px;padding:calc(10px + env(safe-area-inset-top)) max(12px,env(safe-area-inset-right),env(safe-area-inset-left)) calc(118px + env(safe-area-inset-bottom))}main{max-width:100%}.top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;margin-bottom:10px;padding-bottom:10px;align-items:center}.brand{gap:9px;min-width:0}.brand img{width:100px;flex-basis:100px}.staff-meta{display:grid;grid-template-columns:auto auto;gap:6px;justify-content:end;justify-items:stretch}.staff-who{grid-column:1/-1;text-align:right;font-size:10px;letter-spacing:.13em}.staff-meta button,.staff-meta a{min-height:38px;padding:0 10px;font-size:10px;letter-spacing:.14em}.k{font-size:10px;letter-spacing:.26em}h1{font-size:29px}.panel{padding:12px 0}.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;overflow:visible;margin-bottom:12px;padding-bottom:0}.tab{width:100%;min-height:46px;padding:0 8px;letter-spacing:.18em;font-size:11px}button,input{min-height:48px;padding:0 12px}.camera{max-height:min(58svh,520px);aspect-ratio:3/4}.actions{grid-template-columns:1fr 1fr}.actions #start{grid-column:1/-1}.actions button{min-height:48px;letter-spacing:.16em;font-size:11px}.manual{grid-template-columns:1fr}.staff-create{grid-template-columns:1fr}.manual input{width:100%;font-size:16px}.manual button,.staff-create button{width:100%}.invite-form{gap:8px;margin-bottom:8px}.invite-form input,.toolbar input{min-height:50px;font-size:16px}.invite-form button,.toolbar button{min-height:50px;font-size:11px;letter-spacing:.16em}.toolbar{gap:8px;margin-bottom:10px}.grid{max-width:100%;border-radius:2px}table{min-width:980px}th,td{padding:10px 8px;font-size:12px}.pager{margin-top:10px}.link-cell{font-size:12px}.copy-btn{min-height:36px;font-size:10px}}
 @media(max-width:380px){.brand img{width:88px;flex-basis:88px}h1{font-size:27px}.staff-meta button,.staff-meta a{padding:0 8px;letter-spacing:.11em}.tab{letter-spacing:.15em;font-size:10px}.invite-form input,.toolbar input{min-height:48px}.invite-form button,.toolbar button{min-height:48px}}
 </style>
@@ -145,8 +156,9 @@ let stream=null,loop=null,pass=0;const seen=new Map(),REPEAT_MS=4000;
 const PAGE_SIZE=20;
 const MENU_URL='https://whisperssociety.com/menu';
 const PRINT_SIZE=2400;
-let members=[],membersPage=1,sortKey='submittedAt',sortDir=-1,tablesData=null,selectedTableId=null,tableSearch='',tablePeopleSearch='',tableSpendNotice=null,hallMapOpen=false,mapDrag=null,invites=[],invitesPage=1,inviteEditId=null,staffUsers=[],rsvpSetting=null,currentView='scanner';
+let members=[],membersPage=1,sortKey='submittedAt',sortDir=-1,tablesData=null,selectedTableId=null,tableSearch='',tablePeopleSearch='',tableSpendNotice=null,hallMapOpen=false,mapDrag=null,invites=[],invitesPage=1,inviteEditId=null,staffUsers=[],rsvpSettings={confirmation:null,updates:null},currentView='scanner';
 const MAP_DRAG_THRESHOLD=6;
+const RSVP_SETTING_UI={confirmation:{status:'confirmationSettingsStatus',scheduled:'confirmationScheduledChange',input:'confirmationChangeAt',apply:'applyConfirmationSetting',cancel:'cancelConfirmationSchedule',state:'confirmationSettingsState'},updates:{status:'updatesSettingsStatus',scheduled:'updatesScheduledChange',input:'updatesChangeAt',apply:'applyUpdatesSetting',cancel:'cancelUpdatesSchedule',state:'updatesSettingsState'}};
 const ROLE_VIEWS={owner:['scanner','members','tables','invite','menu','staff','settings','hallmap'],admin:['scanner','members','tables','invite','menu','hallmap'],door:['scanner','members','tables','invite','menu','hallmap'],service:['tables','hallmap']};
 const allowedViews=ROLE_VIEWS[STAFF_USER.role]||['scanner'];
 const IS_OWNER=STAFF_USER.role==='owner';
@@ -576,37 +588,34 @@ document.getElementById('inviteForm').onsubmit=async(e)=>{
   else state.textContent=data.emailDelivery?.sent?'Invite created and sent.':'Invite created.';
   await loadInvites();
 };
-function setRsvpSettingsNotice(message,isError){const state=document.getElementById('rsvpSettingsState');if(!state)return;state.className='invite-state'+(isError?' err':'');state.textContent=message||'';}
-function setRsvpSettingsBusy(busy){const input=document.getElementById('rsvpChangeAt'),apply=document.getElementById('applyRsvpSetting'),cancel=document.getElementById('cancelRsvpSchedule');if(input)input.disabled=busy;if(apply)apply.disabled=busy||!rsvpSetting;if(cancel)cancel.disabled=busy;}
-function updateRsvpActionLabel(){const button=document.getElementById('applyRsvpSetting'),input=document.getElementById('rsvpChangeAt');if(!button||!rsvpSetting)return;const action=rsvpSetting.isOpen?'lock':'unlock';button.textContent=input?.value?'Schedule '+action:(rsvpSetting.isOpen?'Lock now':'Unlock now');}
-function renderRsvpSetting(policy){
-  rsvpSetting=policy;const status=document.getElementById('rsvpSettingsStatus'),scheduled=document.getElementById('rsvpScheduledChange'),cancel=document.getElementById('cancelRsvpSchedule');if(!status||!scheduled||!cancel)return;
+function setRsvpSettingsNotice(setting,message,isError){const state=document.getElementById(RSVP_SETTING_UI[setting]?.state);if(!state)return;state.className='invite-state'+(isError?' err':'');state.textContent=message||'';}
+function setRsvpSettingsBusy(setting,busy){const ui=RSVP_SETTING_UI[setting],input=document.getElementById(ui?.input),apply=document.getElementById(ui?.apply),cancel=document.getElementById(ui?.cancel);if(input)input.disabled=busy;if(apply)apply.disabled=busy||!rsvpSettings[setting];if(cancel)cancel.disabled=busy;}
+function updateRsvpActionLabel(setting){const ui=RSVP_SETTING_UI[setting],button=document.getElementById(ui?.apply),input=document.getElementById(ui?.input),policy=rsvpSettings[setting];if(!button||!policy)return;const action=policy.isOpen?'lock':'unlock';button.textContent=input?.value?'Schedule '+action:(policy.isOpen?'Lock now':'Unlock now');}
+function renderRsvpSetting(setting,policy){
+  const ui=RSVP_SETTING_UI[setting];rsvpSettings[setting]=policy;const status=document.getElementById(ui?.status),scheduled=document.getElementById(ui?.scheduled),cancel=document.getElementById(ui?.cancel);if(!status||!scheduled||!cancel)return;
   status.textContent=policy.isOpen?'OPEN':'LOCKED';status.className='settings-status'+(policy.isOpen?'':' locked');
   const change=policy.scheduledChange;if(change){const at=new Date(change.at).toLocaleString('en-GB',{timeZone:'Europe/Sofia',dateStyle:'medium',timeStyle:'short'});scheduled.textContent=(change.open?'Unlocks':'Locks')+' automatically on '+at+' (Europe/Sofia).';scheduled.hidden=false;cancel.hidden=false;}else{scheduled.textContent='';scheduled.hidden=true;cancel.hidden=true;}
-  setRsvpSettingsBusy(false);updateRsvpActionLabel();
+  setRsvpSettingsBusy(setting,false);updateRsvpActionLabel(setting);
 }
 async function loadSettings(){
-  if(!IS_OWNER)return;setRsvpSettingsNotice('Loading...',false);setRsvpSettingsBusy(true);
-  let res,data;try{res=await fetch('/api/staff/settings',{headers:{'Accept':'application/json'}});data=await res.json();}catch(_){setRsvpSettingsNotice('No connection.',true);setRsvpSettingsBusy(false);return;}
-  if(!res.ok){setRsvpSettingsNotice(data.error||'Could not load RSVP settings',true);setRsvpSettingsBusy(false);return;}
-  renderRsvpSetting(data.rsvp);setRsvpSettingsNotice('',false);
+  if(!IS_OWNER)return;for(const setting of Object.keys(RSVP_SETTING_UI)){setRsvpSettingsNotice(setting,'Loading...',false);setRsvpSettingsBusy(setting,true);}
+  let res,data;try{res=await fetch('/api/staff/settings',{headers:{'Accept':'application/json'}});data=await res.json();}catch(_){for(const setting of Object.keys(RSVP_SETTING_UI)){setRsvpSettingsNotice(setting,'No connection.',true);setRsvpSettingsBusy(setting,false);}return;}
+  if(!res.ok){for(const setting of Object.keys(RSVP_SETTING_UI)){setRsvpSettingsNotice(setting,data.error||'Could not load RSVP settings',true);setRsvpSettingsBusy(setting,false);}return;}
+  for(const setting of Object.keys(RSVP_SETTING_UI)){renderRsvpSetting(setting,data.rsvp[setting]);setRsvpSettingsNotice(setting,'',false);}
 }
-async function saveRsvpSetting(targetOpen){
-  const input=document.getElementById('rsvpChangeAt');setRsvpSettingsNotice('Saving...',false);setRsvpSettingsBusy(true);
-  let res,data;try{res=await fetch('/api/staff/settings',{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({targetOpen,changeAtLocal:input?.value||null})});data=await res.json();}catch(_){setRsvpSettingsNotice('No connection.',true);setRsvpSettingsBusy(false);return;}
-  if(!res.ok){setRsvpSettingsNotice(data.error||'Could not save RSVP settings',true);setRsvpSettingsBusy(false);return;}
-  if(input)input.value='';renderRsvpSetting(data.rsvp);setRsvpSettingsNotice(data.rsvp.scheduledChange?'Scheduled.':'Saved.',false);
+async function saveRsvpSetting(setting,targetOpen){
+  const input=document.getElementById(RSVP_SETTING_UI[setting]?.input);setRsvpSettingsNotice(setting,'Saving...',false);setRsvpSettingsBusy(setting,true);
+  let res,data;try{res=await fetch('/api/staff/settings',{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({setting,targetOpen,changeAtLocal:input?.value||null})});data=await res.json();}catch(_){setRsvpSettingsNotice(setting,'No connection.',true);setRsvpSettingsBusy(setting,false);return;}
+  if(!res.ok){setRsvpSettingsNotice(setting,data.error||'Could not save RSVP settings',true);setRsvpSettingsBusy(setting,false);return;}
+  if(input)input.value='';for(const key of Object.keys(RSVP_SETTING_UI))renderRsvpSetting(key,data.rsvp[key]);setRsvpSettingsNotice(setting,data.rsvp[setting].scheduledChange?'Scheduled.':'Saved.',false);
 }
-async function cancelRsvpSchedule(){
-  setRsvpSettingsNotice('Cancelling...',false);setRsvpSettingsBusy(true);
-  let res,data;try{res=await fetch('/api/staff/settings',{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({cancelScheduledChange:true})});data=await res.json();}catch(_){setRsvpSettingsNotice('No connection.',true);setRsvpSettingsBusy(false);return;}
-  if(!res.ok){setRsvpSettingsNotice(data.error||'Could not cancel scheduled change',true);setRsvpSettingsBusy(false);return;}
-  renderRsvpSetting(data.rsvp);setRsvpSettingsNotice('Scheduled change cancelled.',false);
+async function cancelRsvpSchedule(setting){
+  setRsvpSettingsNotice(setting,'Cancelling...',false);setRsvpSettingsBusy(setting,true);
+  let res,data;try{res=await fetch('/api/staff/settings',{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({setting,cancelScheduledChange:true})});data=await res.json();}catch(_){setRsvpSettingsNotice(setting,'No connection.',true);setRsvpSettingsBusy(setting,false);return;}
+  if(!res.ok){setRsvpSettingsNotice(setting,data.error||'Could not cancel scheduled change',true);setRsvpSettingsBusy(setting,false);return;}
+  for(const key of Object.keys(RSVP_SETTING_UI))renderRsvpSetting(key,data.rsvp[key]);setRsvpSettingsNotice(setting,'Scheduled change cancelled.',false);
 }
-const rsvpChangeAt=document.getElementById('rsvpChangeAt'),applyRsvpSetting=document.getElementById('applyRsvpSetting'),cancelRsvpSetting=document.getElementById('cancelRsvpSchedule');
-if(rsvpChangeAt)rsvpChangeAt.oninput=updateRsvpActionLabel;
-if(applyRsvpSetting)applyRsvpSetting.onclick=()=>{if(rsvpSetting)saveRsvpSetting(!rsvpSetting.isOpen);};
-if(cancelRsvpSetting)cancelRsvpSetting.onclick=cancelRsvpSchedule;
+for(const setting of Object.keys(RSVP_SETTING_UI)){const ui=RSVP_SETTING_UI[setting],input=document.getElementById(ui.input),apply=document.getElementById(ui.apply),cancel=document.getElementById(ui.cancel);if(input)input.oninput=()=>updateRsvpActionLabel(setting);if(apply)apply.onclick=()=>{const policy=rsvpSettings[setting];if(policy)saveRsvpSetting(setting,!policy.isOpen);};if(cancel)cancel.onclick=()=>cancelRsvpSchedule(setting);}
 async function loadStaffUsers(){
   if(STAFF_USER.role!=='owner')return;
   const state=document.getElementById('staffState'),body=document.querySelector('#staffUsersTable tbody');state.className='invite-state';state.textContent='';body.innerHTML='<tr><td colspan="6">Loading...</td></tr>';
@@ -661,7 +670,7 @@ if(currentView==='scanner')loadList();
 window.__WHISPERS_STAFF_MAIN_READY=true;
 </script>
     <script defer src="/assets/hall-plan.js?v=20261008-map3"></script>
-    <script defer src="/assets/staff-admin-fallback.js?v=20261008-settings1"></script>
+    <script defer src="/assets/staff-admin-fallback.js?v=20261008-settings2"></script>
 <script async src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </body>
 </html>`, {

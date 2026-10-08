@@ -251,7 +251,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261008-settings1/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261008-settings2/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);

@@ -15,6 +15,18 @@ const SOFIA_FORMATTER = new Intl.DateTimeFormat("en-CA", {
   second: "2-digit",
   hourCycle: "h23",
 });
+const POLICY_FIELDS = {
+  confirmation: {
+    open: "rsvp_open",
+    changeAt: "rsvp_change_at",
+    changeToOpen: "rsvp_change_to_open",
+  },
+  updates: {
+    open: "rsvp_updates_open",
+    changeAt: "rsvp_updates_change_at",
+    changeToOpen: "rsvp_updates_change_to_open",
+  },
+};
 
 function dateParts(date) {
   const values = {};
@@ -63,30 +75,43 @@ export function sofiaLocalToIso(value) {
   return result.toISOString();
 }
 
-export function effectiveRsvpPolicy(row, now = new Date()) {
-  const baseOpen = row?.rsvp_open !== false;
-  const changeAt = row?.rsvp_change_at ? new Date(row.rsvp_change_at) : null;
-  const hasSchedule = changeAt && Number.isFinite(changeAt.getTime()) && typeof row?.rsvp_change_to_open === "boolean";
+function effectivePolicy(row, fields, now) {
+  const baseOpen = row?.[fields.open] !== false;
+  const changeAt = row?.[fields.changeAt] ? new Date(row[fields.changeAt]) : null;
+  const changeToOpen = row?.[fields.changeToOpen];
+  const hasSchedule = changeAt && Number.isFinite(changeAt.getTime()) && typeof changeToOpen === "boolean";
   if (!hasSchedule) {
     return { isOpen: baseOpen, scheduledChange: null, timezone: RSVP_TIME_ZONE };
   }
   if (changeAt.getTime() <= now.getTime()) {
-    return { isOpen: row.rsvp_change_to_open, scheduledChange: null, timezone: RSVP_TIME_ZONE };
+    return { isOpen: changeToOpen, scheduledChange: null, timezone: RSVP_TIME_ZONE };
   }
   return {
     isOpen: baseOpen,
-    scheduledChange: { at: changeAt.toISOString(), open: row.rsvp_change_to_open },
+    scheduledChange: { at: changeAt.toISOString(), open: changeToOpen },
     timezone: RSVP_TIME_ZONE,
   };
 }
 
+export function effectiveRsvpPolicy(row, now = new Date()) {
+  return {
+    confirmation: effectivePolicy(row, POLICY_FIELDS.confirmation, now),
+    updates: effectivePolicy(row, POLICY_FIELDS.updates, now),
+  };
+}
+
 export function buildRsvpSettingsPatch(body, currentPolicy, now = new Date()) {
+  const fields = POLICY_FIELDS[body?.setting];
+  if (!fields) return { error: "Choose a valid RSVP setting." };
+  const selectedPolicy = currentPolicy?.[body.setting];
+  if (!selectedPolicy) return { error: "Could not load RSVP settings." };
+
   if (body?.cancelScheduledChange === true) {
     return {
       patch: {
-        rsvp_open: currentPolicy.isOpen,
-        rsvp_change_at: null,
-        rsvp_change_to_open: null,
+        [fields.open]: selectedPolicy.isOpen,
+        [fields.changeAt]: null,
+        [fields.changeToOpen]: null,
       },
     };
   }
@@ -98,9 +123,9 @@ export function buildRsvpSettingsPatch(body, currentPolicy, now = new Date()) {
   if (!localValue) {
     return {
       patch: {
-        rsvp_open: body.targetOpen,
-        rsvp_change_at: null,
-        rsvp_change_to_open: null,
+        [fields.open]: body.targetOpen,
+        [fields.changeAt]: null,
+        [fields.changeToOpen]: null,
       },
     };
   }
@@ -108,13 +133,13 @@ export function buildRsvpSettingsPatch(body, currentPolicy, now = new Date()) {
   const changeAt = sofiaLocalToIso(localValue);
   if (!changeAt) return { error: "Choose a valid Sofia date and time." };
   if (new Date(changeAt).getTime() <= now.getTime()) return { error: "Choose a future Sofia date and time." };
-  if (body.targetOpen === currentPolicy.isOpen) return { error: "The scheduled state must differ from the current state." };
+  if (body.targetOpen === selectedPolicy.isOpen) return { error: "The scheduled state must differ from the current state." };
 
   return {
     patch: {
-      rsvp_open: currentPolicy.isOpen,
-      rsvp_change_at: changeAt,
-      rsvp_change_to_open: body.targetOpen,
+      [fields.open]: selectedPolicy.isOpen,
+      [fields.changeAt]: changeAt,
+      [fields.changeToOpen]: body.targetOpen,
     },
   };
 }
@@ -122,7 +147,7 @@ export function buildRsvpSettingsPatch(body, currentPolicy, now = new Date()) {
 export async function loadRsvpPolicy(env, now = new Date()) {
   const result = await supabaseFetch(
     env,
-    `/rest/v1/event_details?select=rsvp_open,rsvp_change_at,rsvp_change_to_open&event_key=eq.${encodeURIComponent(EVENT_KEY)}&limit=1`
+    `/rest/v1/event_details?select=rsvp_open,rsvp_change_at,rsvp_change_to_open,rsvp_updates_open,rsvp_updates_change_at,rsvp_updates_change_to_open&event_key=eq.${encodeURIComponent(EVENT_KEY)}&limit=1`
   );
   if (result.error) return result;
   if (!result.response.ok) return { error: json({ error: "Could not load RSVP settings" }, 502) };

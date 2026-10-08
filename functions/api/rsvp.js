@@ -45,7 +45,6 @@ export async function onRequestPost({ request, env, waitUntil }) {
 
   const availability = await loadRsvpPolicy(env);
   if (availability.error) return availability.error;
-  if (!availability.policy.isOpen) return json({ error: "RSVP is closed." }, 403);
 
   let row = buildRsvpRow(body);
   if (body.guestId) {
@@ -55,7 +54,14 @@ export async function onRequestPost({ request, env, waitUntil }) {
   }
   const existing = await findExistingRsvp(env, row);
   if (existing.error) return existing.error;
-  if (existing.row) return updateExistingRsvp(env, request.url, row, existing.row, waitUntil);
+  if (existing.row) {
+    if (!availability.policy.updates.isOpen) return json({ error: "Updates are closed." }, 403);
+    return updateExistingRsvp(env, request.url, row, existing.row, waitUntil);
+  }
+
+  if (!availability.policy.confirmation.isOpen) {
+    return json({ error: "RSVP confirmations are closed." }, 403);
+  }
 
   for (let attempt = 1; ; attempt += 1) {
     const saved = await supabaseFetch(env, "/rest/v1/rsvps", {

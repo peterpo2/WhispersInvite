@@ -32,7 +32,7 @@ export async function onRequestPatch({ request, env }) {
 
   const updated = await supabaseFetch(
     env,
-    "/rest/v1/event_details?on_conflict=event_key&select=rsvp_open,rsvp_change_at,rsvp_change_to_open",
+    "/rest/v1/event_details?on_conflict=event_key&select=rsvp_open,rsvp_change_at,rsvp_change_to_open,rsvp_updates_open,rsvp_updates_change_at,rsvp_updates_change_to_open",
     {
       method: "POST",
       headers: { Prefer: "resolution=merge-duplicates,return=representation" },

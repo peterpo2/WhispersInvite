@@ -104,15 +104,22 @@ create table if not exists event_details (
   rsvp_open boolean not null default true,
   rsvp_change_at timestamptz,
   rsvp_change_to_open boolean,
+  rsvp_updates_open boolean not null default true,
+  rsvp_updates_change_at timestamptz,
+  rsvp_updates_change_to_open boolean,
   constraint event_details_rsvp_schedule_paired check (
     (rsvp_change_at is null and rsvp_change_to_open is null)
     or (rsvp_change_at is not null and rsvp_change_to_open is not null)
   ),
+  constraint event_details_rsvp_updates_schedule_paired check (
+    (rsvp_updates_change_at is null and rsvp_updates_change_to_open is null)
+    or (rsvp_updates_change_at is not null and rsvp_updates_change_to_open is not null)
+  ),
   updated_at timestamptz not null default now()
 );
 alter table event_details enable row level security;
-insert into event_details (event_key, reveal_at, rsvp_open)
-values ('whispers-2026-10-10', '2026-10-09 18:00:00+03', true)
+insert into event_details (event_key, reveal_at, rsvp_open, rsvp_updates_open)
+values ('whispers-2026-10-10', '2026-10-09 18:00:00+03', true, true)
 on conflict (event_key) do nothing;
 
 create table if not exists staff_tables (

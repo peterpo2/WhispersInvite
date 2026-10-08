@@ -25,7 +25,7 @@ export async function onRequestGet({ request, env }) {
   if (!ticket) return json({ error: "Confirmation not found" }, 404);
   const availability = await loadRsvpPolicy(env);
   if (availability.error) return availability.error;
-  const canUpdate = availability.policy.isOpen && confirmationCanUpdate(ticket);
+  const canUpdate = availability.policy.updates.isOpen && confirmationCanUpdate(ticket);
 
   return json({
     ok: true,
