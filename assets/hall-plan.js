@@ -21,6 +21,7 @@
   const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const smooth=()=>matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth';
   const spend=v=>'€'+Number(v||0).toLocaleString('en-US');
+  const formatMapEditedAt=value=>value?new Intl.DateTimeFormat('bg-BG',{timeZone:'Europe/Sofia',dateStyle:'medium',timeStyle:'short'}).format(new Date(value)):'Not edited yet';
   const num=t=>String(t.sortOrder||t.label||'').replace(/\D/g,'')||t.label;
   const f=v=>v.toFixed(1);
   const toSvgX=p=>VB.x+p/100*VB.w,toSvgY=p=>VB.y+p/100*VB.h;
@@ -29,7 +30,7 @@
   function setState(text,err){state.className='hm-state'+(err?' err':'');state.textContent=text;}
   // Each table is split over four layers (zones, stools, tops, numbers) so a neighbour's stool never covers a number.
   function pieces(t){
-    const cx=toSvgX(t.hallX),cy=toSvgY(t.hallY),n=Number(num(t)),p=n>=1&&n<=7?' prem':'',sel=t.id===selectedId?' hm-sel':'',open='<g class="hm-t'+sel+'" data-hm-table="'+esc(t.id)+'"';
+    const cx=toSvgX(t.hallX),cy=toSvgY(t.hallY),n=Number(num(t)),p=n>=1&&n<=7?' prem':'',edited=t.hallMapEditedAt?' hm-edited':'',sel=t.id===selectedId?' hm-sel':'',open='<g class="hm-t'+edited+sel+'" data-hm-table="'+esc(t.id)+'"';
     return {
       occ:open+'><rect x="'+f(cx-31.5)+'" y="'+f(cy-31.5)+'" width="63" height="63" class="occ"/></g>',
       stools:open+'><rect x="'+f(cx-8)+'" y="'+f(cy-31.1)+'" width="16" height="16" class="stool'+p+'"/>'
@@ -61,7 +62,7 @@
     if(!t){detail.hidden=true;detail.innerHTML='';return;}
     const extra=(info.tables||[]).find(x=>x.id===t.id)||{},groups=(info.groups||[]).filter(g=>g.tableId===t.id),guests=groups.reduce((s,g)=>s+g.size,0),n=Number(num(t)),row=ROWS.find(r=>n>=r[0]&&n<=r[1]);
     detail.innerHTML='<div class="hm-detail-head"><div><h2>'+esc(t.label)+'</h2><p>'+esc(!placed(t)?'Not on the plan':row?'Row '+row[2]:'Placed on the map')+'</p></div><button type="button" class="hm-close" id="hmClose" aria-label="Close">×</button></div>'
-      +'<div class="hm-facts"><span>'+guests+' guest'+(guests===1?'':'s')+'</span><span>'+esc(spend(extra.minimumSpendEur))+' min</span></div>'
+      +'<div class="hm-facts"><span>'+guests+' guest'+(guests===1?'':'s')+'</span><span>'+esc(spend(extra.minimumSpendEur))+' min</span><span>Last edited: '+esc(formatMapEditedAt(t.hallMapEditedAt))+'</span></div>'
       +(CAN_DRAG?'<div class="hm-spend"><input id="hmMinimumSpend" type="number" min="0" step="1" inputmode="numeric" value="'+esc(extra.minimumSpendEur||0)+'" aria-label="Minimum spend in EUR"/><button type="button" id="hmSaveSpend">Save amount</button></div>':'')
       +(CAN_DRAG&&!placed(t)?'<button type="button" class="hm-place" id="hmPlace">Place on map</button>':'')
       +'<h3 class="hm-sub">At this table</h3>'
@@ -133,11 +134,11 @@
     setState('Saving...');
     for(const entry of draft.pending()){
       let res,data;try{res=await fetch('/api/staff/hall-map',{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({tableId:entry.id,hallX:entry.position.x,hallY:entry.position.y})});data=await res.json().catch(()=>({}));}
-      catch(_){setState('No connection. Unsaved moves remain.',true);renderTables();return false;}
-      if(!res.ok){setState(data.error||'Could not save table position.',true);renderTables();return false;}
-      draft.confirm(entry.id,{x:data.hallX,y:data.hallY});applyPosition({id:entry.id,position:{x:data.hallX,y:data.hallY}});
+      catch(_){setState('No connection. Unsaved moves remain.',true);renderTables();renderDetail();return false;}
+      if(!res.ok){setState(data.error||'Could not save table position.',true);renderTables();renderDetail();return false;}
+      draft.confirm(entry.id,{x:data.hallX,y:data.hallY});applyPosition({id:entry.id,position:{x:data.hallX,y:data.hallY}});const t=tables.find(x=>x.id===entry.id);if(t)t.hallMapEditedAt=data.hallMapEditedAt;
     }
-    setState('Saved.');renderTables();setTimeout(()=>{if(state.textContent==='Saved.')setState('');},2000);return true;
+    setState('Saved.');renderTables();renderDetail();setTimeout(()=>{if(state.textContent==='Saved.')setState('');},2000);return true;
   }
   function discardDrafts(){for(const entry of draft.discard())applyPosition(entry);renderTables();renderDetail();}
   function placeOnMap(t){

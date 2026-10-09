@@ -19,6 +19,8 @@ const hallMapMigrationPath = "sql/2026-10-06-thirty-five-table-map.sql";
 const hallMapMigration = existsSync(hallMapMigrationPath) ? readFileSync(hallMapMigrationPath, "utf8") : "";
 const fortyFiveTablesMigrationPath = "sql/2026-10-09-forty-five-staff-tables.sql";
 const fortyFiveTablesMigration = existsSync(fortyFiveTablesMigrationPath) ? readFileSync(fortyFiveTablesMigrationPath, "utf8") : "";
+const mapEditStatusMigrationPath = "sql/2026-10-10-map-edit-status.sql";
+const mapEditStatusMigration = existsSync(mapEditStatusMigrationPath) ? readFileSync(mapEditStatusMigrationPath, "utf8") : "";
 
 test("tables add-to-table panel has a broad guest search", () => {
   assert.match(staffPage, /id="tableSearch"/);
@@ -255,7 +257,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261009-search2/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-edited/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -458,6 +460,13 @@ test("staff tables persist normalized hall map coordinates", () => {
   assert.match(hallMapMigration, /check \(map_y between 0 and 100\)/);
 });
 
+test("staff tables persist independent edit dates for both maps", () => {
+  assert.match(mapEditStatusMigration, /hall_map_edited_at timestamptz/);
+  assert.match(mapEditStatusMigration, /table_map_edited_at timestamptz/);
+  assert.match(schema, /hall_map_edited_at timestamptz/);
+  assert.match(schema, /table_map_edited_at timestamptz/);
+});
+
 test("tables view provides a draggable hall map with tap navigation", () => {
   assert.match(staffPage, /id=["']toggleHallMap["']/);
   assert.match(staffPage, /id=["']hallMap["']/);
@@ -551,6 +560,24 @@ test("tables map stages moves with undo and explicit save", () => {
     assert.match(source, /function undoTableMap/);
     assert.match(source, /async function saveTableMapDrafts/);
     assert.match(source, /mapDraftRegistry\.register\(['"]tables-map['"]/);
+  }
+});
+
+test("tables map permanently marks and dates its own saved positions", () => {
+  assert.match(tablesApi, /table_map_edited_at/);
+  assert.match(tablesApi, /tableMapEditedAt/);
+  for (const source of [staffPage, staffFallback]) {
+    assert.match(source, /tableMapEditedAt/);
+    assert.match(source, /map-table ['"]\+\(t\.tableMapEditedAt\?['"]edited ['"]:/);
+    assert.match(source, /formatTableMapEditedAt/);
+    assert.match(source, /Last map edit:/);
+    assert.match(source, /table\.tableMapEditedAt=data\.tableMapEditedAt/);
+  }
+  assert.match(staffPage, /\.map-table\.edited\{/);
+  assert.match(staffPage, /\.map-table\.edited\.active\{[^}]*background:#2F6B46/);
+  assert.doesNotMatch(staffPage, /\.map-table\.edited\.active\{[^}]*linear-gradient/);
+  for (const source of [staffPage, staffFallback]) {
+    assert.match(source, /Could not save table position[\s\S]{0,180}renderHallMap\(\);renderTables\(\);return false/);
   }
 });
 

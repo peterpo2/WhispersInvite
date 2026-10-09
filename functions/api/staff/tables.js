@@ -8,7 +8,7 @@ export async function onRequestGet({ request, env }) {
   const staff = await requireStaff(request, env, "service");
   if (staff.error) return staff.error;
 
-  const tables = await supabaseFetch(env, "/rest/v1/staff_tables?select=id,label,sort_order,minimum_spend_eur,map_x,map_y&order=sort_order.asc");
+  const tables = await supabaseFetch(env, "/rest/v1/staff_tables?select=id,label,sort_order,minimum_spend_eur,map_x,map_y,table_map_edited_at&order=sort_order.asc");
   if (tables.error) return tables.error;
   if (!tables.response.ok) return json({ error: "Could not load tables" }, 502);
 
@@ -79,6 +79,7 @@ export async function onRequestGet({ request, env }) {
     minimumSpendEur: table.minimum_spend_eur || 0,
     mapX: Number(table.map_x),
     mapY: Number(table.map_y),
+    tableMapEditedAt: table.table_map_edited_at || null,
   }));
 
   const searchPeople = buildTableSearchPeople({
@@ -106,17 +107,18 @@ export async function onRequestPatch({ request, env }) {
   const minimumSpend = position ? null : validateMinimumSpendPayload(body);
   const value = position || minimumSpend;
   if (!value) return json({ error: "Invalid table update" }, 400);
+  const editedAt = position ? new Date().toISOString() : null;
   const patch = position
-    ? { map_x: value.mapX, map_y: value.mapY }
+    ? { map_x: value.mapX, map_y: value.mapY, table_map_edited_at: editedAt }
     : { minimum_spend_eur: value.minimumSpendEur };
 
   const updated = await supabaseFetch(
     env,
-    `/rest/v1/staff_tables?id=eq.${encodeURIComponent(value.tableId)}&select=id,minimum_spend_eur,map_x,map_y`,
+    `/rest/v1/staff_tables?id=eq.${encodeURIComponent(value.tableId)}&select=id,minimum_spend_eur,map_x,map_y,table_map_edited_at`,
     {
       method: "PATCH",
       headers: { Prefer: "return=representation" },
-      body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({ ...patch, updated_at: editedAt || new Date().toISOString() }),
     }
   );
   if (updated.error) return updated.error;
@@ -124,7 +126,7 @@ export async function onRequestPatch({ request, env }) {
 
   const rows = await updated.response.json();
   if (!rows.length) return json({ error: "Table not found" }, 404);
-  if (position) return json({ ok: true, tableId: rows[0].id, mapX: Number(rows[0].map_x), mapY: Number(rows[0].map_y) });
+  if (position) return json({ ok: true, tableId: rows[0].id, mapX: Number(rows[0].map_x), mapY: Number(rows[0].map_y), tableMapEditedAt: rows[0].table_map_edited_at });
   return json({ ok: true, tableId: rows[0].id, minimumSpendEur: rows[0].minimum_spend_eur });
 }
 

@@ -93,6 +93,8 @@ export const HALL_PLAN_STYLE = `@font-face{font-family:"HM Cormorant";src:url("/
 .hm .hm-t.dragging *{cursor:grabbing}
 .hm .hm-t.dragging .t{filter:drop-shadow(0 4px 8px rgba(0,0,0,.65)) drop-shadow(0 0 5px rgba(201,160,99,.55))}
 .hm .hm-t .t,.hm .hm-t .occ{transition:stroke .15s ease,opacity .15s ease}
+.hm .hm-t.hm-edited .t{fill:#2F6B46;stroke:#79C995}
+.hm .hm-t.hm-edited .tn{fill:#F1F7F2}
 @media (hover:hover){.hm .hm-t:hover .t{stroke:var(--parch)}.hm .hm-t:hover .occ{opacity:.85}}
 .hm .hm-t.hm-sel .occ,.hm .hm-t:focus-visible .occ{stroke:var(--parch);stroke-width:1.4;stroke-dasharray:none;opacity:1}
 .hm .hm-t.hm-sel .t{stroke:var(--parch);stroke-width:2.6;filter:drop-shadow(0 0 6px rgba(232,223,207,.45))}

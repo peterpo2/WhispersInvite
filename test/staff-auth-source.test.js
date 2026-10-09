@@ -106,6 +106,10 @@ test("tables API returns and updates normalized hall map positions", () => {
   assert.match(tables, /validateTablePositionPayload/);
   assert.match(tables, /map_x: value\.mapX/);
   assert.match(tables, /map_y: value\.mapY/);
+  assert.match(tables, /table_map_edited_at: editedAt/);
+  assert.match(tables, /tableMapEditedAt: table\.table_map_edited_at \|\| null/);
+  assert.match(tables, /tableMapEditedAt: rows\[0\]\.table_map_edited_at/);
+  assert.match(tables, /const editedAt = position \? new Date\(\)\.toISOString\(\) : null/);
   assert.doesNotMatch(tables, /select=id,label,capacity/);
   assert.doesNotMatch(tables, /capacity: table\.capacity/);
 });

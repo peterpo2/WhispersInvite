@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 
 const read = (path) => (existsSync(path) ? readFileSync(path, "utf8") : "");
 const migration = read("sql/2026-10-08-hall-map-positions.sql");
+const editStatusMigration = read("sql/2026-10-10-map-edit-status.sql");
 const schema = read("sql/schema.sql");
 const api = read("functions/api/staff/hall-map.js");
 const markupSource = read("functions/_shared/hall-plan-markup.js");
@@ -15,7 +16,7 @@ const staffPage = read("functions/staff/rose-door-10.js");
 const fallback = read("assets/staff-admin-fallback.js");
 
 test("staff page cache-busts the combined MAP search asset", () => {
-  assert.match(staffPage, /hall-plan\.js\?v=20261009-search2/);
+  assert.match(staffPage, /hall-plan\.js\?v=20261010-edited/);
 });
 
 function seeds(sql) {
@@ -44,12 +45,22 @@ test("schema has hall positions and the same seeds", () => {
   assert.deepEqual(seeds(schema.slice(schema.indexOf("update public.staff_tables as t"))), seeds(migration));
 });
 
+test("map edit status migration keeps independent nullable timestamps", () => {
+  assert.match(editStatusMigration, /add column if not exists hall_map_edited_at timestamptz/);
+  assert.match(editStatusMigration, /add column if not exists table_map_edited_at timestamptz/);
+  assert.doesNotMatch(editStatusMigration, /update public\.staff_tables/);
+  assert.match(schema, /hall_map_edited_at timestamptz/);
+  assert.match(schema, /table_map_edited_at timestamptz/);
+});
+
 test("hall map API reads with service and writes with door, only hall columns", () => {
   assert.match(api, /export async function onRequestGet[\s\S]*requireStaff\(request, env, "service"\)/);
   assert.match(api, /export async function onRequestPatch[\s\S]*requireStaff\(request, env, "door"\)/);
-  assert.match(api, /select=id,label,sort_order,hall_x,hall_y&order=sort_order\.asc/);
+  assert.match(api, /select=id,label,sort_order,hall_x,hall_y,hall_map_edited_at&order=sort_order\.asc/);
+  assert.match(api, /hallMapEditedAt: table\.hall_map_edited_at \|\| null/);
   assert.match(api, /validateHallPositionPayload\(body\)/);
-  assert.match(api, /JSON\.stringify\(\{ hall_x: position\.hallX, hall_y: position\.hallY, updated_at:/);
+  assert.match(api, /hall_map_edited_at: editedAt/);
+  assert.match(api, /hallMapEditedAt: rows\[0\]\.hall_map_edited_at/);
   assert.match(api, /id=eq\.\$\{encodeURIComponent\(position\.tableId\)\}/);
   assert.doesNotMatch(api, /map_x|map_y|minimum_spend/);
   assert.match(api, /catch \{\s*return json\(\{ error: "Invalid table position" \}, 400\);/);
@@ -213,7 +224,7 @@ test("admin shows a MAP tab right after Tables", () => {
   assert.match(staffPage, /<\/style>\r?\n<style>#view-hallmap:target\{display:block\}main:has\(#view-hallmap:target\) #view-scanner\{display:none\}\$\{HALL_PLAN_STYLE\}<\/style>/);
   assert.match(staffPage, /\$\{renderHallPlanView\(\)\}\r?\n<div class="view" id="view-invite">/);
   assert.match(staffPage, /location\.hash==='#hallmap'\|\|location\.hash==='#view-hallmap'\?'hallmap'/);
-  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261009-search2"><\/script>/);
+  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261010-edited"><\/script>/);
 });
 
 test("fallback admin knows the MAP view", () => {
@@ -236,4 +247,16 @@ test("MAP stages table moves and edits minimum spend", async () => {
   assert.match(asset, /id="hmMinimumSpend"/);
   assert.match(asset, /\/api\/staff\/tables/);
   assert.match(asset, /minimumSpendEur/);
+});
+
+test("MAP permanently marks and dates tables saved in the dedicated map", async () => {
+  const { HALL_PLAN_STYLE } = await import("../functions/_shared/hall-plan-markup.js");
+  assert.match(asset, /hallMapEditedAt/);
+  assert.match(asset, /hm-edited/);
+  assert.match(asset, /formatMapEditedAt/);
+  assert.match(asset, /Last edited:/);
+  assert.match(asset, /t\.hallMapEditedAt=data\.hallMapEditedAt/);
+  assert.match(asset, /setState\('Saved\.'\);renderTables\(\);renderDetail\(\)/);
+  assert.match(HALL_PLAN_STYLE, /\.hm \.hm-t\.hm-edited \.t\{/);
+  assert.match(HALL_PLAN_STYLE, /\.hm \.hm-t\.hm-edited \.tn\{/);
 });
