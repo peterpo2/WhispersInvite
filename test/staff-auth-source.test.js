@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 const auth = readFileSync("functions/_shared/staff-auth.js", "utf8");
+const staffTables = readFileSync("functions/_shared/staff-tables.js", "utf8");
 
 test("staff auth helper looks up hashed session tokens only", () => {
   assert.match(auth, /export async function requireStaff/);
@@ -93,17 +94,27 @@ test("tables API includes contact details for the main people search", () => {
   assert.match(tables, /guest_phone/);
   assert.match(tables, /plus_one_email/);
   assert.match(tables, /plus_one_phone/);
-  assert.match(tables, /peopleDetails/);
-  assert.match(tables, /email: row\.guest_email/);
-  assert.match(tables, /phone: row\.guest_phone/);
+  assert.match(staffTables, /peopleDetails/);
+  assert.match(staffTables, /email: rsvp\.guest_email/);
+  assert.match(staffTables, /phone: rsvp\.guest_phone/);
 });
 
 test("tables API exposes RSVP confirmed and manual called as separate states", () => {
   const tables = readFileSync("functions/api/staff/tables.js", "utf8");
   assert.match(tables, /wants_table_reservation,called,status/);
-  assert.match(tables, /confirmed: row\.status === "attending"/);
-  assert.match(tables, /called: row\.called === true/);
+  assert.match(tables, /buildTableRegistry/);
+  assert.match(staffTables, /confirmed: true/);
+  assert.match(staffTables, /called: rsvp\.called === true/);
   assert.doesNotMatch(tables, /reservation_confirmed/);
+});
+
+test("table assignment API accepts only validated invite and RSVP subjects", () => {
+  const assignment = readFileSync("functions/api/staff/table-assignment.js", "utf8");
+  assert.match(assignment, /validateTableAssignmentPayload/);
+  assert.match(assignment, /subjectType === "rsvp"/);
+  assert.match(assignment, /subjectType === "invite"/);
+  assert.match(assignment, /encodeURIComponent\(subjectId\)/);
+  assert.doesNotMatch(assignment, /const rsvpId = Number\(body\?\.rsvpId\)/);
 });
 
 test("tables API returns and updates normalized hall map positions", () => {

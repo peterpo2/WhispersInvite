@@ -1,7 +1,7 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { EVENT_KEY } from "../../_shared/rsvp.js";
 import { requireStaff } from "../../_shared/staff-auth.js";
-import { buildTableSearchPeople, validateMinimumSpendPayload, validateTableEditedPayload, validateTablePositionPayload } from "../../_shared/staff-tables.js";
+import { buildTableRegistry, validateMinimumSpendPayload, validateTableEditedPayload, validateTablePositionPayload } from "../../_shared/staff-tables.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 export async function onRequestGet({ request, env }) {
@@ -14,7 +14,7 @@ export async function onRequestGet({ request, env }) {
 
   const rsvps = await supabaseFetch(
     env,
-    `/rest/v1/rsvps?select=id,guest_id,guest_name,guest_email,guest_phone,wants_table_reservation,called,status,plus_one_name,plus_one_email,plus_one_phone,staff_table_assignments(table_id)&event_key=eq.${encodeURIComponent(EVENT_KEY)}&order=submitted_at.asc&limit=1000`
+    `/rest/v1/rsvps?select=id,guest_id,guest_name,guest_email,guest_phone,wants_table_reservation,called,status,plus_one_name,plus_one_email,plus_one_phone&event_key=eq.${encodeURIComponent(EVENT_KEY)}&order=submitted_at.asc&limit=1000`
   );
   if (rsvps.error) return rsvps.error;
   if (!rsvps.response.ok) return json({ error: "Could not load tables" }, 502);
@@ -33,9 +33,15 @@ export async function onRequestGet({ request, env }) {
   if (invites.error) return invites.error;
   if (!invites.response.ok) return json({ error: "Could not load tables" }, 502);
 
+  const assignments = await supabaseFetch(
+    env,
+    `/rest/v1/staff_table_assignments?select=rsvp_id,invite_id,table_id&event_key=eq.${encodeURIComponent(EVENT_KEY)}&limit=2000`
+  );
+  if (assignments.error) return assignments.error;
+  if (!assignments.response.ok) return json({ error: "Could not load tables" }, 502);
+
   const rsvpRows = await rsvps.response.json();
   const companionRows = [];
-  const companionsByRsvp = new Map();
   for (const row of await companions.response.json()) {
     const parent = Array.isArray(row.rsvps) ? row.rsvps[0] : row.rsvps;
     if (parent?.event_key !== EVENT_KEY) continue;
@@ -44,34 +50,7 @@ export async function onRequestGet({ request, env }) {
       status: parent?.status || "",
       guest_of: parent?.guest_name || "",
     });
-    if (parent?.status !== "attending") continue;
-    const people = companionsByRsvp.get(row.rsvp_id) || [];
-    people.push({ name: row.guest_name, email: row.email || "", phone: row.phone || "" });
-    companionsByRsvp.set(row.rsvp_id, people);
   }
-
-  const groups = rsvpRows.filter((row) => row.status === "attending").map((row) => {
-    const assignment = Array.isArray(row.staff_table_assignments) ? row.staff_table_assignments[0] : row.staff_table_assignments;
-    const peopleDetails = [{ name: row.guest_name, email: row.guest_email || "", phone: row.guest_phone || "" }];
-    if (row.plus_one_name) {
-      peopleDetails.push({ name: row.plus_one_name, email: row.plus_one_email || "", phone: row.plus_one_phone || "" });
-    }
-    for (const person of companionsByRsvp.get(row.id) || []) {
-      if (person.name && !peopleDetails.some((existing) => existing.name === person.name)) peopleDetails.push(person);
-    }
-    const people = peopleDetails.map((person) => person.name);
-    return {
-      rsvpId: row.id,
-      name: row.guest_name,
-      size: people.length,
-      people,
-      peopleDetails,
-      wantsTableReservation: row.wants_table_reservation === true,
-      confirmed: row.status === "attending",
-      called: row.called === true,
-      tableId: assignment?.table_id || null,
-    };
-  });
 
   const tableRows = (await tables.response.json()).map((table) => ({
     id: table.id,
@@ -83,11 +62,11 @@ export async function onRequestGet({ request, env }) {
     tableMapEditedAt: table.table_map_edited_at || null,
   }));
 
-  const searchPeople = buildTableSearchPeople({
+  const { groups, searchPeople } = buildTableRegistry({
     invites: await invites.response.json(),
     rsvps: rsvpRows,
     companions: companionRows,
-    groups,
+    assignments: await assignments.response.json(),
   });
 
   return json({ ok: true, tables: tableRows, groups, searchPeople });

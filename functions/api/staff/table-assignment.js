@@ -1,6 +1,7 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { EVENT_KEY } from "../../_shared/rsvp.js";
 import { requireStaff } from "../../_shared/staff-auth.js";
+import { validateTableAssignmentPayload } from "../../_shared/staff-tables.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 export async function onRequestPost({ request, env }) {
@@ -13,13 +14,41 @@ export async function onRequestPost({ request, env }) {
   } catch {
     return json({ error: "Invalid table assignment" }, 400);
   }
-  const rsvpId = Number(body?.rsvpId);
-  if (!Number.isInteger(rsvpId) || rsvpId <= 0) return json({ error: "Invalid table assignment" }, 400);
+  const assignment = validateTableAssignmentPayload(body);
+  if (!assignment) return json({ error: "Invalid table assignment" }, 400);
+  const { subjectType, subjectId, tableId } = assignment;
+  const subjectColumn = subjectType === "rsvp" ? "rsvp_id" : "invite_id";
 
-  if (body.tableId == null || body.tableId === "") {
+  if (subjectType === "rsvp") {
+    const rsvp = await supabaseFetch(
+      env,
+      `/rest/v1/rsvps?select=id&event_key=eq.${encodeURIComponent(EVENT_KEY)}&id=eq.${encodeURIComponent(subjectId)}&status=eq.attending&limit=1`
+    );
+    if (rsvp.error) return rsvp.error;
+    if (!rsvp.response.ok) return json({ error: "Could not assign table" }, 502);
+    if (!(await rsvp.response.json()).length) return json({ error: "Guest is not confirmed" }, 409);
+  } else if (subjectType === "invite") {
+    const invite = await supabaseFetch(
+      env,
+      `/rest/v1/guest_list?select=id&id=eq.${encodeURIComponent(subjectId)}&limit=1`
+    );
+    if (invite.error) return invite.error;
+    if (!invite.response.ok) return json({ error: "Could not assign table" }, 502);
+    if (!(await invite.response.json()).length) return json({ error: "Invite not found" }, 404);
+
+    const declined = await supabaseFetch(
+      env,
+      `/rest/v1/rsvps?select=id&event_key=eq.${encodeURIComponent(EVENT_KEY)}&guest_id=eq.${encodeURIComponent(subjectId)}&status=eq.declined&limit=1`
+    );
+    if (declined.error) return declined.error;
+    if (!declined.response.ok) return json({ error: "Could not assign table" }, 502);
+    if ((await declined.response.json()).length) return json({ error: "Guest has declined" }, 409);
+  }
+
+  if (!tableId) {
     const removed = await supabaseFetch(
       env,
-      `/rest/v1/staff_table_assignments?event_key=eq.${encodeURIComponent(EVENT_KEY)}&rsvp_id=eq.${encodeURIComponent(rsvpId)}`,
+      `/rest/v1/staff_table_assignments?event_key=eq.${encodeURIComponent(EVENT_KEY)}&${subjectColumn}=eq.${encodeURIComponent(subjectId)}`,
       { method: "DELETE", headers: { Prefer: "return=minimal" } }
     );
     if (removed.error) return removed.error;
@@ -27,16 +56,18 @@ export async function onRequestPost({ request, env }) {
     return json({ ok: true });
   }
 
-  if (typeof body.tableId !== "string" || body.tableId.length > 40) {
-    return json({ error: "Invalid table assignment" }, 400);
-  }
-
-  const saved = await supabaseFetch(env, "/rest/v1/staff_table_assignments", {
+  const assignmentPath = subjectType === "rsvp"
+    ? "/rest/v1/staff_table_assignments?on_conflict=event_key,rsvp_id"
+    : "/rest/v1/staff_table_assignments?on_conflict=event_key,invite_id";
+  const row = subjectType === "rsvp"
+    ? { event_key: EVENT_KEY, rsvp_id: subjectId, table_id: tableId }
+    : { event_key: EVENT_KEY, invite_id: subjectId, table_id: tableId };
+  const saved = await supabaseFetch(env, assignmentPath, {
     method: "POST",
     headers: {
       Prefer: "resolution=merge-duplicates,return=minimal",
     },
-    body: JSON.stringify({ event_key: EVENT_KEY, rsvp_id: rsvpId, table_id: body.tableId }),
+    body: JSON.stringify(row),
   });
   if (saved.error) return saved.error;
   if (!saved.response.ok) return json({ error: "Could not assign table" }, 502);

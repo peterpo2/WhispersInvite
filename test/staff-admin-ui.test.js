@@ -9,6 +9,8 @@ const hallPlanAsset = readFileSync("assets/hall-plan.js", "utf8");
 const reservationStateApi = readFileSync("functions/api/staff/reservation-state.js", "utf8");
 const doorApi = readFileSync("functions/api/door.js", "utf8");
 const tablesApi = readFileSync("functions/api/staff/tables.js", "utf8");
+const tableAssignmentApi = readFileSync("functions/api/staff/table-assignment.js", "utf8");
+const staffTablesHelper = readFileSync("functions/_shared/staff-tables.js", "utf8");
 const membersApi = readFileSync("functions/api/staff/members.js", "utf8");
 const schema = readFileSync("sql/schema.sql", "utf8");
 const tablesMigrationPath = "sql/2026-10-06-twenty-staff-tables.sql";
@@ -423,8 +425,9 @@ test("staff APIs separate RSVP confirmation from the editable called state", () 
   assert.match(membersApi, /called: row\.called === true/);
   assert.match(membersApi, /confirmed: parent\?\.status === "attending"/);
   assert.match(membersApi, /called: parent\?\.called === true/);
-  assert.match(tablesApi, /confirmed: row\.status === "attending"/);
-  assert.match(tablesApi, /called: row\.called === true/);
+  assert.match(tablesApi, /buildTableRegistry/);
+  assert.match(staffTablesHelper, /confirmed: true/);
+  assert.match(staffTablesHelper, /called: rsvp\.called === true/);
   assert.match(reservationStateApi, /reservationStatePatch\(body\)/);
   assert.match(reservationStateApi, /called: body\.called/);
   assert.doesNotMatch(reservationStateApi, /reservationConfirmed|reservation_confirmed/);
@@ -677,16 +680,27 @@ test("Tables and MAP phone search matches Bulgarian local and international form
 });
 
 test("tables API supplies one combined invite and member search registry", () => {
-  assert.match(tablesApi, /buildTableSearchPeople/);
+  assert.match(tablesApi, /buildTableRegistry/);
   assert.match(tablesApi, /\/rest\/v1\/guest_list\?select=/);
+  assert.match(tablesApi, /\/rest\/v1\/staff_table_assignments\?select=rsvp_id,invite_id,table_id/);
+  assert.match(tablesApi, /assignments:/);
+  assert.match(tablesApi, /const \{ groups, searchPeople \} = buildTableRegistry/);
   assert.match(tablesApi, /searchPeople/);
   assert.doesNotMatch(tablesApi, /&status=eq\.attending/);
 });
 
-test("table assignment keeps RSVP groups together without a capacity gate", () => {
-  const assignmentApi = readFileSync("functions/api/staff/table-assignment.js", "utf8");
-  assert.match(assignmentApi, /rsvp_id: rsvpId, table_id: body\.tableId/);
-  assert.doesNotMatch(assignmentApi, /capacity|max(?:imum)?[_A-Z]?capacity|guest_count|group\.size/i);
+test("table assignment validates and persists typed invite or RSVP subjects", () => {
+  assert.match(tableAssignmentApi, /validateTableAssignmentPayload\(body\)/);
+  assert.match(tableAssignmentApi, /subjectType === "rsvp"/);
+  assert.match(tableAssignmentApi, /subjectType === "invite"/);
+  assert.match(tableAssignmentApi, /status=eq\.attending/);
+  assert.match(tableAssignmentApi, /status=eq\.declined/);
+  assert.match(tableAssignmentApi, /on_conflict=event_key,rsvp_id/);
+  assert.match(tableAssignmentApi, /on_conflict=event_key,invite_id/);
+  assert.match(tableAssignmentApi, /rsvp_id: subjectId/);
+  assert.match(tableAssignmentApi, /invite_id: subjectId/);
+  assert.doesNotMatch(tableAssignmentApi, /body\?\.column|body\?\.subjectColumn/);
+  assert.doesNotMatch(tableAssignmentApi, /capacity|max(?:imum)?[_A-Z]?capacity|guest_count|group\.size/i);
   assert.doesNotMatch(tablesApi, /capacity: table\.capacity/);
 });
 
