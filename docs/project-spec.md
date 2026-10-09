@@ -89,10 +89,11 @@ locked state without QR, seal code or venue.
 Admin-created primary invites receive their future ticket link before RSVP. If that ticket link is
 opened before the guest confirms attendance, the page shows a pending locked state and no QR code.
 
-Table numbers are staff-only. `wants_table_reservation` means the guest asked for a table;
-`reservation_confirmed` is the separate staff/admin confirmation. If `reservation_confirmed` is
-true, the guest ticket can show generic copy such as `Your table is confirmed.`, but it must not
-show table number or floor plan.
+Table numbers are staff-only. `wants_table_reservation` means the guest asked for a table.
+`status = attending` is the guest's read-only RSVP confirmation, while `called` is the separate
+staff-managed marker migrated from the old manual confirmation checkbox. If `called` is true, the
+guest ticket can show generic copy such as `Your table is confirmed.`, but it must not show a table
+number or floor plan.
 
 Seal codes are generated server-side in this format:
 
@@ -166,7 +167,7 @@ Invite / Confirmation / Ticket columns each have their own copy/send action. Inv
 | `plus_one_seal_code` | text | Plus-one seal code. |
 | `plus_one_checked_in_at` | timestamptz | Plus-one check-in time. |
 | `wants_table_reservation` | boolean | Reservation requested by the RSVP group. |
-| `reservation_confirmed` | boolean | Staff-confirmed table reservation; separate from table assignment. |
+| `called` | boolean | Staff-managed marker that the RSVP group has been called; separate from RSVP confirmation and table assignment. |
 | `ticket_email_sent_at` | timestamptz | Future idempotency field for ticket email delivery. |
 | `submitted_at` | timestamptz | Last RSVP submit time. |
 

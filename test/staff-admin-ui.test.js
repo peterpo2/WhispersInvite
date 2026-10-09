@@ -413,6 +413,24 @@ test("staff APIs separate RSVP confirmation from the editable called state", () 
   assert.doesNotMatch(reservationStateApi, /reservationConfirmed|reservation_confirmed/);
 });
 
+test("runtime code has no stale reservation-confirmed contract", () => {
+  for (const file of [
+    "functions/_shared/rsvp.js",
+    "functions/api/confirmation.js",
+    "functions/api/rsvp.js",
+    "functions/api/staff/members.js",
+    "functions/api/staff/reservation-state.js",
+    "functions/api/staff/tables.js",
+    "functions/api/ticket.js",
+    "functions/staff/rose-door-10.js",
+    "assets/hall-plan.js",
+    "assets/staff-admin-fallback.js",
+  ]) {
+    const source = readFileSync(file, "utf8");
+    assert.doesNotMatch(source, /reservation_confirmed|reservationConfirmed|["']Reserved|["']RESERVED/, file);
+  }
+});
+
 test("members CSV export is Excel-safe for UTF-8 and formula-like values", () => {
   assert.match(staffPage, /function csvSafeValue\(v\)/);
   assert.ok(staffPage.includes("return /^[=+\\-@\\\\t\\\\r]/.test(s)"));
