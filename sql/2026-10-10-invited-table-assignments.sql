@@ -5,11 +5,11 @@ alter table public.staff_table_assignments
   add column if not exists invite_id text references public.guest_list(id) on delete cascade;
 
 alter table public.staff_table_assignments
-  alter column rsvp_id drop not null,
-  alter column id set not null;
+  drop constraint if exists staff_table_assignments_pkey;
 
 alter table public.staff_table_assignments
-  drop constraint if exists staff_table_assignments_pkey;
+  alter column rsvp_id drop not null,
+  alter column id set not null;
 
 do $$
 begin
