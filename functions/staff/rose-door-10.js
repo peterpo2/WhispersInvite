@@ -149,6 +149,7 @@ ${settingsView}
 <button class="tables-to-top" id="tablesToTop" type="button" aria-label="Back to top" title="Back to top" hidden>&#8593;</button>
 <canvas id="canvas" hidden></canvas>
 ${menuQrScript}
+<script src="/assets/map-draft.js?v=20261009-draft1"></script>
 <script>
 const STAFF_USER = ${JSON.stringify(staff.user)};
 const video=document.getElementById('video'),canvas=document.getElementById('canvas'),result=document.getElementById('result'),list=document.getElementById('list');
