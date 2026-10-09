@@ -117,15 +117,19 @@ export const HALL_PLAN_STYLE = `@font-face{font-family:"HM Cormorant";src:url("/
 .hm .hm-place{display:block;width:100%;min-height:46px;margin:0 0 12px;padding:0 16px;font:400 11px var(--fm);letter-spacing:.22em;text-transform:uppercase;border:1px solid var(--brass);border-radius:0;background:var(--brass);color:var(--ink);cursor:pointer}
 .hm .hm-group{border-top:1px solid #241F17;padding:10px 0;font-size:12.5px}
 .hm .hm-group b{font-family:var(--fd);font-weight:400;font-size:19px;color:var(--parch)}
-.hm .hm-people{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-.hm .hm-person{border:1px solid var(--brass-dim);border-radius:999px;padding:3px 8px;color:var(--parch-dim);font-size:11.5px}
-.hm .hm-pill{display:inline-block;margin-left:8px;border:1px solid var(--crimson-lt);border-radius:999px;padding:2px 7px;color:var(--crimson-lt);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;vertical-align:middle}
+.hm .hm-group-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.hm .hm-person-rows{border:1px solid rgba(168,131,73,.28)}
+.hm .hm-person-row{min-width:0;padding:8px 10px;background:rgba(255,255,255,.012)}
+.hm .hm-person-row+.hm-person-row{border-top:1px solid rgba(168,131,73,.28)}
+.hm .hm-person-row b,.hm .hm-person-row small{display:block;overflow-wrap:anywhere}
+.hm .hm-person-row small{margin-top:2px}
+.hm .hm-pill{display:inline-block;border:1px solid var(--crimson-lt);border-radius:999px;padding:2px 7px;color:var(--crimson-lt);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;vertical-align:middle}
 .hm .hm-empty{color:var(--parch-dim);font-style:italic;font-size:12.5px}
 .hm .hm-sub{margin:18px 0 8px;font:400 11px var(--fm);letter-spacing:.2em;text-transform:uppercase;color:var(--brass)}
 .hm .hm-group{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .hm .hm-group-main{min-width:0;flex:1}
 .hm .hm-group small{display:block;margin-top:3px;color:var(--parch-dim);font-size:11px;overflow-wrap:anywhere}
-.hm .hm-at{display:inline-block;margin-left:8px;border:1px solid var(--brass-dim);border-radius:999px;padding:2px 7px;color:var(--brass);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;vertical-align:middle}
+.hm .hm-at{display:inline-block;border:1px solid var(--brass-dim);border-radius:999px;padding:2px 7px;color:var(--brass);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;vertical-align:middle}
 .hm .hm-act{flex:0 0 auto;min-height:40px;padding:0 14px;font:400 10.5px var(--fm);letter-spacing:.18em;text-transform:uppercase;border:1px solid var(--brass-dim);border-radius:0;background:transparent;color:var(--parch);cursor:pointer}
 .hm .hm-act.primary{background:var(--brass);border-color:var(--brass);color:var(--ink)}
 .hm .hm-act:disabled{opacity:.5;cursor:default}

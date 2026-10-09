@@ -74,20 +74,23 @@
     detail.hidden=false;
     renderResults();
   }
+  function searchValueMatches(value,q,digits){const text=String(value||'').toLowerCase();if(text.includes(q))return true;if(digits.length<3)return false;const valueDigits=text.replace(/\D/g,'');return valueDigits.includes(digits)||(digits.startsWith('0')&&valueDigits.endsWith(digits.slice(1)));}
   function groupMatches(g,q){
     const digits=q.replace(/\D/g,'');
-    return [g.name].concat(g.people||[]).concat((g.peopleDetails||[]).flatMap(p=>[p.email,p.phone])).some(v=>{const s=String(v||'').toLowerCase();return s.includes(q)||(digits.length>=3&&s.replace(/\D/g,'').includes(digits));});
+    return [g.name].concat(g.people||[]).concat((g.peopleDetails||[]).flatMap(p=>[p.email,p.phone])).some(v=>searchValueMatches(v,q,digits));
   }
   function personMatches(person,q){
     const digits=q.replace(/\D/g,'');
-    return [person.name,person.email,person.phone,person.guestOf,person.type,person.status].concat(person.aliases||[]).some(v=>{const s=String(v||'').toLowerCase();return s.includes(q)||(digits.length>=3&&s.replace(/\D/g,'').includes(digits));});
+    return [person.name,person.email,person.phone,person.guestOf,person.type,person.status].concat(person.aliases||[]).some(v=>searchValueMatches(v,q,digits));
   }
   function tableSearchStatus(status){return status==='attending'?'Attending':status==='declined'?'Declined':'Invited';}
+  function groupPeopleRows(g,primaryName=g.name){
+    const details=(g.peopleDetails||[]).length?g.peopleDetails:(g.people&&g.people.length?g.people:[g.name]).map(name=>({name}));
+    return details.map((person,index)=>{const name=index===0?(primaryName||person.name):person.name,contact=[person.email,person.phone].filter(Boolean).join(' · ');return '<div class="hm-person-row"><b>'+esc(name||'Guest')+'</b>'+(contact?'<small>'+esc(contact)+'</small>':'')+'</div>';}).join('');
+  }
   function groupRow(g,action,note){
-    const contact=(g.peopleDetails||[]).map(p=>[p.email,p.phone].filter(Boolean).join(' · ')).find(Boolean)||'';
-    return '<div class="hm-group"><div class="hm-group-main"><b>'+esc(g.name)+'</b>'+(g.reservationConfirmed?'<span class="hm-pill">Reserved</span>':'')
-      +(note?'<span class="hm-at">'+esc(note)+'</span>':'')+(contact?'<small>'+esc(contact)+'</small>':'')
-      +'<div class="hm-people">'+(g.people||[]).map(p=>'<span class="hm-person">'+esc(p)+'</span>').join('')+'</div></div>'+action+'</div>';
+    return '<div class="hm-group"><div class="hm-group-main"><div class="hm-group-meta">'+(g.reservationConfirmed?'<span class="hm-pill">Reserved</span>':'')
+      +(note?'<span class="hm-at">'+esc(note)+'</span>':'')+'</div><div class="hm-person-rows">'+groupPeopleRows(g)+'</div></div>'+action+'</div>';
   }
   function searchPersonRow(person){
     const table=(tables.find(x=>x.id===person.tableId)||{}).label||'',sameTable=person.tableId===selectedId;
@@ -96,12 +99,16 @@
     const action=CAN_ASSIGN&&person.assignable&&!sameTable?'<button type="button" class="hm-act primary" data-hm-add="'+esc(person.rsvpId)+'">'+(person.tableId?'Move here':'Add')+'</button>':'';
     return '<div class="hm-group"><div class="hm-group-main"><b>'+esc(person.name)+'</b><span class="hm-at">'+esc(note)+'</span>'+(contact?'<small>'+esc(contact)+'</small>':'')+'</div>'+action+'</div>';
   }
+  function groupPrimaryName(group,matchedPerson){
+    const primary=(info.searchPeople||[]).find(candidate=>String(candidate.rsvpId)===String(group.rsvpId)&&candidate.type==='Member'&&!candidate.guestOf);
+    return primary?.name||(matchedPerson.type==='Member'?matchedPerson.name:'')||group.name;
+  }
   function searchGroupRow(person){
     const group=(info.groups||[]).find(item=>String(item.rsvpId)===String(person.rsvpId));
     if(!group)return searchPersonRow(person);
     const table=(tables.find(x=>x.id===group.tableId)||{}).label||'',sameTable=group.tableId===selectedId,note=sameTable?'At this table':table?'At '+table:'Unassigned';
     const action=CAN_ASSIGN&&!sameTable?'<button type="button" class="hm-act primary" data-hm-add="'+esc(group.rsvpId)+'">'+(group.tableId?'Move here':'Add')+'</button>':'';
-    return groupRow({...group,name:person.name||group.name},action,note);
+    return groupRow({...group,name:groupPrimaryName(group,person)},action,note);
   }
   // Empty search: attending groups waiting for a table. Typing searches the full invite and member registry.
   function renderResults(){

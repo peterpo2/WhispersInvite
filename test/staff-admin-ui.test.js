@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 const staffPage = readFileSync("functions/staff/rose-door-10.js", "utf8");
 const staffLoginPage = readFileSync("functions/_shared/staff-login-page.js", "utf8");
 const staffFallback = readFileSync("assets/staff-admin-fallback.js", "utf8");
+const hallPlanAsset = readFileSync("assets/hall-plan.js", "utf8");
 const reservationStateApi = readFileSync("functions/api/staff/reservation-state.js", "utf8");
 const doorApi = readFileSync("functions/api/door.js", "utf8");
 const tablesApi = readFileSync("functions/api/staff/tables.js", "utf8");
@@ -18,6 +19,35 @@ const minimumSpendMigration = existsSync(minimumSpendMigrationPath) ? readFileSy
 const hallMapMigrationPath = "sql/2026-10-06-thirty-five-table-map.sql";
 const hallMapMigration = existsSync(hallMapMigrationPath) ? readFileSync(hallMapMigrationPath, "utf8") : "";
 const fortyFiveTablesMigrationPath = "sql/2026-10-09-forty-five-staff-tables.sql";
+
+function extractFunction(source, name) {
+  const start = source.indexOf(`function ${name}(`);
+  assert.notEqual(start, -1, `${name} must exist`);
+  const open = source.indexOf("{", start);
+  let depth = 0;
+  let quote = "";
+  for (let index = open; index < source.length; index += 1) {
+    const char = source[index];
+    if (quote) {
+      if (char === "\\") index += 1;
+      else if (char === quote) quote = "";
+      continue;
+    }
+    if (char === "'" || char === '"' || char === "`") {
+      quote = char;
+      continue;
+    }
+    if (char === "{") depth += 1;
+    if (char === "}" && --depth === 0) return source.slice(start, index + 1);
+  }
+  throw new Error(`Could not extract ${name}`);
+}
+
+function runFunction(source, name, args, globals = {}) {
+  const keys = Object.keys(globals);
+  const execute = new Function(...keys, "args", `${extractFunction(source, name)}; return ${name}(...args);`);
+  return execute(...keys.map((key) => globals[key]), args);
+}
 const fortyFiveTablesMigration = existsSync(fortyFiveTablesMigrationPath) ? readFileSync(fortyFiveTablesMigrationPath, "utf8") : "";
 const mapEditStatusMigrationPath = "sql/2026-10-10-map-edit-status.sql";
 const mapEditStatusMigration = existsSync(mapEditStatusMigrationPath) ? readFileSync(mapEditStatusMigrationPath, "utf8") : "";
@@ -257,7 +287,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-save-table1/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-grouped-rows1/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -512,14 +542,62 @@ test("tables main search finds people and opens their assigned table", () => {
     assert.match(source, /function renderTablePeopleSearch\(\)/);
     assert.match(source, /searchPeople/);
     assert.match(source, /function tableSearchGroup\(/);
-    assert.match(source, /group\.people/);
-    assert.match(source, /person\.name\|\|group\?\.name/);
+    assert.match(source, /function groupPeopleRows\(g,primaryName=g\.name\)/);
+    assert.match(source, /g\.peopleDetails/);
+    assert.match(source, /<span class=["']group-person-row["']/);
+    assert.match(source, /function tableGroupPrimaryName\(group,matchedPerson\)/);
+    assert.match(source, /candidate\.type={2,3}['"]Member['"]/);
+    assert.match(source, /tableGroupPrimaryName\(group,person\)/);
+    assert.match(source, /groupPeopleRows\(displayGroup,primaryName\)/);
+    assert.match(source, /groupPeopleRows\(g\)/);
     assert.match(source, /data-table-person/);
     assert.match(source, /tableSearchStatus/);
     assert.match(source, /function openTableFromSearch\(tableId,rsvpId\)/);
     assert.match(source, /data-group-rsvp/);
     assert.match(source, /scrollIntoView/);
     assert.doesNotMatch(source, /matches\.slice\(0,\s*30\)/);
+  }
+  assert.match(staffPage, /\.group-person-row\+\.group-person-row\{/);
+});
+
+test("table and MAP renderers keep the primary and plus-one as two escaped attached rows", () => {
+  const group = {
+    name: "RSVP Primary",
+    people: ["RSVP Primary", "Plus Person"],
+    peopleDetails: [
+      { name: "RSVP Primary", email: "primary@example.com", phone: "+359 88 111" },
+      { name: "Plus Person", email: "plus@example.com", phone: "+359 88 222" },
+    ],
+  };
+  const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
+  for (const source of [staffPage, staffFallback, hallPlanAsset]) {
+    const markup = runFunction(source, "groupPeopleRows", [group, "<Admin Invite>"] , { esc });
+    assert.equal((markup.match(/class="(?:hm-|group-)person-row"/g) || []).length, 2);
+    assert.match(markup, /&lt;Admin Invite&gt;/);
+    assert.match(markup, /Plus Person/);
+    assert.match(markup, /primary@example\.com/);
+    assert.match(markup, /plus@example\.com/);
+    assert.doesNotMatch(markup, /<Admin Invite>/);
+  }
+});
+
+test("searching a plus-one keeps the linked admin invite as the primary row", () => {
+  const group = { rsvpId: 31, name: "RSVP Primary" };
+  const matchedPlusOne = { rsvpId: 31, name: "Plus Person", type: "Plus-one", guestOf: "RSVP Primary" };
+  const searchPeople = [
+    { rsvpId: 31, name: "Admin Invite", type: "Member", guestOf: "" },
+    matchedPlusOne,
+  ];
+  assert.equal(runFunction(staffPage, "tableGroupPrimaryName", [group, matchedPlusOne], { tablesData: { searchPeople } }), "Admin Invite");
+  assert.equal(runFunction(staffFallback, "tableGroupPrimaryName", [group, matchedPlusOne], { tablesData: { searchPeople } }), "Admin Invite");
+  assert.equal(runFunction(hallPlanAsset, "groupPrimaryName", [group, matchedPlusOne], { info: { searchPeople } }), "Admin Invite");
+});
+
+test("Tables and MAP phone search matches Bulgarian local and international formatting", () => {
+  for (const [source, name] of [[staffPage, "tableSearchValueMatches"], [staffFallback, "tableSearchValueMatches"], [hallPlanAsset, "searchValueMatches"]]) {
+    assert.equal(runFunction(source, name, ["+359 888 123 456", "0888123456", "0888123456"]), true);
+    assert.equal(runFunction(source, name, ["guest@example.com", "guest", ""]), true);
+    assert.equal(runFunction(source, name, ["+359 888 123 456", "777", "777"]), false);
   }
 });
 
