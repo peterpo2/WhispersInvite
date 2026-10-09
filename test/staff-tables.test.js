@@ -2,7 +2,80 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as staffTables from "../functions/_shared/staff-tables.js";
 
-const { validateHallPositionPayload, validateMinimumSpendPayload, validateTableEditedPayload, validateTablePositionPayload } = staffTables;
+const { validateHallPositionPayload, validateMinimumSpendPayload, validateTableAssignmentPayload, validateTableEditedPayload, validateTablePositionPayload } = staffTables;
+
+test("table assignment accepts typed RSVP and invite subjects", () => {
+  assert.deepEqual(validateTableAssignmentPayload({ subjectType: "invite", subjectId: "invite-1", tableId: "t4" }), {
+    subjectType: "invite",
+    subjectId: "invite-1",
+    tableId: "t4",
+  });
+  assert.deepEqual(validateTableAssignmentPayload({ subjectType: "rsvp", subjectId: 12, tableId: null }), {
+    subjectType: "rsvp",
+    subjectId: 12,
+    tableId: null,
+  });
+});
+
+test("table assignment rejects ambiguous and malformed subjects", () => {
+  for (const body of [
+    null,
+    [],
+    { rsvpId: 12, tableId: "t4" },
+    { subjectType: "other", subjectId: 12, tableId: "t4" },
+    { subjectType: "rsvp", subjectId: 0, tableId: "t4" },
+    { subjectType: "rsvp", subjectId: "12", tableId: "t4" },
+    { subjectType: "invite", subjectId: "bad invite", tableId: "t4" },
+    { subjectType: "invite", subjectId: "x".repeat(121), tableId: "t4" },
+    { subjectType: "invite", subjectId: "invite-1", tableId: "bad table" },
+  ]) {
+    assert.equal(validateTableAssignmentPayload(body), null);
+  }
+});
+
+test("table registry makes invited guests assignable without duplicating confirmed groups", () => {
+  const registry = staffTables.buildTableRegistry({
+    invites: [
+      { id: "invite-1", name: "Confirmed Invite", email: "confirmed@example.com", phone: "+359 88 100" },
+      { id: "invite-2", name: "Waiting Invite", email: "waiting@example.com", phone: "+359 88 200" },
+      { id: "invite-3", name: "Declined Invite", email: "declined@example.com", phone: "+359 88 300" },
+      { id: "invite-4", name: "Searchable Invite", email: "search@example.com", phone: "+359 88 400" },
+    ],
+    rsvps: [
+      { id: 11, guest_id: "invite-1", guest_name: "Confirmed Name", guest_email: "confirmed@example.com", guest_phone: "+359 88 100", status: "attending", plus_one_name: "Plus Person", plus_one_email: "plus@example.com" },
+      { id: 12, guest_id: "invite-3", guest_name: "Declined Name", guest_email: "declined@example.com", guest_phone: "+359 88 300", status: "declined" },
+    ],
+    companions: [
+      { id: 21, rsvp_id: 11, guest_name: "Added Person", email: "added@example.com", phone: "+359 88 500", status: "attending", guest_of: "Confirmed Name" },
+    ],
+    assignments: [
+      { rsvp_id: 11, invite_id: null, table_id: "t3" },
+      { rsvp_id: null, invite_id: "invite-2", table_id: "t4" },
+    ],
+  });
+
+  assert.equal(registry.groups.length, 2);
+  assert.deepEqual(registry.groups.map((group) => [group.name, group.status, group.tableId]), [
+    ["Confirmed Invite", "attending", "t3"],
+    ["Waiting Invite", "invited", "t4"],
+  ]);
+  assert.deepEqual(registry.groups[0].people, ["Confirmed Invite", "Plus Person", "Added Person"]);
+  assert.equal(registry.groups[0].subjectType, "rsvp");
+  assert.equal(registry.groups[0].subjectId, 11);
+  assert.equal(registry.groups[0].confirmed, true);
+  assert.equal(registry.groups[1].subjectType, "invite");
+  assert.equal(registry.groups[1].subjectId, "invite-2");
+  assert.equal(registry.groups[1].confirmed, false);
+  assert.equal(registry.groups[1].size, 1);
+
+  const waiting = registry.searchPeople.find((person) => person.id === "invite:invite-2");
+  const searchable = registry.searchPeople.find((person) => person.id === "invite:invite-4");
+  const declined = registry.searchPeople.find((person) => person.name === "Declined Invite");
+  assert.deepEqual([waiting.assignable, waiting.subjectType, waiting.subjectId, waiting.tableId], [true, "invite", "invite-2", "t4"]);
+  assert.deepEqual([searchable.assignable, searchable.subjectType, searchable.subjectId, searchable.tableId], [true, "invite", "invite-4", null]);
+  assert.equal(declined.assignable, false);
+  assert.equal(registry.groups.some((group) => group.name === "Declined Invite"), false);
+});
 
 test("table search combines invites and members without duplicating linked guests", () => {
   assert.equal(typeof staffTables.buildTableSearchPeople, "function");
@@ -26,6 +99,8 @@ test("table search combines invites and members without duplicating linked guest
   assert.deepEqual(searchPeople[0], {
     id: "guest:11",
     rsvpId: 11,
+    subjectType: "rsvp",
+    subjectId: 11,
     name: "Old Invite Name",
     email: "new@example.com",
     phone: "+359 88 300",
@@ -36,8 +111,8 @@ test("table search combines invites and members without duplicating linked guest
     assignable: true,
     aliases: ["Confirmed Name", "old@example.com", "+359 88 100"],
   });
-  assert.equal(searchPeople[1].status, "not_responded");
-  assert.equal(searchPeople[1].assignable, false);
+  assert.equal(searchPeople[1].status, "invited");
+  assert.equal(searchPeople[1].assignable, true);
   assert.equal(searchPeople[2].status, "declined");
   assert.equal(searchPeople[2].assignable, false);
   assert.equal(searchPeople[3].guestOf, "Confirmed Name");
