@@ -23,7 +23,7 @@ create table if not exists rsvps (
   plus_one_phone text,
   plus_one_email_is_fallback boolean not null default false,
   wants_table_reservation boolean not null default false,
-  reservation_confirmed boolean not null default false,
+  called boolean not null default false,
   seal_code text,
   confirmation_token text,
   ticket_token text,

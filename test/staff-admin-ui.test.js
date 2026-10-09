@@ -51,6 +51,17 @@ function runFunction(source, name, args, globals = {}) {
 const fortyFiveTablesMigration = existsSync(fortyFiveTablesMigrationPath) ? readFileSync(fortyFiveTablesMigrationPath, "utf8") : "";
 const mapEditStatusMigrationPath = "sql/2026-10-10-map-edit-status.sql";
 const mapEditStatusMigration = existsSync(mapEditStatusMigrationPath) ? readFileSync(mapEditStatusMigrationPath, "utf8") : "";
+const calledMigrationPath = "sql/2026-10-10-rsvp-called.sql";
+const calledMigration = existsSync(calledMigrationPath) ? readFileSync(calledMigrationPath, "utf8") : "";
+
+test("called migration preserves every existing manual confirmation", () => {
+  assert.match(calledMigration, /add column if not exists called boolean not null default false/i);
+  assert.match(calledMigration, /set called = reservation_confirmed/i);
+  assert.match(calledMigration, /where called is distinct from reservation_confirmed/i);
+  assert.match(calledMigration, /if not exists[\s\S]*column_name = 'called'/i);
+  assert.match(calledMigration, /notify pgrst, 'reload schema'/i);
+  assert.match(schema, /called boolean not null default false/i);
+});
 
 test("tables add-to-table panel has a broad guest search", () => {
   assert.match(staffPage, /id="tableSearch"/);
