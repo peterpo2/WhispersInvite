@@ -172,7 +172,11 @@ begin
     end if;
   elsif new.status = 'declined' then
     delete from public.staff_table_assignments
-    where event_key = new.event_key and invite_id = new.guest_id;
+    where event_key = new.event_key
+      and (
+        rsvp_id = new.id
+        or invite_id = new.guest_id
+      );
   end if;
   return new;
 end

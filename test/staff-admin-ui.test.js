@@ -80,6 +80,7 @@ test("invited table assignment migration preserves rows and supports exactly one
   assert.match(invitedAssignmentsMigration, /after insert or update of status, guest_id on public\.rsvps/i);
   assert.match(invitedAssignmentsMigration, /new\.status = 'attending'/i);
   assert.match(invitedAssignmentsMigration, /new\.status = 'declined'/i);
+  assert.match(invitedAssignmentsMigration, /rsvp_id = new\.id\s+or invite_id = new\.guest_id/i);
   assert.doesNotMatch(invitedAssignmentsMigration, /delete from public\.staff_table_assignments\s*;/i);
   assert.match(invitedAssignmentsMigration, /notify pgrst, 'reload schema'/i);
   assert.match(schema, /invite_id text references public\.guest_list\(id\) on delete cascade/i);
@@ -321,7 +322,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-confirmed-called1/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-invited-tables1/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -630,8 +631,8 @@ test("tables main search finds people and opens their assigned table", () => {
     assert.match(source, /groupPeopleRows\(g\)/);
     assert.match(source, /data-table-person/);
     assert.match(source, /tableSearchStatus/);
-    assert.match(source, /function openTableFromSearch\(tableId,rsvpId\)/);
-    assert.match(source, /data-group-rsvp/);
+    assert.match(source, /function openTableFromSearch\(tableId,subjectType,subjectId\)/);
+    assert.match(source, /data-group-subject/);
     assert.match(source, /scrollIntoView/);
     assert.doesNotMatch(source, /matches\.slice\(0,\s*30\)/);
   }
@@ -666,9 +667,10 @@ test("searching a plus-one keeps the linked admin invite as the primary row", ()
     { rsvpId: 31, name: "Admin Invite", type: "Member", guestOf: "" },
     matchedPlusOne,
   ];
-  assert.equal(runFunction(staffPage, "tableGroupPrimaryName", [group, matchedPlusOne], { tablesData: { searchPeople } }), "Admin Invite");
-  assert.equal(runFunction(staffFallback, "tableGroupPrimaryName", [group, matchedPlusOne], { tablesData: { searchPeople } }), "Admin Invite");
-  assert.equal(runFunction(hallPlanAsset, "groupPrimaryName", [group, matchedPlusOne], { info: { searchPeople } }), "Admin Invite");
+  const tableSubjectKey = (item) => String(item.subjectType || "rsvp") + ":" + String(item.subjectId ?? item.rsvpId);
+  assert.equal(runFunction(staffPage, "tableGroupPrimaryName", [group, matchedPlusOne], { tablesData: { searchPeople }, tableSubjectKey }), "Admin Invite");
+  assert.equal(runFunction(staffFallback, "tableGroupPrimaryName", [group, matchedPlusOne], { tablesData: { searchPeople }, tableSubjectKey }), "Admin Invite");
+  assert.equal(runFunction(hallPlanAsset, "groupPrimaryName", [group, matchedPlusOne], { info: { searchPeople }, subjectKey: tableSubjectKey }), "Admin Invite");
 });
 
 test("Tables and MAP phone search matches Bulgarian local and international formatting", () => {
@@ -694,7 +696,8 @@ test("table assignment validates and persists typed invite or RSVP subjects", ()
   assert.match(tableAssignmentApi, /subjectType === "rsvp"/);
   assert.match(tableAssignmentApi, /subjectType === "invite"/);
   assert.match(tableAssignmentApi, /status=eq\.attending/);
-  assert.match(tableAssignmentApi, /status=eq\.declined/);
+  assert.match(tableAssignmentApi, /select=id,status/);
+  assert.match(tableAssignmentApi, /Guest has already responded/);
   assert.match(tableAssignmentApi, /on_conflict=event_key,rsvp_id/);
   assert.match(tableAssignmentApi, /on_conflict=event_key,invite_id/);
   assert.match(tableAssignmentApi, /rsvp_id: subjectId/);
@@ -718,6 +721,19 @@ test("table assignment errors are shown instead of silently reloading", () => {
     assert.match(source, /async function assignTable\(/);
     assert.match(source, /Could not assign table/);
   }
+});
+
+test("Tables clients assign invited and RSVP groups through typed subjects", () => {
+  for (const source of [staffPage, staffFallback]) {
+    assert.match(source, /data-subject-type/);
+    assert.match(source, /data-subject-id/);
+    assert.match(source, /subjectType==='rsvp'\?Number\(subjectId\):subjectId/);
+    assert.match(source, /\{subjectType,subjectId:normalizedSubjectId,tableId\}/);
+    assert.match(source, /status-invited/);
+    assert.match(source, />invited</i);
+    assert.doesNotMatch(source, /JSON\.stringify\(\{rsvpId:Number\(rsvpId\),tableId\}\)/);
+  }
+  assert.match(staffPage, /JSON\.stringify\(\{subjectType,subjectId:normalizedSubjectId,tableId\}\)/);
 });
 
 test("tables map stages moves with undo and explicit save", () => {

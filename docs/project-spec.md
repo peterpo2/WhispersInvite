@@ -191,8 +191,14 @@ most one companion row per RSVP.
 
 ### `staff_tables` and `staff_table_assignments`
 
-Stores internal table definitions and RSVP group table assignment. Assignments are visible to
-staff/admin. Guest tickets must not reveal the table label.
+Stores internal table definitions and guest table assignments. An assignment identifies exactly
+one subject: either an attending RSVP (`rsvp_id`) or an admin-created invite that has not responded
+yet (`invite_id`). Both subjects can be searched, added, moved and removed in Tables and MAP.
+
+When an assigned invite confirms, a database trigger transfers its existing table to the RSVP row,
+so the placement is preserved without creating a duplicate. If the invite declines, or an assigned
+RSVP later declines, the assignment is removed. Assignments are visible to staff/admin. Guest
+tickets must not reveal the table label.
 
 ## Routes and Asset Access
 

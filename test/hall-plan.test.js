@@ -16,7 +16,7 @@ const staffPage = read("functions/staff/rose-door-10.js");
 const fallback = read("assets/staff-admin-fallback.js");
 
 test("staff page cache-busts the combined MAP search asset", () => {
-  assert.match(staffPage, /hall-plan\.js\?v=20261010-confirmed-called1/);
+  assert.match(staffPage, /hall-plan\.js\?v=20261010-invited-tables1/);
 });
 
 function seeds(sql) {
@@ -206,11 +206,11 @@ test("MAP detail lists the table's guests and lets door+ search, add and remove"
   assert.match(asset, /tableSearchStatus/);
   assert.match(asset, /p\.email,p\.phone/);
   assert.match(asset, /const CAN_ASSIGN=CAN_DRAG/);
-  assert.match(asset, /data-hm-add="'\+esc\(person\.rsvpId\)/);
-  assert.match(asset, /data-hm-remove="'\+esc\(g\.rsvpId\)/);
+  assert.match(asset, /data-subject-type/);
+  assert.match(asset, /data-subject-id/);
   assert.match(asset, /'Move here':'Add'/);
   assert.match(asset, /fetch\('\/api\/staff\/table-assignment',\{method:'POST'/);
-  assert.match(asset, /JSON\.stringify\(\{rsvpId:Number\(rsvpId\),tableId\}\)/);
+  assert.match(asset, /JSON\.stringify\(\{subjectType,subjectId:normalizedSubjectId,tableId\}\)/);
   assert.doesNotMatch(read("functions/api/staff/table-assignment.js"), /hall/);
   assert.doesNotMatch(asset, /list\.slice\(0,30\)/);
   const { HALL_PLAN_STYLE } = await import("../functions/_shared/hall-plan-markup.js");
@@ -229,6 +229,15 @@ test("MAP shows RSVP confirmed and manual called as separate statuses", async ()
   assert.match(HALL_PLAN_STYLE, /\.hm \.hm-pill\.status-called\{/);
 });
 
+test("MAP can add, move and remove invited groups through typed subjects", () => {
+  assert.match(asset, /data-subject-type/);
+  assert.match(asset, /data-subject-id/);
+  assert.match(asset, /subjectType==='rsvp'\?Number\(subjectId\):subjectId/);
+  assert.match(asset, /status-invited/);
+  assert.match(asset, />Invited</);
+  assert.doesNotMatch(asset, /JSON\.stringify\(\{rsvpId:Number\(rsvpId\),tableId\}\)/);
+});
+
 test("opening MAP keeps the staff tabs in view", () => {
   assert.match(asset, /function toTop\(\)\{requestAnimationFrame\(\(\)=>window\.scrollTo\(0,0\)\);\}/);
   assert.match(asset, /if\(active&&!wasActive\)\{load\(\);toTop\(\);\}/);
@@ -241,7 +250,7 @@ test("admin shows a MAP tab right after Tables", () => {
   assert.match(staffPage, /<\/style>\r?\n<style>#view-hallmap:target\{display:block\}main:has\(#view-hallmap:target\) #view-scanner\{display:none\}\$\{HALL_PLAN_STYLE\}<\/style>/);
   assert.match(staffPage, /\$\{renderHallPlanView\(\)\}\r?\n<div class="view" id="view-invite">/);
   assert.match(staffPage, /location\.hash==='#hallmap'\|\|location\.hash==='#view-hallmap'\?'hallmap'/);
-  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261010-confirmed-called1"><\/script>/);
+  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261010-invited-tables1"><\/script>/);
 });
 
 test("fallback admin knows the MAP view", () => {

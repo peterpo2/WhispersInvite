@@ -36,13 +36,15 @@ export async function onRequestPost({ request, env }) {
     if (!invite.response.ok) return json({ error: "Could not assign table" }, 502);
     if (!(await invite.response.json()).length) return json({ error: "Invite not found" }, 404);
 
-    const declined = await supabaseFetch(
+    const responded = await supabaseFetch(
       env,
-      `/rest/v1/rsvps?select=id&event_key=eq.${encodeURIComponent(EVENT_KEY)}&guest_id=eq.${encodeURIComponent(subjectId)}&status=eq.declined&limit=1`
+      `/rest/v1/rsvps?select=id,status&event_key=eq.${encodeURIComponent(EVENT_KEY)}&guest_id=eq.${encodeURIComponent(subjectId)}&limit=1`
     );
-    if (declined.error) return declined.error;
-    if (!declined.response.ok) return json({ error: "Could not assign table" }, 502);
-    if ((await declined.response.json()).length) return json({ error: "Guest has declined" }, 409);
+    if (responded.error) return responded.error;
+    if (!responded.response.ok) return json({ error: "Could not assign table" }, 502);
+    if ((await responded.response.json()).length) {
+      return json({ error: "Guest has already responded. Refresh and try again." }, 409);
+    }
   }
 
   if (!tableId) {

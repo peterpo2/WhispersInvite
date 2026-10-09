@@ -125,6 +125,7 @@ export const HALL_PLAN_STYLE = `@font-face{font-family:"HM Cormorant";src:url("/
 .hm .hm-person-row small{margin-top:2px}
 .hm .hm-pill{display:inline-block;border:1px solid var(--crimson-lt);border-radius:999px;padding:2px 7px;color:var(--crimson-lt);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;vertical-align:middle}
 .hm .hm-pill.status-confirmed{border-color:#79C995;color:#9DDBB2;background:rgba(47,107,70,.18)}
+.hm .hm-pill.status-invited{border-color:#D9AE78;color:#EBCB95;background:rgba(217,174,120,.08)}
 .hm .hm-pill.status-called{border-color:var(--brass);color:var(--parch);background:rgba(168,131,73,.1)}
 .hm .hm-pill.status-request{border-color:var(--brass-dim);color:var(--brass)}
 .hm .hm-empty{color:var(--parch-dim);font-style:italic;font-size:12.5px}

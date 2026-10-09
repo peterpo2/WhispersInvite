@@ -67,7 +67,7 @@
       +(CAN_DRAG?'<button type="button" class="hm-save-table" id="hmSaveTable">Save table</button>':'')
       +(CAN_DRAG&&!placed(t)?'<button type="button" class="hm-place" id="hmPlace">Place on map</button>':'')
       +'<h3 class="hm-sub">At this table</h3>'
-      +(groups.map(g=>groupRow(g,CAN_ASSIGN?'<button type="button" class="hm-act" data-hm-remove="'+esc(g.rsvpId)+'">Remove</button>':'','')).join('')||'<div class="hm-empty">No groups at this table.</div>')
+      +(groups.map(g=>groupRow(g,CAN_ASSIGN?subjectButton('data-hm-remove',g,'Remove','hm-act'):'','')).join('')||'<div class="hm-empty">No groups at this table.</div>')
       +'<div class="hm-add"><h3 class="hm-sub">'+(CAN_ASSIGN?'Add guests':'Find a guest')+'</h3>'
       +'<input class="hm-search" id="hmSearch" type="search" placeholder="Search guests by name, email or phone" autocomplete="off" value="'+esc(searchQuery)+'"/>'
       +'<p class="hm-state" id="hmAssignState" aria-live="polite"></p><div id="hmResults"></div></div>';
@@ -84,12 +84,15 @@
     return [person.name,person.email,person.phone,person.guestOf,person.type,person.status].concat(person.aliases||[]).some(v=>searchValueMatches(v,q,digits));
   }
   function tableSearchStatus(status){return status==='attending'?'Attending':status==='declined'?'Declined':'Invited';}
+  function subjectKey(item){return String(item.subjectType||'rsvp')+':'+String(item.subjectId??item.rsvpId);}
+  function subjectButton(flag,item,label,className){const subjectType=item.subjectType||'rsvp',subjectId=item.subjectId??item.rsvpId;return '<button type="button" class="'+className+'" '+flag+' data-subject-type="'+esc(subjectType)+'" data-subject-id="'+esc(subjectId)+'">'+label+'</button>';}
   function groupPeopleRows(g,primaryName=g.name){
     const details=(g.peopleDetails||[]).length?g.peopleDetails:(g.people&&g.people.length?g.people:[g.name]).map(name=>({name}));
     return details.map((person,index)=>{const name=index===0?(primaryName||person.name):person.name,contact=[person.email,person.phone].filter(Boolean).join(' · ');return '<div class="hm-person-row"><b>'+esc(name||'Guest')+'</b>'+(contact?'<small>'+esc(contact)+'</small>':'')+'</div>';}).join('');
   }
   function groupRow(g,action,note){
     return '<div class="hm-group"><div class="hm-group-main"><div class="hm-group-meta">'+(g.confirmed?'<span class="hm-pill status-confirmed">Confirmed</span>':'')
+      +(g.status==='invited'?'<span class="hm-pill status-invited">Invited</span>':'')
       +(g.wantsTableReservation?'<span class="hm-pill status-request">Requested table</span>':'')
       +(g.called?'<span class="hm-pill status-called">Called</span>':'')
       +(note?'<span class="hm-at">'+esc(note)+'</span>':'')+'</div><div class="hm-person-rows">'+groupPeopleRows(g)+'</div></div>'+action+'</div>';
@@ -98,35 +101,36 @@
     const table=(tables.find(x=>x.id===person.tableId)||{}).label||'',sameTable=person.tableId===selectedId;
     const note=person.assignable?(sameTable?'At this table':table?'At '+table:'Unassigned'):tableSearchStatus(person.status);
     const contact=[person.email,person.phone,person.guestOf?'Guest of '+person.guestOf:''].filter(Boolean).join(' | ');
-    const action=CAN_ASSIGN&&person.assignable&&!sameTable?'<button type="button" class="hm-act primary" data-hm-add="'+esc(person.rsvpId)+'">'+(person.tableId?'Move here':'Add')+'</button>':'';
+    const action=CAN_ASSIGN&&person.assignable&&!sameTable?subjectButton('data-hm-add',person,person.tableId?'Move here':'Add','hm-act primary'):'';
     return '<div class="hm-group"><div class="hm-group-main"><b>'+esc(person.name)+'</b><span class="hm-at">'+esc(note)+'</span>'+(contact?'<small>'+esc(contact)+'</small>':'')+'</div>'+action+'</div>';
   }
   function groupPrimaryName(group,matchedPerson){
-    const primary=(info.searchPeople||[]).find(candidate=>String(candidate.rsvpId)===String(group.rsvpId)&&candidate.type==='Member'&&!candidate.guestOf);
+    const key=subjectKey(group),primary=(info.searchPeople||[]).find(candidate=>subjectKey(candidate)===key&&candidate.type==='Member'&&!candidate.guestOf);
     return primary?.name||(matchedPerson.type==='Member'?matchedPerson.name:'')||group.name;
   }
   function searchGroupRow(person){
-    const group=(info.groups||[]).find(item=>String(item.rsvpId)===String(person.rsvpId));
+    const group=(info.groups||[]).find(item=>subjectKey(item)===subjectKey(person));
     if(!group)return searchPersonRow(person);
     const table=(tables.find(x=>x.id===group.tableId)||{}).label||'',sameTable=group.tableId===selectedId,note=sameTable?'At this table':table?'At '+table:'Unassigned';
-    const action=CAN_ASSIGN&&!sameTable?'<button type="button" class="hm-act primary" data-hm-add="'+esc(group.rsvpId)+'">'+(group.tableId?'Move here':'Add')+'</button>':'';
+    const action=CAN_ASSIGN&&!sameTable?subjectButton('data-hm-add',group,group.tableId?'Move here':'Add','hm-act primary'):'';
     return groupRow({...group,name:groupPrimaryName(group,person)},action,note);
   }
   // Empty search: attending groups waiting for a table. Typing searches the full invite and member registry.
   function renderResults(){
     const box=document.getElementById('hmResults');if(!box)return;
     const q=searchQuery.trim().toLowerCase(),others=(info.groups||[]).filter(g=>g.tableId!==selectedId);
-    const seen=new Set(),list=q?(info.searchPeople||[]).filter(person=>personMatches(person,q)).filter(person=>{const key=person.assignable&&person.rsvpId?'rsvp:'+person.rsvpId:person.id;if(seen.has(key))return false;seen.add(key);return true;}):others.filter(g=>!g.tableId);
+    const seen=new Set(),list=q?(info.searchPeople||[]).filter(person=>personMatches(person,q)).filter(person=>{const key=subjectKey(person);if(seen.has(key))return false;seen.add(key);return true;}):others.filter(g=>!g.tableId);
     const tableName=id=>(tables.find(x=>x.id===id)||{}).label||'';
     box.innerHTML='<p class="hm-list-label">'+(q?'Matching guests':'Waiting for a table')+'</p>'
-      +(list.map(item=>q?(item.assignable?searchGroupRow(item):searchPersonRow(item)):groupRow(item,CAN_ASSIGN?'<button type="button" class="hm-act primary" data-hm-add="'+esc(item.rsvpId)+'">Add</button>':'',item.tableId?'At '+tableName(item.tableId):'')).join('')
+      +(list.map(item=>q?(item.assignable?searchGroupRow(item):searchPersonRow(item)):groupRow(item,CAN_ASSIGN?subjectButton('data-hm-add',item,'Add','hm-act primary'):'',item.tableId?'At '+tableName(item.tableId):'')).join('')
       ||'<div class="hm-empty">'+(q?'No matching guests.':'Everyone has a table.')+'</div>');
   }
   function setAssignState(text,err){const el=document.getElementById('hmAssignState');if(el){el.className='hm-state'+(err?' err':'');el.textContent=text;}}
-  async function assign(rsvpId,tableId){
+  async function assign(subjectType,subjectId,tableId){
     setAssignState('Saving...');
+    const normalizedSubjectId=subjectType==='rsvp'?Number(subjectId):subjectId;
     let res;
-    try{res=await fetch('/api/staff/table-assignment',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({rsvpId:Number(rsvpId),tableId})});}
+    try{res=await fetch('/api/staff/table-assignment',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({subjectType,subjectId:normalizedSubjectId,tableId})});}
     catch(_){setAssignState('No connection.',true);return;}
     if(!res.ok){const data=await res.json().catch(()=>({}));setAssignState(data.error||'Could not update the table.',true);return;}
     try{const r=await fetch('/api/staff/tables');if(r.ok)info=await r.json();}catch(_){}
@@ -194,8 +198,8 @@
     if(e.target.closest('#hmSaveTable')){saveTableStatus();return;}
     if(e.target.closest('#hmPlace')){const t=tables.find(x=>x.id===selectedId);if(t&&CAN_DRAG&&!placed(t))placeOnMap(t);return;}
     const add=e.target.closest('[data-hm-add]'),remove=e.target.closest('[data-hm-remove]');
-    if(CAN_ASSIGN&&add&&selectedId){add.disabled=true;assign(add.dataset.hmAdd,selectedId);}
-    else if(CAN_ASSIGN&&remove){remove.disabled=true;assign(remove.dataset.hmRemove,null);}
+    if(CAN_ASSIGN&&add&&selectedId){add.disabled=true;assign(add.dataset.subjectType,add.dataset.subjectId,selectedId);}
+    else if(CAN_ASSIGN&&remove){remove.disabled=true;assign(remove.dataset.subjectType,remove.dataset.subjectId,null);}
   });
   detail.addEventListener('input',e=>{if(e.target.id==='hmSearch'){searchQuery=e.target.value;renderResults();}});
   legendToggle.addEventListener('click',()=>{
