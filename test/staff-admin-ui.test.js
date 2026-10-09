@@ -505,6 +505,23 @@ test("tables main search finds people and opens their assigned table", () => {
     assert.match(source, /function openTableFromSearch\(tableId,rsvpId\)/);
     assert.match(source, /data-group-rsvp/);
     assert.match(source, /scrollIntoView/);
+    assert.doesNotMatch(source, /matches\.slice\(0,\s*30\)/);
+  }
+});
+
+test("table guest filtering keeps the input focused and searches contact details", () => {
+  for (const source of [staffPage, staffFallback]) {
+    assert.match(source, /function renderAvailableGroups\(/);
+    assert.match(source, /peopleDetails/);
+    assert.match(source, /search\.oninput=.*renderAvailableGroups/);
+    assert.doesNotMatch(source, /search\.oninput=.*renderTables\(\)/);
+  }
+});
+
+test("table assignment errors are shown instead of silently reloading", () => {
+  for (const source of [staffPage, staffFallback]) {
+    assert.match(source, /async function assignTable\(/);
+    assert.match(source, /Could not assign table/);
   }
 });
 
