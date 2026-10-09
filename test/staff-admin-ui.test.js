@@ -409,12 +409,15 @@ test("staff tables include forty-five unlimited defaults with an idempotent roll
   assert.match(hallMapMigration, /\('t35', 'Table 35', 1, 35\)/);
   assert.match(hallMapMigration, /\('t35', 'Table 35', 35\)/);
   assert.match(hallMapMigration, /on conflict \(id\) do nothing/);
+  assert.match(fortyFiveTablesMigration, /information_schema\.columns/);
+  assert.match(fortyFiveTablesMigration, /insert into public\.staff_tables \(id, label, capacity, sort_order, map_x, map_y\)/);
+  assert.match(fortyFiveTablesMigration, /\('t36', 'Table 36', 1, 36, 10, 14\)/);
   assert.match(fortyFiveTablesMigration, /insert into public\.staff_tables \(id, label, sort_order, map_x, map_y\)/);
   assert.match(fortyFiveTablesMigration, /\('t36', 'Table 36', 36, 10, 14\)/);
   assert.match(fortyFiveTablesMigration, /\('t45', 'Table 45', 45, 90, 28\)/);
   assert.match(fortyFiveTablesMigration, /on conflict \(id\) do nothing/);
   assert.doesNotMatch(fortyFiveTablesMigration, /\bupdate\s+public\.staff_tables\b/i);
-  assert.doesNotMatch(fortyFiveTablesMigration, /hall_x|hall_y|minimum_spend_eur|capacity/);
+  assert.doesNotMatch(fortyFiveTablesMigration, /hall_x|hall_y|minimum_spend_eur/);
 });
 
 test("staff tables store a non-negative whole-euro minimum spend", () => {
