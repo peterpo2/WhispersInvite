@@ -65,6 +65,7 @@ test("staff settings API is owner-only and validates updates before an upsert", 
 test("staff settings API route is explicitly allowlisted", () => {
   const source = read("functions/_shared/access.js");
   assert.match(source, /"\/api\/staff\/settings"/);
+  assert.match(source, /"\/api\/staff\/ticket-bulk-send"/);
 });
 
 test("RSVP writes use independent confirmation and update policies", () => {
@@ -102,6 +103,11 @@ test("staff page renders RSVP settings only for the owner", () => {
   assert.match(source, /id="cancelConfirmationSchedule"/);
   assert.match(source, /id="applyUpdatesSetting"/);
   assert.match(source, /id="cancelUpdatesSchedule"/);
+  assert.match(source, />Ticket emails</);
+  assert.match(source, /id="ticketBulkSendAt" type="datetime-local"/);
+  assert.match(source, /id="previewTicketBulkSend"/);
+  assert.match(source, /id="sendTicketBulkSend"/);
+  assert.match(source, /id="ticketBulkSendState"/);
   assert.match(source, /owner:\['scanner','members','tables','invite','menu','staff','settings','hallmap'\]/);
   assert.doesNotMatch(source, /admin:\[[^\]]*settings/);
   assert.doesNotMatch(source, /door:\[[^\]]*settings/);
@@ -122,6 +128,12 @@ test("owner settings UI loads, saves and cancels the RSVP schedule", () => {
   assert.match(source, /timeZone:'Europe\/Sofia'/);
   assert.match(source, /if\(name==='settings'\)loadSettings\(\)/);
   assert.match(source, /else if\(currentView==='settings'\)loadSettings\(\)/);
+  assert.match(source, /async function previewTicketBulkSend\(\)/);
+  assert.match(source, /async function sendTicketBulkSend\(\)/);
+  assert.match(source, /\/api\/staff\/ticket-bulk-send/);
+  assert.match(source, /ticketBulkSendAt/);
+  assert.match(source, /dryRun:true/);
+  assert.match(source, /dryRun:false/);
 });
 
 test("staff fallback preserves the owner RSVP settings controls", () => {
@@ -134,4 +146,25 @@ test("staff fallback preserves the owner RSVP settings controls", () => {
   assert.match(source, /setting,targetOpen,changeAtLocal:/);
   assert.match(source, /setting,cancelScheduledChange:true/);
   assert.match(source, /\/api\/staff\/settings/);
+  assert.match(source, /previewTicketBulkSend/);
+  assert.match(source, /sendTicketBulkSend/);
+  assert.match(source, /\/api\/staff\/ticket-bulk-send/);
+});
+
+test("ticket bulk send API sends only pending registered ticket emails and records successes", () => {
+  const source = read("functions/api/staff/ticket-bulk-send.js");
+  assert.match(source, /requireStaff\(request, env, "owner"\)/);
+  assert.match(source, /dryRun/);
+  assert.match(source, /status=eq\.attending/);
+  assert.match(source, /ticket_email_sent_at=is\.null/);
+  assert.match(source, /guest_email=not\.is\.null/);
+  assert.match(source, /ticket_token=not\.is\.null/);
+  assert.match(source, /rsvp_companions/);
+  assert.match(source, /buildTicketEmail/);
+  assert.match(source, /postmarkBatchSend/);
+  assert.match(source, /markPrimarySent/);
+  assert.match(source, /markCompanionSent/);
+  assert.match(source, /sentAt/);
+  assert.match(source, /skipped/);
+  assert.match(source, /failed/);
 });

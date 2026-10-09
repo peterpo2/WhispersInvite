@@ -16,6 +16,7 @@ const PUBLIC_PATHS = new Set([
   "/api/staff/reservation-state",
   "/api/staff/invites",
   "/api/staff/invite-send",
+  "/api/staff/ticket-bulk-send",
   "/api/staff/tables",
   "/api/staff/table-assignment",
   "/api/staff/hall-map",

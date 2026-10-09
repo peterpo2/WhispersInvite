@@ -359,7 +359,7 @@
   }
   async function loadSettings(){
     if(role!=="owner")return;for(const setting of Object.keys(RSVP_SETTING_UI)){setNotice(RSVP_SETTING_UI[setting].state,"Loading...",false);setRsvpSettingsBusy(setting,true);}
-    try{const data=await getJson("/api/staff/settings");for(const setting of Object.keys(RSVP_SETTING_UI)){renderRsvpSetting(setting,data.rsvp[setting]);setNotice(RSVP_SETTING_UI[setting].state,"",false);}}catch(err){for(const setting of Object.keys(RSVP_SETTING_UI)){setNotice(RSVP_SETTING_UI[setting].state,err.message||"Could not load RSVP settings",true);setRsvpSettingsBusy(setting,false);}}
+    try{const data=await getJson("/api/staff/settings");for(const setting of Object.keys(RSVP_SETTING_UI)){renderRsvpSetting(setting,data.rsvp[setting]);setNotice(RSVP_SETTING_UI[setting].state,"",false);}await previewTicketBulkSend();}catch(err){for(const setting of Object.keys(RSVP_SETTING_UI)){setNotice(RSVP_SETTING_UI[setting].state,err.message||"Could not load RSVP settings",true);setRsvpSettingsBusy(setting,false);}}
   }
   async function saveRsvpSetting(setting,targetOpen){
     const ui=RSVP_SETTING_UI[setting],input=byId(ui?.input);setNotice(ui.state,"Saving...",false);setRsvpSettingsBusy(setting,true);
@@ -370,6 +370,25 @@
     try{const data=await postJson("/api/staff/settings",{setting,cancelScheduledChange:true},"PATCH");for(const key of Object.keys(RSVP_SETTING_UI))renderRsvpSetting(key,data.rsvp[key]);setNotice(ui.state,"Scheduled change cancelled.",false);}catch(err){setNotice(ui.state,err.message||"Could not cancel scheduled change",true);setRsvpSettingsBusy(setting,false);}
   }
   for(const setting of Object.keys(RSVP_SETTING_UI)){const ui=RSVP_SETTING_UI[setting],input=byId(ui.input),apply=byId(ui.apply),cancel=byId(ui.cancel);if(input)input.oninput=()=>updateRsvpActionLabel(setting);if(apply)apply.onclick=()=>{const policy=rsvpSettings[setting];if(policy)saveRsvpSetting(setting,!policy.isOpen);};if(cancel)cancel.onclick=()=>cancelRsvpSchedule(setting);}
+  function setTicketBulkBusy(busy){["previewTicketBulkSend","sendTicketBulkSend","ticketBulkSendAt"].forEach((id)=>{const el=byId(id);if(el)el.disabled=busy;});}
+  function ticketBulkPayload(dryRun){const scheduledAtLocal=byId("ticketBulkSendAt")?.value||null;return dryRun?{dryRun:true,scheduledAtLocal}:{dryRun:false,scheduledAtLocal};}
+  async function callTicketBulkSend(dryRun){return postJson("/api/staff/ticket-bulk-send",ticketBulkPayload(dryRun));}
+  async function previewTicketBulkSend(){
+    if(role!=="owner"||!byId("previewTicketBulkSend"))return;setTicketBulkBusy(true);setNotice("ticketBulkSendState","Checking pending tickets...",false);
+    try{const data=await callTicketBulkSend(true);setNotice("ticketBulkSendState",data.pending+" pending ticket email"+(data.pending===1?"":"s")+" ("+data.primary+" guests, "+data.companions+" added guests).",false);}catch(err){setNotice("ticketBulkSendState",err.message||"Could not preview ticket emails",true);}
+    finally{setTicketBulkBusy(false);}
+  }
+  let ticketBulkTimer=null;
+  async function sendTicketBulkSend(){
+    if(role!=="owner")return;if(ticketBulkTimer){clearTimeout(ticketBulkTimer);ticketBulkTimer=null;}
+    const input=byId("ticketBulkSendAt"),raw=input?.value||"",at=raw?new Date(raw):null;
+    if(at&&at.getTime()>Date.now()+30000){ticketBulkTimer=setTimeout(()=>{if(input)input.value="";sendTicketBulkSend();},at.getTime()-Date.now());setNotice("ticketBulkSendState","Scheduled for "+at.toLocaleString()+". Keep this tab open.",false);return;}
+    setTicketBulkBusy(true);setNotice("ticketBulkSendState","Preparing ticket emails...",false);
+    try{const preview=await callTicketBulkSend(true);if(!preview.pending){setNotice("ticketBulkSendState","No pending ticket emails.",false);return;}if(!confirm("Send "+preview.pending+" ticket emails now?")){setNotice("ticketBulkSendState","Send cancelled.",false);return;}setNotice("ticketBulkSendState","Sending "+preview.pending+" ticket emails...",false);const data=await callTicketBulkSend(false);setNotice("ticketBulkSendState","Sent "+data.sent+". Failed "+data.failed+".",data.failed>0);await loadMembers();}catch(err){setNotice("ticketBulkSendState",err.message||"Could not send ticket emails",true);}
+    finally{setTicketBulkBusy(false);}
+  }
+  byId("previewTicketBulkSend")&&(byId("previewTicketBulkSend").onclick=previewTicketBulkSend);
+  byId("sendTicketBulkSend")&&(byId("sendTicketBulkSend").onclick=sendTicketBulkSend);
   async function loadTables(){
     const box=byId("tablesView");if(!box)return;
     box.innerHTML='<div class="empty-state">Loading...</div>';

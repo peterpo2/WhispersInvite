@@ -30,6 +30,13 @@ export async function onRequestGet({ request, env }) {
 <div class="settings-actions"><button class="primary" id="applyUpdatesSetting" type="button" disabled>Save</button><button id="cancelUpdatesSchedule" type="button" hidden>Cancel scheduled change</button></div>
 <p class="invite-state" id="updatesSettingsState" aria-live="polite"></p>
 </div>
+<div class="settings-control">
+<div class="settings-heading"><div><h2>Ticket emails</h2><p class="small">Send tickets to registered attending guests and added guests with email addresses.</p></div><strong class="settings-status" id="ticketBulkSendStatus">READY</strong></div>
+<label class="settings-field" for="ticketBulkSendAt"><span>Optional send time</span><input id="ticketBulkSendAt" type="datetime-local" aria-describedby="ticketBulkSendTimezone"/></label>
+<p class="small settings-timezone" id="ticketBulkSendTimezone">Date and time use this browser. Leave empty to send now. Scheduled sends require this tab to stay open.</p>
+<div class="settings-actions"><button id="previewTicketBulkSend" type="button">Preview</button><button class="primary" id="sendTicketBulkSend" type="button">Send all tickets</button></div>
+<p class="invite-state" id="ticketBulkSendState" aria-live="polite"></p>
+</div>
 </section>
 </div>` : '';
   const menuView = `<div class="view" id="view-menu">
@@ -615,6 +622,7 @@ async function loadSettings(){
   let res,data;try{res=await fetch('/api/staff/settings',{headers:{'Accept':'application/json'}});data=await res.json();}catch(_){for(const setting of Object.keys(RSVP_SETTING_UI)){setRsvpSettingsNotice(setting,'No connection.',true);setRsvpSettingsBusy(setting,false);}return;}
   if(!res.ok){for(const setting of Object.keys(RSVP_SETTING_UI)){setRsvpSettingsNotice(setting,data.error||'Could not load RSVP settings',true);setRsvpSettingsBusy(setting,false);}return;}
   for(const setting of Object.keys(RSVP_SETTING_UI)){renderRsvpSetting(setting,data.rsvp[setting]);setRsvpSettingsNotice(setting,'',false);}
+  await previewTicketBulkSend();
 }
 async function saveRsvpSetting(setting,targetOpen){
   const input=document.getElementById(RSVP_SETTING_UI[setting]?.input);setRsvpSettingsNotice(setting,'Saving...',false);setRsvpSettingsBusy(setting,true);
@@ -629,6 +637,42 @@ async function cancelRsvpSchedule(setting){
   for(const key of Object.keys(RSVP_SETTING_UI))renderRsvpSetting(key,data.rsvp[key]);setRsvpSettingsNotice(setting,'Scheduled change cancelled.',false);
 }
 for(const setting of Object.keys(RSVP_SETTING_UI)){const ui=RSVP_SETTING_UI[setting],input=document.getElementById(ui.input),apply=document.getElementById(ui.apply),cancel=document.getElementById(ui.cancel);if(input)input.oninput=()=>updateRsvpActionLabel(setting);if(apply)apply.onclick=()=>{const policy=rsvpSettings[setting];if(policy)saveRsvpSetting(setting,!policy.isOpen);};if(cancel)cancel.onclick=()=>cancelRsvpSchedule(setting);}
+function setTicketBulkState(message,isError){const state=document.getElementById('ticketBulkSendState');if(!state)return;state.className='invite-state'+(isError?' err':'');state.textContent=message||'';}
+function setTicketBulkBusy(busy){for(const id of ['previewTicketBulkSend','sendTicketBulkSend','ticketBulkSendAt']){const el=document.getElementById(id);if(el)el.disabled=busy;}}
+function ticketBulkPayload(dryRun){const scheduledAtLocal=document.getElementById('ticketBulkSendAt')?.value||null;return dryRun?{dryRun:true,scheduledAtLocal}:{dryRun:false,scheduledAtLocal};}
+async function callTicketBulkSend(dryRun){
+  const res=await fetch('/api/staff/ticket-bulk-send',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(ticketBulkPayload(dryRun))});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data.error||'Could not send ticket emails');
+  return data;
+}
+async function previewTicketBulkSend(){
+  if(!IS_OWNER||!document.getElementById('previewTicketBulkSend'))return;
+  setTicketBulkBusy(true);setTicketBulkState('Checking pending tickets...',false);
+  try{const data=await callTicketBulkSend(true);setTicketBulkState(data.pending+' pending ticket email'+(data.pending===1?'':'s')+' ('+data.primary+' guests, '+data.companions+' added guests).',false);}
+  catch(err){setTicketBulkState(err.message||'Could not preview ticket emails',true);}
+  finally{setTicketBulkBusy(false);}
+}
+let ticketBulkTimer=null;
+async function sendTicketBulkSend(){
+  if(!IS_OWNER)return;
+  if(ticketBulkTimer){clearTimeout(ticketBulkTimer);ticketBulkTimer=null;}
+  const input=document.getElementById('ticketBulkSendAt'),raw=input?.value||'',at=raw?new Date(raw):null;
+  if(at&&at.getTime()>Date.now()+30000){const delay=at.getTime()-Date.now();setTicketBulkState('Scheduled for '+at.toLocaleString()+'. Keep this tab open.',false);ticketBulkTimer=setTimeout(()=>{if(input)input.value='';sendTicketBulkSend();},delay);return;}
+  setTicketBulkBusy(true);setTicketBulkState('Preparing ticket emails...',false);
+  try{
+    const preview=await callTicketBulkSend(true);
+    if(!preview.pending){setTicketBulkState('No pending ticket emails.',false);return;}
+    if(!window.confirm('Send '+preview.pending+' ticket emails now?')){setTicketBulkState('Send cancelled.',false);return;}
+    setTicketBulkState('Sending '+preview.pending+' ticket emails...',false);
+    const data=await callTicketBulkSend(false);
+    setTicketBulkState('Sent '+data.sent+'. Failed '+data.failed+'.',data.failed>0);
+    await loadMembers();
+  }catch(err){setTicketBulkState(err.message||'Could not send ticket emails',true);}
+  finally{setTicketBulkBusy(false);}
+}
+document.getElementById('previewTicketBulkSend')&&(document.getElementById('previewTicketBulkSend').onclick=previewTicketBulkSend);
+document.getElementById('sendTicketBulkSend')&&(document.getElementById('sendTicketBulkSend').onclick=sendTicketBulkSend);
 async function loadStaffUsers(){
   if(STAFF_USER.role!=='owner')return;
   const state=document.getElementById('staffState'),body=document.querySelector('#staffUsersTable tbody');state.className='invite-state';state.textContent='';body.innerHTML='<tr><td colspan="6">Loading...</td></tr>';
