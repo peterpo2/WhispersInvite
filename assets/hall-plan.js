@@ -64,6 +64,7 @@
     detail.innerHTML='<div class="hm-detail-head"><div><h2>'+esc(t.label)+'</h2><p>'+esc(!placed(t)?'Not on the plan':row?'Row '+row[2]:'Placed on the map')+'</p></div><button type="button" class="hm-close" id="hmClose" aria-label="Close">×</button></div>'
       +'<div class="hm-facts"><span>'+guests+' guest'+(guests===1?'':'s')+'</span><span>'+esc(spend(extra.minimumSpendEur))+' min</span><span>Last edited: '+esc(formatMapEditedAt(t.hallMapEditedAt))+'</span></div>'
       +(CAN_DRAG?'<div class="hm-spend"><input id="hmMinimumSpend" type="number" min="0" step="1" inputmode="numeric" value="'+esc(extra.minimumSpendEur||0)+'" aria-label="Minimum spend in EUR"/><button type="button" id="hmSaveSpend">Save amount</button></div>':'')
+      +(CAN_DRAG?'<button type="button" class="hm-save-table" id="hmSaveTable">Save table</button>':'')
       +(CAN_DRAG&&!placed(t)?'<button type="button" class="hm-place" id="hmPlace">Place on map</button>':'')
       +'<h3 class="hm-sub">At this table</h3>'
       +(groups.map(g=>groupRow(g,CAN_ASSIGN?'<button type="button" class="hm-act" data-hm-remove="'+esc(g.rsvpId)+'">Remove</button>':'','')).join('')||'<div class="hm-empty">No groups at this table.</div>')
@@ -148,6 +149,7 @@
     requestAnimationFrame(()=>layer.querySelector('[data-hm-table="'+CSS.escape(t.id)+'"] .t')?.scrollIntoView({behavior:smooth(),block:'center',inline:'center'}));
   }
   async function saveMinimumSpend(){const input=document.getElementById('hmMinimumSpend'),button=document.getElementById('hmSaveSpend');if(!input||!selectedId)return;const raw=input.value.trim(),minimumSpendEur=raw===''?0:Number(raw);if(!/^\d*$/.test(raw)||!Number.isSafeInteger(minimumSpendEur)||minimumSpendEur<0){setState('Enter a whole euro amount.',true);return;}button.disabled=true;setState('Saving amount...');let res,data;try{res=await fetch('/api/staff/tables',{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({tableId:selectedId,minimumSpendEur})});data=await res.json().catch(()=>({}));}catch(_){setState('No connection.',true);button.disabled=false;return;}if(!res.ok){setState(data.error||'Could not update minimum spend.',true);button.disabled=false;return;}const t=(info.tables||[]).find(x=>x.id===selectedId);if(t)t.minimumSpendEur=data.minimumSpendEur;setState('Amount saved.');renderDetail();}
+  async function saveTableStatus(){const button=document.getElementById('hmSaveTable');if(!button||!selectedId)return;button.disabled=true;setState('Saving table...');let res,data;try{res=await fetch('/api/staff/tables',{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({tableId:selectedId,markEdited:true,editSurface:'hall'})});data=await res.json().catch(()=>({}));}catch(_){setState('No connection.',true);button.disabled=false;return;}if(!res.ok){setState(data.error||'Could not save table.',true);button.disabled=false;return;}const t=tables.find(x=>x.id===selectedId);if(t)t.hallMapEditedAt=data.hallMapEditedAt;setState('Table saved.');renderTables();renderDetail();}
   layer.addEventListener('pointerdown',e=>{
     const g=e.target.closest('[data-hm-table]');if(!g||e.button>0)return;
     const t=tables.find(x=>x.id===g.dataset.hmTable);if(!t)return;
@@ -180,6 +182,7 @@
   detail.addEventListener('click',e=>{
     if(e.target.closest('#hmClose')){closeDetail();return;}
     if(e.target.closest('#hmSaveSpend')){saveMinimumSpend();return;}
+    if(e.target.closest('#hmSaveTable')){saveTableStatus();return;}
     if(e.target.closest('#hmPlace')){const t=tables.find(x=>x.id===selectedId);if(t&&CAN_DRAG&&!placed(t))placeOnMap(t);return;}
     const add=e.target.closest('[data-hm-add]'),remove=e.target.closest('[data-hm-remove]');
     if(CAN_ASSIGN&&add&&selectedId){add.disabled=true;assign(add.dataset.hmAdd,selectedId);}

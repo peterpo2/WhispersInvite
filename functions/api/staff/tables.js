@@ -1,7 +1,7 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { EVENT_KEY } from "../../_shared/rsvp.js";
 import { requireStaff } from "../../_shared/staff-auth.js";
-import { buildTableSearchPeople, validateMinimumSpendPayload, validateTablePositionPayload } from "../../_shared/staff-tables.js";
+import { buildTableSearchPeople, validateMinimumSpendPayload, validateTableEditedPayload, validateTablePositionPayload } from "../../_shared/staff-tables.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 export async function onRequestGet({ request, env }) {
@@ -105,20 +105,27 @@ export async function onRequestPatch({ request, env }) {
 
   const position = validateTablePositionPayload(body);
   const minimumSpend = position ? null : validateMinimumSpendPayload(body);
-  const value = position || minimumSpend;
+  const edited = position || minimumSpend ? null : validateTableEditedPayload(body);
+  const value = position || minimumSpend || edited;
   if (!value) return json({ error: "Invalid table update" }, 400);
-  const editedAt = position ? new Date().toISOString() : null;
+  const editedAt = new Date().toISOString();
   const patch = position
     ? { map_x: value.mapX, map_y: value.mapY, table_map_edited_at: editedAt }
-    : { minimum_spend_eur: value.minimumSpendEur };
+    : minimumSpend
+      ? { minimum_spend_eur: value.minimumSpendEur }
+      : edited.editSurface === "hall"
+        ? { hall_map_edited_at: editedAt }
+        : edited.editSurface === "tables"
+          ? { table_map_edited_at: editedAt }
+          : {};
 
   const updated = await supabaseFetch(
     env,
-    `/rest/v1/staff_tables?id=eq.${encodeURIComponent(value.tableId)}&select=id,minimum_spend_eur,map_x,map_y,table_map_edited_at`,
+    `/rest/v1/staff_tables?id=eq.${encodeURIComponent(value.tableId)}&select=id,minimum_spend_eur,map_x,map_y,table_map_edited_at,hall_map_edited_at`,
     {
       method: "PATCH",
       headers: { Prefer: "return=representation" },
-      body: JSON.stringify({ ...patch, updated_at: editedAt || new Date().toISOString() }),
+      body: JSON.stringify({ ...patch, updated_at: editedAt }),
     }
   );
   if (updated.error) return updated.error;
@@ -127,7 +134,13 @@ export async function onRequestPatch({ request, env }) {
   const rows = await updated.response.json();
   if (!rows.length) return json({ error: "Table not found" }, 404);
   if (position) return json({ ok: true, tableId: rows[0].id, mapX: Number(rows[0].map_x), mapY: Number(rows[0].map_y), tableMapEditedAt: rows[0].table_map_edited_at });
-  return json({ ok: true, tableId: rows[0].id, minimumSpendEur: rows[0].minimum_spend_eur });
+  return json({
+    ok: true,
+    tableId: rows[0].id,
+    minimumSpendEur: rows[0].minimum_spend_eur,
+    tableMapEditedAt: rows[0].table_map_edited_at,
+    hallMapEditedAt: rows[0].hall_map_edited_at,
+  });
 }
 
 export async function onRequest() {

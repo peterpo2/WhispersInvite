@@ -16,7 +16,7 @@ const staffPage = read("functions/staff/rose-door-10.js");
 const fallback = read("assets/staff-admin-fallback.js");
 
 test("staff page cache-busts the combined MAP search asset", () => {
-  assert.match(staffPage, /hall-plan\.js\?v=20261010-search3/);
+  assert.match(staffPage, /hall-plan\.js\?v=20261010-save-table1/);
 });
 
 function seeds(sql) {
@@ -224,7 +224,7 @@ test("admin shows a MAP tab right after Tables", () => {
   assert.match(staffPage, /<\/style>\r?\n<style>#view-hallmap:target\{display:block\}main:has\(#view-hallmap:target\) #view-scanner\{display:none\}\$\{HALL_PLAN_STYLE\}<\/style>/);
   assert.match(staffPage, /\$\{renderHallPlanView\(\)\}\r?\n<div class="view" id="view-invite">/);
   assert.match(staffPage, /location\.hash==='#hallmap'\|\|location\.hash==='#view-hallmap'\?'hallmap'/);
-  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261010-search3"><\/script>/);
+  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261010-save-table1"><\/script>/);
 });
 
 test("fallback admin knows the MAP view", () => {
@@ -256,6 +256,9 @@ test("MAP permanently marks and dates tables saved in the dedicated map", async 
   assert.match(asset, /formatMapEditedAt/);
   assert.match(asset, /Last edited:/);
   assert.match(asset, /t\.hallMapEditedAt=data\.hallMapEditedAt/);
+  assert.match(asset, /id="hmSaveTable"/);
+  assert.match(asset, /markEdited:true,editSurface:'hall'/);
+  assert.match(asset, /saveTableStatus[\s\S]*t\.hallMapEditedAt=data\.hallMapEditedAt[\s\S]*renderTables\(\);renderDetail\(\)/);
   assert.match(asset, /setState\('Saved\.'\);renderTables\(\);renderDetail\(\)/);
   assert.match(HALL_PLAN_STYLE, /\.hm \.hm-t\.hm-edited \.t\{/);
   assert.match(HALL_PLAN_STYLE, /\.hm \.hm-t\.hm-edited \.tn\{/);

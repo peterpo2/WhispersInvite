@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as staffTables from "../functions/_shared/staff-tables.js";
 
-const { validateHallPositionPayload, validateMinimumSpendPayload, validateTablePositionPayload } = staffTables;
+const { validateHallPositionPayload, validateMinimumSpendPayload, validateTableEditedPayload, validateTablePositionPayload } = staffTables;
 
 test("table search combines invites and members without duplicating linked guests", () => {
   assert.equal(typeof staffTables.buildTableSearchPeople, "function");
@@ -85,6 +85,25 @@ test("minimum spend rejects malformed table IDs and invalid amounts", () => {
     { tableId: "table-1", minimumSpendEur: Number.MAX_SAFE_INTEGER + 1 },
   ]) {
     assert.equal(validateMinimumSpendPayload(body), null);
+  }
+});
+
+test("table edited status requires an explicit map surface", () => {
+  assert.deepEqual(validateTableEditedPayload({ tableId: "table-3", markEdited: true, editSurface: "hall" }), {
+    tableId: "table-3",
+    editSurface: "hall",
+  });
+  assert.deepEqual(validateTableEditedPayload({ tableId: "table-4", markEdited: true, editSurface: "tables" }), {
+    tableId: "table-4",
+    editSurface: "tables",
+  });
+  for (const body of [
+    null,
+    { tableId: "table-1", markEdited: false, editSurface: "hall" },
+    { tableId: "table-1", markEdited: true, editSurface: "other" },
+    { tableId: "bad id", markEdited: true, editSurface: "tables" },
+  ]) {
+    assert.equal(validateTableEditedPayload(body), null);
   }
 });
 

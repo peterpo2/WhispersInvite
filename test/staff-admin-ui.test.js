@@ -257,7 +257,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-search3/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-save-table1/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -490,12 +490,12 @@ test("tables view provides a draggable hall map with tap navigation", () => {
   assert.match(staffFallback, /tablesReadOnly/);
 });
 
-test("pressing the Tables tab returns to the complete hall overview", () => {
+test("pressing the Tables tab returns to all tables with Show map collapsed", () => {
   for (const source of [staffPage, staffFallback]) {
     assert.match(source, /function openTablesOverview\(\)/);
     assert.match(source, /selectedTableId=null/);
     assert.match(source, /tableSearch=['"]{2}/);
-    assert.match(source, /hallMapOpen=true/);
+    assert.match(source, /function openTablesOverview\(\)[\s\S]{0,180}hallMapOpen=false/);
     assert.match(source, /view-tables/);
     assert.match(source, /scrollIntoView/);
   }
@@ -573,7 +573,13 @@ test("tables map permanently marks and dates its own saved positions", () => {
     assert.match(source, /formatTableMapEditedAt/);
     assert.match(source, /Last map edit:/);
     assert.match(source, /table\.tableMapEditedAt=data\.tableMapEditedAt/);
+    assert.match(source, /data-save-table-status/);
+    assert.match(source, /markEdited:true,editSurface:["']tables["']/);
+    assert.match(source, /table-chip ['"]\+\(t\.tableMapEditedAt\?["']edited ["']:/);
   }
+  assert.match(tablesApi, /edited\.editSurface === "hall"/);
+  assert.match(tablesApi, /edited\.editSurface === "tables"/);
+  assert.match(tablesApi, /hall_map_edited_at: editedAt/);
   assert.match(staffPage, /\.map-table\.edited\{/);
   assert.match(staffPage, /\.map-table\.edited\.active\{[^}]*background:#2F6B46/);
   assert.doesNotMatch(staffPage, /\.map-table\.edited\.active\{[^}]*linear-gradient/);

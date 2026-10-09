@@ -128,6 +128,15 @@ export function validateMinimumSpendPayload(body) {
   return { tableId, minimumSpendEur };
 }
 
+export function validateTableEditedPayload(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  if (typeof body.tableId !== "string" || body.markEdited !== true) return null;
+  const tableId = body.tableId.trim();
+  if (!TABLE_ID_PATTERN.test(tableId)) return null;
+  if (body.editSurface !== "tables" && body.editSurface !== "hall") return null;
+  return { tableId, editSurface: body.editSurface };
+}
+
 export function validateTablePositionPayload(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) return null;
   if (typeof body.tableId !== "string") return null;
