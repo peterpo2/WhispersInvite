@@ -354,10 +354,10 @@ export function doorScans(rows, limit = 80) {
   const scans = [];
   for (const row of rows || []) {
     if (row.checked_in_at) {
-      scans.push({ guest_name: row.guest_name, seal_code: row.seal_code, checked_in_at: row.checked_in_at, brought_by: row.brought_by || null });
+      scans.push({ guest_name: row.guest_name, seal_code: row.seal_code, checked_in_at: row.checked_in_at, brought_by: row.brought_by || null, table: row.table || "" });
     }
     if (row.plus_one_checked_in_at) {
-      scans.push({ guest_name: row.plus_one_name, seal_code: row.plus_one_seal_code, checked_in_at: row.plus_one_checked_in_at, brought_by: row.guest_name });
+      scans.push({ guest_name: row.plus_one_name, seal_code: row.plus_one_seal_code, checked_in_at: row.plus_one_checked_in_at, brought_by: row.guest_name, table: row.table || "" });
     }
   }
   return scans.sort((a, b) => b.checked_in_at.localeCompare(a.checked_in_at)).slice(0, limit);

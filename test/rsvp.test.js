@@ -779,13 +779,13 @@ test("unknown tokens and declined replies have no ticket", () => {
 
 test("door list shows the guest and the plus-one as separate check-ins, newest first", () => {
   const scans = doorScans([
-    { ...ROW, plus_one_checked_in_at: "2026-10-10T20:05:00.000Z" },
-    { guest_name: "Petar Popov", seal_code: "WSP·10·QQQQ", checked_in_at: "2026-10-10T20:02:00.000Z", plus_one_name: null, plus_one_checked_in_at: null },
+    { ...ROW, table: "Table 3", plus_one_checked_in_at: "2026-10-10T20:05:00.000Z" },
+    { guest_name: "Petar Popov", seal_code: "WSP·10·QQQQ", checked_in_at: "2026-10-10T20:02:00.000Z", plus_one_name: null, plus_one_checked_in_at: null, table: "Table 8" },
   ]);
   assert.deepEqual(scans, [
-    { guest_name: "Simona Ivanova", seal_code: "WSP·10·PPPP", checked_in_at: "2026-10-10T20:05:00.000Z", brought_by: "Michelle Georgieva" },
-    { guest_name: "Petar Popov", seal_code: "WSP·10·QQQQ", checked_in_at: "2026-10-10T20:02:00.000Z", brought_by: null },
-    { guest_name: "Michelle Georgieva", seal_code: "WSP·10·GGGG", checked_in_at: "2026-10-10T20:00:00.000Z", brought_by: null },
+    { guest_name: "Simona Ivanova", seal_code: "WSP·10·PPPP", checked_in_at: "2026-10-10T20:05:00.000Z", brought_by: "Michelle Georgieva", table: "Table 3" },
+    { guest_name: "Petar Popov", seal_code: "WSP·10·QQQQ", checked_in_at: "2026-10-10T20:02:00.000Z", brought_by: null, table: "Table 8" },
+    { guest_name: "Michelle Georgieva", seal_code: "WSP·10·GGGG", checked_in_at: "2026-10-10T20:00:00.000Z", brought_by: null, table: "Table 3" },
   ]);
 });
 

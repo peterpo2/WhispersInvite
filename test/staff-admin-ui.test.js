@@ -6,6 +6,7 @@ const staffPage = readFileSync("functions/staff/rose-door-10.js", "utf8");
 const staffLoginPage = readFileSync("functions/_shared/staff-login-page.js", "utf8");
 const staffFallback = readFileSync("assets/staff-admin-fallback.js", "utf8");
 const reservationStateApi = readFileSync("functions/api/staff/reservation-state.js", "utf8");
+const doorApi = readFileSync("functions/api/door.js", "utf8");
 const schema = readFileSync("sql/schema.sql", "utf8");
 const tablesMigrationPath = "sql/2026-10-06-twenty-staff-tables.sql";
 const tablesMigration = existsSync(tablesMigrationPath) ? readFileSync(tablesMigrationPath, "utf8") : "";
@@ -251,11 +252,11 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261009-draft1/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261009-scanner1/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
-  assert.match(staffFallback, /let members=\[\],membersPage=1,invites=\[\],invitesPage=1,inviteEditId=""/);
+  assert.match(staffFallback, /let members=\[\],membersPage=1,doorScansData=\[\],scanSearchQuery="",invites=\[\],invitesPage=1,inviteEditId=""/);
   assert.match(staffFallback, /function inviteColspan\(\)\{return role==="owner"\?9:8;\}/);
   assert.match(staffFallback, /function inviteActionsCell\(i\)/);
   assert.match(staffFallback, /data-invite-edit-id/);
@@ -280,6 +281,28 @@ test("members table edits request, confirmation and check-in through confirmed c
   assert.match(staffPage, /toggleRequest\(cb,cb\.dataset\.requestId,cb\.checked\)/);
   assert.match(staffPage, /toggleReservation\(cb,cb\.dataset\.reservationId,cb\.checked\)/);
   assert.match(staffPage, /toggleMember\(cb,cb\.dataset\.checkinId,cb\.checked\)/);
+});
+
+test("member checkbox updates preserve the current list and scroll position", () => {
+  assert.match(staffPage, /function renderMembersAtCurrentScroll\(\)/);
+  assert.match(staffPage, /function updateMembersByRsvp\(rsvpId,patch\)/);
+  assert.match(staffPage, /cb\.disabled=true/);
+  assert.match(staffPage, /checkedInAt:data\.checkedInAt/);
+  assert.match(staffPage, /updateMembersByRsvp\(rsvpId,\{wantsTableReservation\}\)/);
+  assert.match(staffPage, /updateMembersByRsvp\(rsvpId,\{reservationConfirmed\}\)/);
+  assert.match(staffFallback, /function renderMembersAtCurrentScroll\(\)/);
+  assert.match(staffFallback, /function updateMembersByRsvp\(rsvpId,patch\)/);
+});
+
+test("scanner list shows assigned tables and filters cached scans", () => {
+  assert.match(staffPage, /id="scanSearch"/);
+  assert.match(staffPage, /function scanMatchesSearch\(scan,query\)/);
+  assert.match(staffPage, /function renderDoorList\(markLatest\)/);
+  assert.match(staffPage, /scan\.table/);
+  assert.match(staffFallback, /function scanMatchesSearch\(scan,query\)/);
+  assert.match(staffFallback, /function renderDoorList\(markLatest\)/);
+  assert.match(doorApi, /staff_table_assignments\(staff_tables\(label\)\)/);
+  assert.match(doorApi, /table: tableLabel\(/);
 });
 
 test("members table groups table and door status columns", () => {

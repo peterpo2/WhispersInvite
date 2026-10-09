@@ -17,25 +17,32 @@ export async function onRequestGet({ request, env }) {
 
   const listed = await supabaseFetch(
     env,
-    "/rest/v1/rsvps?select=guest_name,seal_code,checked_in_at,plus_one_name,plus_one_seal_code,plus_one_checked_in_at&status=eq.attending&or=(checked_in_at.not.is.null,plus_one_checked_in_at.not.is.null)&order=submitted_at.desc&limit=200"
+    "/rest/v1/rsvps?select=guest_name,seal_code,checked_in_at,plus_one_name,plus_one_seal_code,plus_one_checked_in_at,staff_table_assignments(staff_tables(label))&status=eq.attending&or=(checked_in_at.not.is.null,plus_one_checked_in_at.not.is.null)&order=submitted_at.desc&limit=200"
   );
   if (listed.error) return listed.error;
   if (!listed.response.ok) return json({ error: "Could not load door list" }, 502);
 
   const companionListed = await supabaseFetch(
     env,
-    "/rest/v1/rsvp_companions?select=guest_name,seal_code,checked_in_at,rsvps!inner(guest_name,status)&checked_in_at=not.is.null&order=checked_in_at.desc&limit=200"
+    "/rest/v1/rsvp_companions?select=guest_name,seal_code,checked_in_at,rsvps!inner(guest_name,status,staff_table_assignments(staff_tables(label)))&checked_in_at=not.is.null&order=checked_in_at.desc&limit=200"
   );
   let companionRows = [];
   if (!companionListed.error && companionListed.response.ok) {
     const rows = await companionListed.response.json();
     companionRows = rows.map((row) => {
       const primary = Array.isArray(row.rsvps) ? row.rsvps[0] : row.rsvps;
-      return { guest_name: row.guest_name, seal_code: row.seal_code, checked_in_at: row.checked_in_at, brought_by: primary?.guest_name || null };
+      return { guest_name: row.guest_name, seal_code: row.seal_code, checked_in_at: row.checked_in_at, brought_by: primary?.guest_name || null, table: tableLabel(primary) };
     });
   }
 
-  return json({ ok: true, scans: doorScans([...(await listed.response.json()), ...companionRows]) });
+  const primaryRows = (await listed.response.json()).map((row) => ({ ...row, table: tableLabel(row) }));
+  return json({ ok: true, scans: doorScans([...primaryRows, ...companionRows]) });
+}
+
+function tableLabel(row) {
+  const assignment = Array.isArray(row?.staff_table_assignments) ? row.staff_table_assignments[0] : row?.staff_table_assignments;
+  const table = Array.isArray(assignment?.staff_tables) ? assignment.staff_tables[0] : assignment?.staff_tables;
+  return table?.label || "";
 }
 
 export async function onRequestPost({ request, env }) {

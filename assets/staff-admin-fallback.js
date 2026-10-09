@@ -8,7 +8,7 @@
   const PRINT_SIZE=2400;
   const allowed={owner:["scanner","members","tables","invite","menu","staff","settings","hallmap"],admin:["scanner","members","tables","invite","menu","hallmap"],door:["scanner","members","tables","invite","menu","hallmap"],service:["tables","hallmap"]}[role]||["scanner"];
   const PAGE_SIZE=20;
-  let members=[],membersPage=1,invites=[],invitesPage=1,inviteEditId="",staffUsers=[],rsvpSettings={confirmation:null,updates:null},tablesData={tables:[],groups:[]},selectedTableId=null,tableSearch="",tablePeopleSearch="",tableSpendNotice=null,hallMapOpen=false,mapDrag=null,unassignedExpanded=matchMedia("(min-width: 760px)").matches,stream=null,loop=null,ctx=null,currentView="";
+  let members=[],membersPage=1,doorScansData=[],scanSearchQuery="",invites=[],invitesPage=1,inviteEditId="",staffUsers=[],rsvpSettings={confirmation:null,updates:null},tablesData={tables:[],groups:[]},selectedTableId=null,tableSearch="",tablePeopleSearch="",tableSpendNotice=null,hallMapOpen=false,mapDrag=null,unassignedExpanded=matchMedia("(min-width: 760px)").matches,stream=null,loop=null,ctx=null,currentView="";
   const MAP_DRAG_THRESHOLD=6;
   const tableMapDraft=window.WhispersMapDraft.create({historyLimit:5}),mapDraftRegistry=window.WhispersMapDraft.registry;
   const RSVP_SETTING_UI={confirmation:{status:"confirmationSettingsStatus",scheduled:"confirmationScheduledChange",input:"confirmationChangeAt",apply:"applyConfirmationSetting",cancel:"cancelConfirmationSchedule",state:"confirmationSettingsState"},updates:{status:"updatesSettingsStatus",scheduled:"updatesScheduledChange",input:"updatesChangeAt",apply:"applyUpdatesSetting",cancel:"cancelUpdatesSchedule",state:"updatesSettingsState"}};
@@ -173,9 +173,14 @@
     const list=byId("list");if(!list)return;
     try{
       const data=await getJson("/api/door");
-      list.innerHTML=(data.scans||[]).map((s)=>'<div class="row"><b>'+esc(s.guest_name)+(s.brought_by?'<small>Guest of '+esc(s.brought_by)+"</small>":"")+"</b><span>"+esc(s.seal_code||"")+"<br>"+esc(hhmm(s.checked_in_at))+"</span></div>").join("")||'<p class="small">No scanned tickets yet.</p>';
-      const first=list.querySelector(".row");if(markLatest&&first)first.classList.add("latest");
+      doorScansData=data.scans||[];renderDoorList(markLatest);
     }catch(_){list.innerHTML='<p class="small">Could not load the list. Try again.</p>';}
+  }
+  function scanMatchesSearch(scan,query){return !query||[scan.guest_name,scan.brought_by,scan.table,scan.seal_code].some((value)=>String(value||"").toLowerCase().includes(query));}
+  function renderDoorList(markLatest){
+    const list=byId("list");if(!list)return;const query=scanSearchQuery.trim().toLowerCase(),scans=doorScansData.filter((scan)=>scanMatchesSearch(scan,query));
+    list.innerHTML=scans.map((scan)=>'<div class="row"><b>'+esc(scan.guest_name)+(scan.brought_by?'<small>Guest of '+esc(scan.brought_by)+"</small>":"")+(scan.table?'<small>'+esc(scan.table)+"</small>":"")+"</b><span>"+esc(scan.seal_code||"")+"<br>"+esc(hhmm(scan.checked_in_at))+"</span></div>").join("")||'<p class="small">'+(query?"No matching scanned guests.":"No scanned tickets yet.")+"</p>";
+    const first=list.querySelector(".row");if(markLatest&&first)first.classList.add("latest");
   }
   async function loadMembers(){
     const body=qs("#membersTable tbody");if(!body)return;
@@ -213,21 +218,23 @@
     qsa("[data-request-id]",body).forEach((cb)=>cb.onchange=()=>toggleRequest(cb,cb.dataset.requestId,cb.checked));
     qsa("[data-reservation-id]",body).forEach((cb)=>cb.onchange=()=>toggleReservation(cb,cb.dataset.reservationId,cb.checked));
   }
+  function renderMembersAtCurrentScroll(){const scrollY=window.scrollY;renderMembers();requestAnimationFrame(()=>window.scrollTo({top:scrollY,behavior:"auto"}));}
+  function updateMembersByRsvp(rsvpId,patch){members.forEach((member)=>{if(String(member.rsvpId)===String(rsvpId))Object.assign(member,patch);});}
   async function toggleMember(cb,id,checkedIn){
     if(!checkedIn&&!confirmToggle(cb,"Remove this guest check-in?"))return;
     const m=members.find((x)=>x.id===id);if(!m)return;
-    try{await postJson("/api/staff/checkin-state",{rsvpId:m.rsvpId,companionId:m.companionId,holder:m.holder,checkedIn});await loadMembers();}
-    catch(e){alert(e.message||"Could not update member");cb.checked=!checkedIn;}
+    cb.disabled=true;try{const data=await postJson("/api/staff/checkin-state",{rsvpId:m.rsvpId,companionId:m.companionId,holder:m.holder,checkedIn});Object.assign(m,{checkedIn:data.checkedIn===true,checkedInAt:data.checkedInAt||null});renderMembersAtCurrentScroll();loadDoorList();}
+    catch(e){alert(e.message||"Could not update member");cb.checked=!checkedIn;cb.disabled=false;}
   }
   async function toggleRequest(cb,rsvpId,wantsTableReservation){
     if(!wantsTableReservation&&!confirmToggle(cb,"Remove table request for this group?"))return;
-    try{await postJson("/api/staff/reservation-state",{rsvpId:Number(rsvpId),wantsTableReservation});await loadTables();await loadMembers();}
-    catch(e){alert(e.message||"Could not update reservation");cb.checked=!wantsTableReservation;}
+    cb.disabled=true;try{await postJson("/api/staff/reservation-state",{rsvpId:Number(rsvpId),wantsTableReservation});updateMembersByRsvp(rsvpId,{wantsTableReservation});renderMembersAtCurrentScroll();loadTables();}
+    catch(e){alert(e.message||"Could not update reservation");cb.checked=!wantsTableReservation;cb.disabled=false;}
   }
   async function toggleReservation(cb,rsvpId,reservationConfirmed){
     if(!reservationConfirmed&&!confirmToggle(cb,"Remove table reservation confirmation?"))return;
-    try{await postJson("/api/staff/reservation-state",{rsvpId:Number(rsvpId),reservationConfirmed});await loadTables();await loadMembers();}
-    catch(e){alert(e.message||"Could not update reservation");cb.checked=!reservationConfirmed;}
+    cb.disabled=true;try{await postJson("/api/staff/reservation-state",{rsvpId:Number(rsvpId),reservationConfirmed});updateMembersByRsvp(rsvpId,{reservationConfirmed});renderMembersAtCurrentScroll();loadTables();}
+    catch(e){alert(e.message||"Could not update reservation");cb.checked=!reservationConfirmed;cb.disabled=false;}
   }
   function csvSafeValue(v){const s=String(v??"");return /^[=+\-@\t\r]/.test(s)?"'"+s:s;}
   function csvCell(v){return '"'+csvSafeValue(v).replace(/"/g,'""')+'"';}
@@ -245,6 +252,7 @@
     return Array.from(groups.values());
   }
   byId("memberSearch")&&(byId("memberSearch").oninput=()=>{membersPage=1;renderMembers();});
+  byId("scanSearch")&&(byId("scanSearch").oninput=(event)=>{scanSearchQuery=event.target.value;renderDoorList(false);});
   byId("exportMembers")&&(byId("exportMembers").onclick=exportMembersCsv);
   async function loadInvites(){
     const body=qs("#invitesTable tbody");if(!body)return;
