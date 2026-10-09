@@ -100,7 +100,7 @@
     if(!group)return searchPersonRow(person);
     const table=(tables.find(x=>x.id===group.tableId)||{}).label||'',sameTable=group.tableId===selectedId,note=sameTable?'At this table':table?'At '+table:'Unassigned';
     const action=CAN_ASSIGN&&!sameTable?'<button type="button" class="hm-act primary" data-hm-add="'+esc(group.rsvpId)+'">'+(group.tableId?'Move here':'Add')+'</button>':'';
-    return groupRow(group,action,note);
+    return groupRow({...group,name:person.name||group.name},action,note);
   }
   // Empty search: attending groups waiting for a table. Typing searches the full invite and member registry.
   function renderResults(){

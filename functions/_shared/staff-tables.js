@@ -48,11 +48,11 @@ export function buildTableSearchPeople({ invites = [], rsvps = [], companions = 
       || null;
     if (rsvp && matchedRsvps.has(rsvp.id)) continue;
     if (rsvp) matchedRsvps.add(rsvp.id);
-    const aliases = rsvp ? [invite.name, invite.email, invite.phone] : [];
+    const aliases = rsvp ? [rsvp.guest_name, invite.email, invite.phone] : [];
     primary.push(searchPerson({
       id: rsvp ? `guest:${rsvp.id}` : `invite:${invite.id}`,
       rsvp,
-      name: rsvp?.guest_name || invite.name,
+      name: invite.name || rsvp?.guest_name,
       email: rsvp?.guest_email || invite.email,
       phone: rsvp?.guest_phone || invite.phone,
       type: rsvp ? "Member" : "Invite",

@@ -435,7 +435,7 @@ function openTableFromMap(tableId){hallMapOpen=false;selectedTableId=tableId;tab
 function renderTablePeopleSearch(){
   const input=document.getElementById('tablePeopleSearch'),results=document.getElementById('tablePeopleResults');if(!input||!results)return;tablePeopleSearch=input.value;const q=tablePeopleSearch.trim().toLowerCase();results.hidden=!q;if(!q){results.innerHTML='';return;}
   const tables=tablesData?.tables||[],seen=new Set(),matches=(tablesData?.searchPeople||[]).filter(person=>[person.name,person.email,person.phone,person.guestOf,person.type,person.status].concat(person.aliases||[]).some(value=>String(value||'').toLowerCase().includes(q))).filter(person=>{const key=person.assignable&&person.rsvpId?'rsvp:'+person.rsvpId:person.id;if(seen.has(key))return false;seen.add(key);return true;});
-  results.innerHTML=matches.map(person=>{const group=tableSearchGroup(person),table=tables.find(item=>item.id===(group?.tableId||person.tableId)),names=group?.people?.length?group.people.join(' + '):person.name,contact=[person.email,person.phone,person.guestOf?'Guest of '+person.guestOf:''].filter(Boolean).join(' | ')||person.type||'No contact details',status=person.assignable?(table?.label||'Unassigned'):tableSearchStatus(person.status),tag=person.assignable?'button':'div',attrs=person.assignable?' type="button" data-table-person data-table-id="'+esc(group?.tableId||person.tableId||'')+'" data-rsvp-id="'+esc(person.rsvpId)+'"':'';return '<'+tag+' class="table-person-result"'+attrs+'><span><b>'+esc(group?.name||person.name)+'</b><small>'+esc(names)+(contact?' | '+esc(contact):'')+'</small></span><strong>'+esc(status)+'</strong></'+tag+'>';}).join('')||'<div class="table-person-empty">No matching people.</div>';
+  results.innerHTML=matches.map(person=>{const group=tableSearchGroup(person),table=tables.find(item=>item.id===(group?.tableId||person.tableId)),names=group?.people?.length?group.people.join(' + '):person.name,contact=[person.email,person.phone,person.guestOf?'Guest of '+person.guestOf:''].filter(Boolean).join(' | ')||person.type||'No contact details',status=person.assignable?(table?.label||'Unassigned'):tableSearchStatus(person.status),tag=person.assignable?'button':'div',attrs=person.assignable?' type="button" data-table-person data-table-id="'+esc(group?.tableId||person.tableId||'')+'" data-rsvp-id="'+esc(person.rsvpId)+'"':'';return '<'+tag+' class="table-person-result"'+attrs+'><span><b>'+esc(person.name||group?.name)+'</b><small>'+esc(names)+(contact?' | '+esc(contact):'')+'</small></span><strong>'+esc(status)+'</strong></'+tag+'>';}).join('')||'<div class="table-person-empty">No matching people.</div>';
   results.querySelectorAll('[data-table-person]').forEach(button=>button.onclick=()=>openTableFromSearch(button.dataset.tableId||null,button.dataset.rsvpId));
 }
 function tableSearchGroup(person){return (tablesData?.groups||[]).find(group=>String(group.rsvpId)===String(person.rsvpId))||null;}
@@ -756,8 +756,8 @@ async function deleteStaffUser(id){
 if(currentView==='scanner')loadList();
 window.__WHISPERS_STAFF_MAIN_READY=true;
 </script>
-    <script defer src="/assets/hall-plan.js?v=20261010-edited"></script>
-    <script defer src="/assets/staff-admin-fallback.js?v=20261010-edited"></script>
+    <script defer src="/assets/hall-plan.js?v=20261010-search3"></script>
+    <script defer src="/assets/staff-admin-fallback.js?v=20261010-search3"></script>
 <script async src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </body>
 </html>`, {

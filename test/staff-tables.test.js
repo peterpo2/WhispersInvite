@@ -22,11 +22,11 @@ test("table search combines invites and members without duplicating linked guest
   });
 
   assert.equal(searchPeople.length, 5);
-  assert.deepEqual(searchPeople.map((person) => person.name), ["Confirmed Name", "Waiting Guest", "Declined Person", "Plus Person", "Added Person"]);
+  assert.deepEqual(searchPeople.map((person) => person.name), ["Old Invite Name", "Waiting Guest", "Declined Person", "Plus Person", "Added Person"]);
   assert.deepEqual(searchPeople[0], {
     id: "guest:11",
     rsvpId: 11,
-    name: "Confirmed Name",
+    name: "Old Invite Name",
     email: "new@example.com",
     phone: "+359 88 300",
     guestOf: "",
@@ -34,7 +34,7 @@ test("table search combines invites and members without duplicating linked guest
     type: "Member",
     tableId: "table-3",
     assignable: true,
-    aliases: ["Old Invite Name", "old@example.com", "+359 88 100"],
+    aliases: ["Confirmed Name", "old@example.com", "+359 88 100"],
   });
   assert.equal(searchPeople[1].status, "not_responded");
   assert.equal(searchPeople[1].assignable, false);
@@ -42,6 +42,19 @@ test("table search combines invites and members without duplicating linked guest
   assert.equal(searchPeople[2].assignable, false);
   assert.equal(searchPeople[3].guestOf, "Confirmed Name");
   assert.equal(searchPeople[4].guestOf, "Confirmed Name");
+});
+
+test("linked admin invites keep their invite name while the RSVP name remains searchable", () => {
+  const [person] = staffTables.buildTableSearchPeople({
+    invites: [{ id: "admin-invite", name: "тест", email: "peterpopov250@gmail.com", phone: "" }],
+    rsvps: [{ id: 31, guest_id: "other-id", guest_name: "Peter Popov", guest_email: "peterpopov250@gmail.com", guest_phone: "+359895787117", status: "attending" }],
+    groups: [{ rsvpId: 31, tableId: null, people: ["Peter Popov"] }],
+  });
+
+  assert.equal(person.name, "тест");
+  assert.equal(person.rsvpId, 31);
+  assert.equal(person.assignable, true);
+  assert.ok(person.aliases.includes("Peter Popov"));
 });
 
 test("minimum spend accepts whole non-negative euro amounts", () => {

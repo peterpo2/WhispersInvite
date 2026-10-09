@@ -257,7 +257,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-edited/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-search3/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -513,6 +513,7 @@ test("tables main search finds people and opens their assigned table", () => {
     assert.match(source, /searchPeople/);
     assert.match(source, /function tableSearchGroup\(/);
     assert.match(source, /group\.people/);
+    assert.match(source, /person\.name\|\|group\?\.name/);
     assert.match(source, /data-table-person/);
     assert.match(source, /tableSearchStatus/);
     assert.match(source, /function openTableFromSearch\(tableId,rsvpId\)/);
