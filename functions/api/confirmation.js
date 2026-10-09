@@ -3,8 +3,8 @@ import { TICKET_RELEASE_AT, buildConfirmationUpdateUrl, buildTicketUrl, confirma
 import { loadRsvpPolicy } from "../_shared/rsvp-settings.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
-const PRIMARY_COLUMNS = "id,guest_id,guest_name,guest_email,guest_phone,status,confirmation_token,ticket_token,plus_one_name,plus_one_email,wants_table_reservation,reservation_confirmed,submitted_at";
-const COMPANION_COLUMNS = "id,rsvp_id,guest_name,confirmation_token,ticket_token,rsvps!inner(id,guest_name,status,wants_table_reservation,reservation_confirmed,submitted_at)";
+const PRIMARY_COLUMNS = "id,guest_id,guest_name,guest_email,guest_phone,status,confirmation_token,ticket_token,plus_one_name,plus_one_email,wants_table_reservation,called,submitted_at";
+const COMPANION_COLUMNS = "id,rsvp_id,guest_name,confirmation_token,ticket_token,rsvps!inner(id,guest_name,status,wants_table_reservation,called,submitted_at)";
 
 export async function onRequestGet({ request, env }) {
   const raw = new URL(request.url).searchParams.get("token");
@@ -75,7 +75,7 @@ async function findPrimaryConfirmation(env, token) {
       brought_by: null,
       companion,
       table_label: null,
-      table_reserved: row.reservation_confirmed === true,
+      table_reserved: row.called === true,
       table_requested: row.wants_table_reservation === true,
       locked: true,
     },
@@ -114,7 +114,7 @@ async function findCompanionConfirmation(env, token) {
       bringing: null,
       brought_by: primary.guest_name,
       table_label: null,
-      table_reserved: primary.reservation_confirmed === true,
+      table_reserved: primary.called === true,
       table_requested: primary.wants_table_reservation === true,
       locked: true,
     },

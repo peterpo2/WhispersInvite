@@ -9,6 +9,7 @@ const hallPlanAsset = readFileSync("assets/hall-plan.js", "utf8");
 const reservationStateApi = readFileSync("functions/api/staff/reservation-state.js", "utf8");
 const doorApi = readFileSync("functions/api/door.js", "utf8");
 const tablesApi = readFileSync("functions/api/staff/tables.js", "utf8");
+const membersApi = readFileSync("functions/api/staff/members.js", "utf8");
 const schema = readFileSync("sql/schema.sql", "utf8");
 const tablesMigrationPath = "sql/2026-10-06-twenty-staff-tables.sql";
 const tablesMigration = existsSync(tablesMigrationPath) ? readFileSync(tablesMigrationPath, "utf8") : "";
@@ -380,11 +381,19 @@ test("members table keeps guests and their added guests together", () => {
   assert.match(staffPage, /\.member-row-companion td/);
 });
 
-test("reservation-state endpoint can update request and confirmed separately", () => {
+test("staff APIs separate RSVP confirmation from the editable called state", () => {
+  assert.match(membersApi, /confirmed: row\.status === "attending"/);
+  assert.match(membersApi, /called: row\.called === true/);
+  assert.match(membersApi, /confirmed: parent\?\.status === "attending"/);
+  assert.match(membersApi, /called: parent\?\.called === true/);
+  assert.match(tablesApi, /confirmed: row\.status === "attending"/);
+  assert.match(tablesApi, /called: row\.called === true/);
   assert.match(reservationStateApi, /wantsTableReservation/);
   assert.match(reservationStateApi, /wants_table_reservation/);
-  assert.match(reservationStateApi, /reservationConfirmed/);
-  assert.match(reservationStateApi, /reservation_confirmed/);
+  assert.match(reservationStateApi, /typeof body\?\.called === "boolean"/);
+  assert.match(reservationStateApi, /patch\.called = body\.called/);
+  assert.match(reservationStateApi, /called: body\.called/);
+  assert.doesNotMatch(reservationStateApi, /reservationConfirmed|reservation_confirmed/);
 });
 
 test("members CSV export is Excel-safe for UTF-8 and formula-like values", () => {

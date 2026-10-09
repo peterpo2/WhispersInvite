@@ -11,3 +11,10 @@ test("confirmation API exposes saved companion details for update mode", () => {
   assert.match(confirmationApi, /email: firstCompanion\.email \|\| ""/);
   assert.match(confirmationApi, /companion,/);
 });
+
+test("confirmation API keeps the existing table-reserved behavior on called", () => {
+  assert.match(confirmationApi, /wants_table_reservation,called,submitted_at/);
+  assert.match(confirmationApi, /table_reserved: row\.called === true/);
+  assert.match(confirmationApi, /table_reserved: primary\.called === true/);
+  assert.doesNotMatch(confirmationApi, /reservation_confirmed/);
+});

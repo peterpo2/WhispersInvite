@@ -701,10 +701,10 @@ test("companion matching detects the same stored +1 before replacing it", () => 
   assert.equal(companionMatchesRsvp({ guest_name: "Maria Nikolova", email: "simona@example.com", email_is_fallback: false }, row), false);
 });
 
-test("confirmed table reservations stay requested during update details", () => {
+test("called table reservations stay requested during update details", () => {
   const row = buildRsvpRow({ guestId: "g1", guestName: "Peter Popov", ...CONTACT, status: "attending", wantsTableReservation: false }, () => TOKEN, FIXED_NOW, FIXED_SEAL);
-  assert.equal(tableReservationForUpdate(row, { wants_table_reservation: true, reservation_confirmed: true }), true);
-  assert.equal(tableReservationForUpdate(row, { wants_table_reservation: true, reservation_confirmed: false }), false);
+  assert.equal(tableReservationForUpdate(row, { wants_table_reservation: true, called: true }), true);
+  assert.equal(tableReservationForUpdate(row, { wants_table_reservation: true, called: false }), false);
 });
 
 test("declining clears the plus-one and their ticket", () => {
@@ -762,13 +762,13 @@ test("the plus-one's token opens their own ticket", () => {
   });
 });
 
-test("assigned tables are only guest-visible after reservation confirmation", () => {
-  const assigned = { ...ROW, table_label: "Table 1", reservation_confirmed: false };
-  const confirmed = { ...ROW, table_label: "Table 1", reservation_confirmed: true };
+test("assigned tables are only guest-visible after staff marks the group called", () => {
+  const assigned = { ...ROW, table_label: "Table 1", called: false };
+  const called = { ...ROW, table_label: "Table 1", called: true };
   assert.equal(ticketForToken(assigned, TOKEN).table_label, null);
   assert.equal(ticketForToken(assigned, TOKEN).table_reserved, false);
-  assert.equal(ticketForToken(confirmed, TOKEN).table_label, null);
-  assert.equal(ticketForToken(confirmed, TOKEN).table_reserved, true);
+  assert.equal(ticketForToken(called, TOKEN).table_label, null);
+  assert.equal(ticketForToken(called, TOKEN).table_reserved, true);
 });
 
 test("unknown tokens and declined replies have no ticket", () => {

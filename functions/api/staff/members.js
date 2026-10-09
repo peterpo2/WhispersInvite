@@ -11,7 +11,7 @@ const RSVP_COLUMNS = [
   "status",
   "submitted_at",
   "wants_table_reservation",
-  "reservation_confirmed",
+  "called",
   "ticket_email_sent_at",
   "checked_in_at",
   "plus_one_name",
@@ -35,7 +35,7 @@ export async function onRequestGet({ request, env }) {
 
   const companions = await supabaseFetch(
     env,
-    "/rest/v1/rsvp_companions?select=id,rsvp_id,guest_name,email,email_is_fallback,phone,ticket_email_sent_at,checked_in_at,rsvps!inner(guest_name,event_key,status,submitted_at,wants_table_reservation,reservation_confirmed)&order=created_at.desc&limit=1000"
+    "/rest/v1/rsvp_companions?select=id,rsvp_id,guest_name,email,email_is_fallback,phone,ticket_email_sent_at,checked_in_at,rsvps!inner(guest_name,event_key,status,submitted_at,wants_table_reservation,called)&order=created_at.desc&limit=1000"
   );
   if (companions.error) return companions.error;
   if (!companions.response.ok) return json({ error: "Could not load members" }, 502);
@@ -59,8 +59,9 @@ export async function onRequestGet({ request, env }) {
       email: row.guest_email || "",
       phone: row.guest_phone || "",
       status: row.status,
+      confirmed: row.status === "attending",
       wantsTableReservation: row.wants_table_reservation === true,
-      reservationConfirmed: row.reservation_confirmed === true,
+      called: row.called === true,
       table,
       ticketEmailSentAt: row.ticket_email_sent_at || null,
       checkedIn: Boolean(row.checked_in_at),
@@ -79,8 +80,9 @@ export async function onRequestGet({ request, env }) {
         emailIsFallback: row.plus_one_email_is_fallback === true,
         phone: row.plus_one_phone || "",
         status: row.status,
+        confirmed: row.status === "attending",
         wantsTableReservation: row.wants_table_reservation === true,
-        reservationConfirmed: row.reservation_confirmed === true,
+        called: row.called === true,
         table,
         ticketEmailSentAt: null,
         checkedIn: Boolean(row.plus_one_checked_in_at),
@@ -104,8 +106,9 @@ export async function onRequestGet({ request, env }) {
       emailIsFallback: row.email_is_fallback === true,
       phone: row.phone || "",
       status: parent?.status || "",
+      confirmed: parent?.status === "attending",
       wantsTableReservation: parent?.wants_table_reservation === true,
-      reservationConfirmed: parent?.reservation_confirmed === true,
+      called: parent?.called === true,
       table: "",
       ticketEmailSentAt: row.ticket_email_sent_at || null,
       checkedIn: Boolean(row.checked_in_at),

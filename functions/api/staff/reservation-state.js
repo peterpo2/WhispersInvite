@@ -17,7 +17,7 @@ export async function onRequestPost({ request, env }) {
   const rsvpId = Number(body?.rsvpId);
   const patch = {};
   if (typeof body?.wantsTableReservation === "boolean") patch.wants_table_reservation = body.wantsTableReservation;
-  if (typeof body?.reservationConfirmed === "boolean") patch.reservation_confirmed = body.reservationConfirmed;
+  if (typeof body?.called === "boolean") patch.called = body.called;
 
   if (!Number.isInteger(rsvpId) || rsvpId <= 0 || !Object.keys(patch).length) {
     return json({ error: "Invalid reservation update" }, 400);
@@ -38,7 +38,7 @@ export async function onRequestPost({ request, env }) {
   return json({
     ok: true,
     wantsTableReservation: body.wantsTableReservation,
-    reservationConfirmed: body.reservationConfirmed,
+    called: body.called,
   });
 }
 

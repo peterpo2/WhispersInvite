@@ -19,3 +19,9 @@ test("ticket API shows ticket links immediately, without the date release gate",
 test("ticket API reveals venue when tickets are manually unlocked", () => {
   assert.match(ticketApi, /publicVenue\(row, new Date\(TICKET_RELEASE_AT\)\)/);
 });
+
+test("ticket API keeps the existing table-reserved behavior on called", () => {
+  assert.match(ticketApi, /plus_one_checked_in_at,called/);
+  assert.match(ticketApi, /wants_table_reservation,called/);
+  assert.doesNotMatch(ticketApi, /reservation_confirmed/);
+});

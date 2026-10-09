@@ -29,7 +29,7 @@ const LOOKUP_COLUMNS = [
   "plus_one_seal_code",
   "plus_one_checked_in_at",
   "wants_table_reservation",
-  "reservation_confirmed",
+  "called",
 ].join(",");
 
 export async function onRequestPost({ request, env, waitUntil }) {

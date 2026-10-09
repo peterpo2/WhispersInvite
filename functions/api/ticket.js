@@ -2,8 +2,8 @@ import { json, methodNotAllowed } from "../_shared/responses.js";
 import { EVENT_KEY, TICKET_RELEASE_AT, buildCheckInUrl, buildInviteUrl, buildTicketUrl, companionTicketForToken, pendingInviteTicket, publicVenue, ticketForToken, tokenFromValue } from "../_shared/rsvp.js";
 import { supabaseFetch } from "../_shared/supabase.js";
 
-const PRIMARY_COLUMNS = "id,guest_name,seal_code,ticket_token,checked_in_at,status,plus_one_name,plus_one_seal_code,plus_one_ticket_token,plus_one_checked_in_at,reservation_confirmed";
-const COMPANION_COLUMNS = "id,rsvp_id,guest_name,seal_code,ticket_token,checked_in_at,rsvps!inner(id,guest_name,status,event_key,wants_table_reservation,reservation_confirmed)";
+const PRIMARY_COLUMNS = "id,guest_name,seal_code,ticket_token,checked_in_at,status,plus_one_name,plus_one_seal_code,plus_one_ticket_token,plus_one_checked_in_at,called";
+const COMPANION_COLUMNS = "id,rsvp_id,guest_name,seal_code,ticket_token,checked_in_at,rsvps!inner(id,guest_name,status,event_key,wants_table_reservation,called)";
 
 export async function onRequestGet({ request, env }) {
   const raw = new URL(request.url).searchParams.get("token");

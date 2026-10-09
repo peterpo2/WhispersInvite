@@ -248,7 +248,7 @@ export function companionMatchesRsvp(existing, row) {
 }
 
 export function tableReservationForUpdate(row, existing) {
-  if (existing?.reservation_confirmed === true && existing?.wants_table_reservation === true) return true;
+  if (existing?.called === true && existing?.wants_table_reservation === true) return true;
   return row?.wants_table_reservation === true;
 }
 
@@ -303,7 +303,7 @@ export function pendingInviteTicket(row, token) {
 export function ticketForToken(row, token, options = {}) {
   if (!row || row.status !== "attending" || !token) return null;
   const released = options.released ?? true;
-  const tableReserved = released && row.reservation_confirmed === true;
+  const tableReserved = released && row.called === true;
   if (row.ticket_token === token) {
     return {
       holder: "guest",
@@ -336,7 +336,7 @@ export function ticketForToken(row, token, options = {}) {
 export function companionTicketForToken(row, primary, token, options = {}) {
   if (!row || !primary || primary.status !== "attending" || row.ticket_token !== token) return null;
   const released = options.released ?? true;
-  const tableReserved = released && primary.reservation_confirmed === true;
+  const tableReserved = released && primary.called === true;
   return {
     holder: "companion",
     guest_name: row.guest_name,

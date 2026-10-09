@@ -98,6 +98,14 @@ test("tables API includes contact details for the main people search", () => {
   assert.match(tables, /phone: row\.guest_phone/);
 });
 
+test("tables API exposes RSVP confirmed and manual called as separate states", () => {
+  const tables = readFileSync("functions/api/staff/tables.js", "utf8");
+  assert.match(tables, /wants_table_reservation,called,status/);
+  assert.match(tables, /confirmed: row\.status === "attending"/);
+  assert.match(tables, /called: row\.called === true/);
+  assert.doesNotMatch(tables, /reservation_confirmed/);
+});
+
 test("tables API returns and updates normalized hall map positions", () => {
   const tables = readFileSync("functions/api/staff/tables.js", "utf8");
   assert.match(tables, /map_x,map_y/);
