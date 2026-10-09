@@ -379,6 +379,7 @@
   }
   for(const setting of Object.keys(RSVP_SETTING_UI)){const ui=RSVP_SETTING_UI[setting],input=byId(ui.input),apply=byId(ui.apply),cancel=byId(ui.cancel);if(input)input.oninput=()=>updateRsvpActionLabel(setting);if(apply)apply.onclick=()=>{const policy=rsvpSettings[setting];if(policy)saveRsvpSetting(setting,!policy.isOpen);};if(cancel)cancel.onclick=()=>cancelRsvpSchedule(setting);}
   function setTicketBulkBusy(busy){["previewTicketBulkSend","sendTicketBulkSend","ticketBulkSendAt"].forEach((id)=>{const el=byId(id);if(el)el.disabled=busy;});}
+  function updateTicketBulkActionLabel(){const input=byId("ticketBulkSendAt"),button=byId("sendTicketBulkSend");if(!button)return;const at=input?.value?new Date(input.value):null;button.textContent=at&&at.getTime()>Date.now()+30000?"Schedule tickets":"Send all tickets";}
   function ticketBulkPayload(dryRun){const scheduledAtLocal=byId("ticketBulkSendAt")?.value||null;return dryRun?{dryRun:true,scheduledAtLocal}:{dryRun:false,scheduledAtLocal};}
   async function callTicketBulkSend(dryRun){return postJson("/api/staff/ticket-bulk-send",ticketBulkPayload(dryRun));}
   async function previewTicketBulkSend(){
@@ -397,6 +398,8 @@
   }
   byId("previewTicketBulkSend")&&(byId("previewTicketBulkSend").onclick=previewTicketBulkSend);
   byId("sendTicketBulkSend")&&(byId("sendTicketBulkSend").onclick=sendTicketBulkSend);
+  byId("ticketBulkSendAt")&&(byId("ticketBulkSendAt").oninput=updateTicketBulkActionLabel);
+  updateTicketBulkActionLabel();
   async function loadTables(){
     const box=byId("tablesView");if(!box)return;
     box.innerHTML='<div class="empty-state">Loading...</div>';

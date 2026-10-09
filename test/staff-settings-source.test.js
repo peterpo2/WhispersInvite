@@ -130,6 +130,8 @@ test("owner settings UI loads, saves and cancels the RSVP schedule", () => {
   assert.match(source, /else if\(currentView==='settings'\)loadSettings\(\)/);
   assert.match(source, /async function previewTicketBulkSend\(\)/);
   assert.match(source, /async function sendTicketBulkSend\(\)/);
+  assert.match(source, /function updateTicketBulkActionLabel\(\)/);
+  assert.match(source, /Schedule tickets/);
   assert.match(source, /\/api\/staff\/ticket-bulk-send/);
   assert.match(source, /ticketBulkSendAt/);
   assert.match(source, /dryRun:true/);

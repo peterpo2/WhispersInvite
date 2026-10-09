@@ -33,7 +33,7 @@ export async function onRequestGet({ request, env }) {
 <div class="settings-control">
 <div class="settings-heading"><div><h2>Ticket emails</h2><p class="small">Send tickets to registered attending guests and added guests with email addresses.</p></div><strong class="settings-status" id="ticketBulkSendStatus">READY</strong></div>
 <label class="settings-field" for="ticketBulkSendAt"><span>Optional send time</span><input id="ticketBulkSendAt" type="datetime-local" aria-describedby="ticketBulkSendTimezone"/></label>
-<p class="small settings-timezone" id="ticketBulkSendTimezone">Date and time use this browser. Leave empty to send now. Scheduled sends require this tab to stay open.</p>
+<p class="small settings-timezone" id="ticketBulkSendTimezone">Leave empty to send now. If you choose a future time, press Schedule tickets and keep this tab open.</p>
 <div class="settings-actions"><button id="previewTicketBulkSend" type="button">Preview</button><button class="primary" id="sendTicketBulkSend" type="button">Send all tickets</button></div>
 <p class="invite-state" id="ticketBulkSendState" aria-live="polite"></p>
 </div>
@@ -651,6 +651,7 @@ async function cancelRsvpSchedule(setting){
 for(const setting of Object.keys(RSVP_SETTING_UI)){const ui=RSVP_SETTING_UI[setting],input=document.getElementById(ui.input),apply=document.getElementById(ui.apply),cancel=document.getElementById(ui.cancel);if(input)input.oninput=()=>updateRsvpActionLabel(setting);if(apply)apply.onclick=()=>{const policy=rsvpSettings[setting];if(policy)saveRsvpSetting(setting,!policy.isOpen);};if(cancel)cancel.onclick=()=>cancelRsvpSchedule(setting);}
 function setTicketBulkState(message,isError){const state=document.getElementById('ticketBulkSendState');if(!state)return;state.className='invite-state'+(isError?' err':'');state.textContent=message||'';}
 function setTicketBulkBusy(busy){for(const id of ['previewTicketBulkSend','sendTicketBulkSend','ticketBulkSendAt']){const el=document.getElementById(id);if(el)el.disabled=busy;}}
+function updateTicketBulkActionLabel(){const input=document.getElementById('ticketBulkSendAt'),button=document.getElementById('sendTicketBulkSend');if(!button)return;const at=input?.value?new Date(input.value):null;button.textContent=at&&at.getTime()>Date.now()+30000?'Schedule tickets':'Send all tickets';}
 function ticketBulkPayload(dryRun){const scheduledAtLocal=document.getElementById('ticketBulkSendAt')?.value||null;return dryRun?{dryRun:true,scheduledAtLocal}:{dryRun:false,scheduledAtLocal};}
 async function callTicketBulkSend(dryRun){
   const res=await fetch('/api/staff/ticket-bulk-send',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(ticketBulkPayload(dryRun))});
@@ -685,6 +686,8 @@ async function sendTicketBulkSend(){
 }
 document.getElementById('previewTicketBulkSend')&&(document.getElementById('previewTicketBulkSend').onclick=previewTicketBulkSend);
 document.getElementById('sendTicketBulkSend')&&(document.getElementById('sendTicketBulkSend').onclick=sendTicketBulkSend);
+document.getElementById('ticketBulkSendAt')&&(document.getElementById('ticketBulkSendAt').oninput=updateTicketBulkActionLabel);
+updateTicketBulkActionLabel();
 async function loadStaffUsers(){
   if(STAFF_USER.role!=='owner')return;
   const state=document.getElementById('staffState'),body=document.querySelector('#staffUsersTable tbody');state.className='invite-state';state.textContent='';body.innerHTML='<tr><td colspan="6">Loading...</td></tr>';
