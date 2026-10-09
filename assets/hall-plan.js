@@ -76,20 +76,39 @@
     const digits=q.replace(/\D/g,'');
     return [g.name].concat(g.people||[]).concat((g.peopleDetails||[]).flatMap(p=>[p.email,p.phone])).some(v=>{const s=String(v||'').toLowerCase();return s.includes(q)||(digits.length>=3&&s.replace(/\D/g,'').includes(digits));});
   }
+  function personMatches(person,q){
+    const digits=q.replace(/\D/g,'');
+    return [person.name,person.email,person.phone,person.guestOf,person.type,person.status].concat(person.aliases||[]).some(v=>{const s=String(v||'').toLowerCase();return s.includes(q)||(digits.length>=3&&s.replace(/\D/g,'').includes(digits));});
+  }
+  function tableSearchStatus(status){return status==='attending'?'Attending':status==='declined'?'Declined':'Invited';}
   function groupRow(g,action,note){
     const contact=(g.peopleDetails||[]).map(p=>[p.email,p.phone].filter(Boolean).join(' · ')).find(Boolean)||'';
     return '<div class="hm-group"><div class="hm-group-main"><b>'+esc(g.name)+'</b>'+(g.reservationConfirmed?'<span class="hm-pill">Reserved</span>':'')
       +(note?'<span class="hm-at">'+esc(note)+'</span>':'')+(contact?'<small>'+esc(contact)+'</small>':'')
       +'<div class="hm-people">'+(g.people||[]).map(p=>'<span class="hm-person">'+esc(p)+'</span>').join('')+'</div></div>'+action+'</div>';
   }
-  // Empty search: groups still waiting for a table. Typing searches every attending group not at this table.
+  function searchPersonRow(person){
+    const table=(tables.find(x=>x.id===person.tableId)||{}).label||'',sameTable=person.tableId===selectedId;
+    const note=person.assignable?(sameTable?'At this table':table?'At '+table:'Unassigned'):tableSearchStatus(person.status);
+    const contact=[person.email,person.phone,person.guestOf?'Guest of '+person.guestOf:''].filter(Boolean).join(' | ');
+    const action=CAN_ASSIGN&&person.assignable&&!sameTable?'<button type="button" class="hm-act primary" data-hm-add="'+esc(person.rsvpId)+'">'+(person.tableId?'Move here':'Add')+'</button>':'';
+    return '<div class="hm-group"><div class="hm-group-main"><b>'+esc(person.name)+'</b><span class="hm-at">'+esc(note)+'</span>'+(contact?'<small>'+esc(contact)+'</small>':'')+'</div>'+action+'</div>';
+  }
+  function searchGroupRow(person){
+    const group=(info.groups||[]).find(item=>String(item.rsvpId)===String(person.rsvpId));
+    if(!group)return searchPersonRow(person);
+    const table=(tables.find(x=>x.id===group.tableId)||{}).label||'',sameTable=group.tableId===selectedId,note=sameTable?'At this table':table?'At '+table:'Unassigned';
+    const action=CAN_ASSIGN&&!sameTable?'<button type="button" class="hm-act primary" data-hm-add="'+esc(group.rsvpId)+'">'+(group.tableId?'Move here':'Add')+'</button>':'';
+    return groupRow(group,action,note);
+  }
+  // Empty search: attending groups waiting for a table. Typing searches the full invite and member registry.
   function renderResults(){
     const box=document.getElementById('hmResults');if(!box)return;
     const q=searchQuery.trim().toLowerCase(),others=(info.groups||[]).filter(g=>g.tableId!==selectedId);
-    const list=q?others.filter(g=>groupMatches(g,q)):others.filter(g=>!g.tableId);
+    const seen=new Set(),list=q?(info.searchPeople||[]).filter(person=>personMatches(person,q)).filter(person=>{const key=person.assignable&&person.rsvpId?'rsvp:'+person.rsvpId:person.id;if(seen.has(key))return false;seen.add(key);return true;}):others.filter(g=>!g.tableId);
     const tableName=id=>(tables.find(x=>x.id===id)||{}).label||'';
     box.innerHTML='<p class="hm-list-label">'+(q?'Matching guests':'Waiting for a table')+'</p>'
-      +(list.slice(0,30).map(g=>groupRow(g,CAN_ASSIGN?'<button type="button" class="hm-act primary" data-hm-add="'+esc(g.rsvpId)+'">'+(g.tableId?'Move here':'Add')+'</button>':'',g.tableId?'At '+tableName(g.tableId):'')).join('')
+      +(list.map(item=>q?(item.assignable?searchGroupRow(item):searchPersonRow(item)):groupRow(item,CAN_ASSIGN?'<button type="button" class="hm-act primary" data-hm-add="'+esc(item.rsvpId)+'">Add</button>':'',item.tableId?'At '+tableName(item.tableId):'')).join('')
       ||'<div class="hm-empty">'+(q?'No matching guests.':'Everyone has a table.')+'</div>');
   }
   function setAssignState(text,err){const el=document.getElementById('hmAssignState');if(el){el.className='hm-state'+(err?' err':'');el.textContent=text;}}

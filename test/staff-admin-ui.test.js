@@ -7,6 +7,7 @@ const staffLoginPage = readFileSync("functions/_shared/staff-login-page.js", "ut
 const staffFallback = readFileSync("assets/staff-admin-fallback.js", "utf8");
 const reservationStateApi = readFileSync("functions/api/staff/reservation-state.js", "utf8");
 const doorApi = readFileSync("functions/api/door.js", "utf8");
+const tablesApi = readFileSync("functions/api/staff/tables.js", "utf8");
 const schema = readFileSync("sql/schema.sql", "utf8");
 const tablesMigrationPath = "sql/2026-10-06-twenty-staff-tables.sql";
 const tablesMigration = existsSync(tablesMigrationPath) ? readFileSync(tablesMigrationPath, "utf8") : "";
@@ -254,7 +255,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261009-scanner1/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261009-search2/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -500,13 +501,30 @@ test("tables main search finds people and opens their assigned table", () => {
   assert.match(staffPage, /id="tablePeopleResults"/);
   for (const source of [staffPage, staffFallback]) {
     assert.match(source, /function renderTablePeopleSearch\(\)/);
-    assert.match(source, /peopleDetails/);
+    assert.match(source, /searchPeople/);
+    assert.match(source, /function tableSearchGroup\(/);
+    assert.match(source, /group\.people/);
     assert.match(source, /data-table-person/);
+    assert.match(source, /tableSearchStatus/);
     assert.match(source, /function openTableFromSearch\(tableId,rsvpId\)/);
     assert.match(source, /data-group-rsvp/);
     assert.match(source, /scrollIntoView/);
     assert.doesNotMatch(source, /matches\.slice\(0,\s*30\)/);
   }
+});
+
+test("tables API supplies one combined invite and member search registry", () => {
+  assert.match(tablesApi, /buildTableSearchPeople/);
+  assert.match(tablesApi, /\/rest\/v1\/guest_list\?select=/);
+  assert.match(tablesApi, /searchPeople/);
+  assert.doesNotMatch(tablesApi, /&status=eq\.attending/);
+});
+
+test("table assignment keeps RSVP groups together without a capacity gate", () => {
+  const assignmentApi = readFileSync("functions/api/staff/table-assignment.js", "utf8");
+  assert.match(assignmentApi, /rsvp_id: rsvpId, table_id: body\.tableId/);
+  assert.doesNotMatch(assignmentApi, /capacity|max(?:imum)?[_A-Z]?capacity|guest_count|group\.size/i);
+  assert.doesNotMatch(tablesApi, /capacity: table\.capacity/);
 });
 
 test("table guest filtering keeps the input focused and searches contact details", () => {

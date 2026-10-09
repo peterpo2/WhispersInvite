@@ -14,6 +14,10 @@ const asset = read("assets/hall-plan.js");
 const staffPage = read("functions/staff/rose-door-10.js");
 const fallback = read("assets/staff-admin-fallback.js");
 
+test("staff page cache-busts the combined MAP search asset", () => {
+  assert.match(staffPage, /hall-plan\.js\?v=20261009-search2/);
+});
+
 function seeds(sql) {
   return [...sql.matchAll(/\('t(\d+)', ([\d.]+), ([\d.]+)\)/g)].map((m) => [Number(m[1]), Number(m[2]), Number(m[3])]);
 }
@@ -179,14 +183,19 @@ test("MAP detail lists the table's guests and lets door+ search, add and remove"
   assert.match(asset, /At this table/);
   assert.match(asset, /id="hmSearch" type="search" placeholder="Search guests by name, email or phone"/);
   assert.match(asset, /function groupMatches\(g,q\)/);
+  assert.match(asset, /info\.searchPeople/);
+  assert.match(asset, /function searchGroupRow\(/);
+  assert.match(asset, /groupRow\(group/);
+  assert.match(asset, /tableSearchStatus/);
   assert.match(asset, /p\.email,p\.phone/);
   assert.match(asset, /const CAN_ASSIGN=CAN_DRAG/);
-  assert.match(asset, /data-hm-add="'\+esc\(g\.rsvpId\)/);
+  assert.match(asset, /data-hm-add="'\+esc\(person\.rsvpId\)/);
   assert.match(asset, /data-hm-remove="'\+esc\(g\.rsvpId\)/);
   assert.match(asset, /'Move here':'Add'/);
   assert.match(asset, /fetch\('\/api\/staff\/table-assignment',\{method:'POST'/);
   assert.match(asset, /JSON\.stringify\(\{rsvpId:Number\(rsvpId\),tableId\}\)/);
   assert.doesNotMatch(read("functions/api/staff/table-assignment.js"), /hall/);
+  assert.doesNotMatch(asset, /list\.slice\(0,30\)/);
   const { HALL_PLAN_STYLE } = await import("../functions/_shared/hall-plan-markup.js");
   assert.match(HALL_PLAN_STYLE, /\.hm \.hm-search\{/);
   assert.match(HALL_PLAN_STYLE, /\.hm \.hm-act\{/);
@@ -204,7 +213,7 @@ test("admin shows a MAP tab right after Tables", () => {
   assert.match(staffPage, /<\/style>\r?\n<style>#view-hallmap:target\{display:block\}main:has\(#view-hallmap:target\) #view-scanner\{display:none\}\$\{HALL_PLAN_STYLE\}<\/style>/);
   assert.match(staffPage, /\$\{renderHallPlanView\(\)\}\r?\n<div class="view" id="view-invite">/);
   assert.match(staffPage, /location\.hash==='#hallmap'\|\|location\.hash==='#view-hallmap'\?'hallmap'/);
-  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261009-draft1"><\/script>/);
+  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261009-search2"><\/script>/);
 });
 
 test("fallback admin knows the MAP view", () => {

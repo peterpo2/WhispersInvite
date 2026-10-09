@@ -1,6 +1,48 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validateHallPositionPayload, validateMinimumSpendPayload, validateTablePositionPayload } from "../functions/_shared/staff-tables.js";
+import * as staffTables from "../functions/_shared/staff-tables.js";
+
+const { validateHallPositionPayload, validateMinimumSpendPayload, validateTablePositionPayload } = staffTables;
+
+test("table search combines invites and members without duplicating linked guests", () => {
+  assert.equal(typeof staffTables.buildTableSearchPeople, "function");
+  const searchPeople = staffTables.buildTableSearchPeople({
+    invites: [
+      { id: "invite-1", name: "Old Invite Name", email: "old@example.com", phone: "+359 88 100" },
+      { id: "invite-2", name: "Waiting Guest", email: "waiting@example.com", phone: "+359 88 200" },
+    ],
+    rsvps: [
+      { id: 11, guest_id: "invite-1", guest_name: "Confirmed Name", guest_email: "new@example.com", guest_phone: "+359 88 300", status: "attending", plus_one_name: "Plus Person", plus_one_email: "plus@example.com", plus_one_phone: "" },
+      { id: 12, guest_id: "direct", guest_name: "Declined Person", guest_email: "declined@example.com", guest_phone: "", status: "declined" },
+    ],
+    companions: [
+      { id: 21, rsvp_id: 11, guest_name: "Added Person", email: "added@example.com", phone: "+359 88 400", status: "attending", guest_of: "Confirmed Name" },
+    ],
+    groups: [{ rsvpId: 11, tableId: "table-3" }],
+  });
+
+  assert.equal(searchPeople.length, 5);
+  assert.deepEqual(searchPeople.map((person) => person.name), ["Confirmed Name", "Waiting Guest", "Declined Person", "Plus Person", "Added Person"]);
+  assert.deepEqual(searchPeople[0], {
+    id: "guest:11",
+    rsvpId: 11,
+    name: "Confirmed Name",
+    email: "new@example.com",
+    phone: "+359 88 300",
+    guestOf: "",
+    status: "attending",
+    type: "Member",
+    tableId: "table-3",
+    assignable: true,
+    aliases: ["Old Invite Name", "old@example.com", "+359 88 100"],
+  });
+  assert.equal(searchPeople[1].status, "not_responded");
+  assert.equal(searchPeople[1].assignable, false);
+  assert.equal(searchPeople[2].status, "declined");
+  assert.equal(searchPeople[2].assignable, false);
+  assert.equal(searchPeople[3].guestOf, "Confirmed Name");
+  assert.equal(searchPeople[4].guestOf, "Confirmed Name");
+});
 
 test("minimum spend accepts whole non-negative euro amounts", () => {
   assert.deepEqual(validateMinimumSpendPayload({ tableId: "table-1", minimumSpendEur: 2500 }), {
