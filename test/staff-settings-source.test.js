@@ -166,6 +166,8 @@ test("ticket bulk send API sends only pending registered ticket emails and recor
   assert.match(source, /postmarkBatchSend/);
   assert.match(source, /markPrimarySent/);
   assert.match(source, /markCompanionSent/);
+  assert.match(source, /id=in\.\(/);
+  assert.doesNotMatch(source, /markPrimarySent\(env, item\.id/);
   assert.match(source, /sentAt/);
   assert.match(source, /skipped/);
   assert.match(source, /failed/);

@@ -62,26 +62,32 @@ export async function onRequestPost({ request, env }) {
   }
 
   const sentAt = new Date().toISOString();
-  let sent = 0;
   const failures = [];
+  const primarySentIds = [];
+  const companionSentIds = [];
   for (let index = 0; index < emails.length; index += 1) {
     const item = emails[index];
     const result = results[index] || {};
     if (Number(result.ErrorCode || 0) === 0) {
-      const marked = item.kind === "primary"
-        ? await markPrimarySent(env, item.id, sentAt)
-        : await markCompanionSent(env, item.id, sentAt);
-      if (marked.error instanceof Response) return marked.error;
-      if (marked.error) {
-        failures.push({ to: item.to, name: item.name, error: marked.error });
+      if (item.kind === "primary") {
+        primarySentIds.push(item.id);
       } else {
-        sent += 1;
+        companionSentIds.push(item.id);
       }
     } else {
       failures.push({ to: item.to, name: item.name, error: result.Message || "Postmark rejected this email" });
     }
   }
 
+  const markedPrimary = await markPrimarySent(env, primarySentIds, sentAt);
+  if (markedPrimary.error instanceof Response) return markedPrimary.error;
+  if (markedPrimary.error) failures.push({ to: "", name: "Primary tickets", error: markedPrimary.error });
+
+  const markedCompanions = await markCompanionSent(env, companionSentIds, sentAt);
+  if (markedCompanions.error instanceof Response) return markedCompanions.error;
+  if (markedCompanions.error) failures.push({ to: "", name: "Added guest tickets", error: markedCompanions.error });
+
+  const sent = primarySentIds.length + companionSentIds.length;
   return json({ ok: true, dryRun: false, sent, failed: failures.length, skipped, failures: failures.slice(0, 20), sentAt });
 }
 
@@ -151,8 +157,9 @@ async function loadPendingTicketEmails({ env, requestUrl, config }) {
   return { items };
 }
 
-async function markPrimarySent(env, id, sentAt) {
-  const result = await supabaseFetch(env, `/rest/v1/rsvps?id=eq.${encodeURIComponent(id)}`, {
+async function markPrimarySent(env, ids, sentAt) {
+  if (!ids.length) return { ok: true };
+  const result = await supabaseFetch(env, `/rest/v1/rsvps?id=in.(${ids.map((id) => encodeURIComponent(id)).join(",")})`, {
     method: "PATCH",
     headers: { Prefer: "return=minimal" },
     body: JSON.stringify({ ticket_email_sent_at: sentAt }),
@@ -162,8 +169,9 @@ async function markPrimarySent(env, id, sentAt) {
   return { ok: true };
 }
 
-async function markCompanionSent(env, id, sentAt) {
-  const result = await supabaseFetch(env, `/rest/v1/rsvp_companions?id=eq.${encodeURIComponent(id)}`, {
+async function markCompanionSent(env, ids, sentAt) {
+  if (!ids.length) return { ok: true };
+  const result = await supabaseFetch(env, `/rest/v1/rsvp_companions?id=in.(${ids.map((id) => encodeURIComponent(id)).join(",")})`, {
     method: "PATCH",
     headers: { Prefer: "return=minimal" },
     body: JSON.stringify({ ticket_email_sent_at: sentAt }),
