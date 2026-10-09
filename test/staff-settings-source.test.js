@@ -158,6 +158,15 @@ test("staff fallback preserves the owner RSVP settings controls", () => {
   assert.match(source, /deliveryIssues/);
 });
 
+test("ticket email status lists stay collapsed until the owner opens them", () => {
+  for (const path of ["functions/staff/rose-door-10.js", "assets/staff-admin-fallback.js"]) {
+    const source = read(path);
+    assert.match(source, /<details class=["']ticket-email-list["']><summary>Postmark delivery issues/);
+    assert.match(source, /<details class=["']ticket-email-list["']><summary>Pending in database/);
+    assert.doesNotMatch(source, /<details class=["']ticket-email-list["'] open/);
+  }
+});
+
 test("ticket bulk send API sends only pending registered ticket emails and records successes", () => {
   const source = read("functions/api/staff/ticket-bulk-send.js");
   assert.match(source, /requireStaff\(request, env, "owner"\)/);
