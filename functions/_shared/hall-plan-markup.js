@@ -12,6 +12,7 @@ export const HALL_PLAN_STYLE = `@font-face{font-family:"HM Cormorant";src:url("/
 .hm .hm-hint{margin:0;font-size:11px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;color:var(--parch-dim)}
 .hm .hm-legend-toggle{min-height:44px;padding:0 18px;font:400 11px var(--fm);letter-spacing:.22em;text-transform:uppercase;border:1px solid var(--brass-dim);border-radius:0;background:transparent;color:var(--brass)}
 .hm .hm-legend-toggle[aria-expanded="true"]{background:var(--brass);border-color:var(--brass);color:var(--ink)}
+.hm .hm-tools{display:flex;gap:8px;align-items:center}.hm .hm-tools button{min-height:44px;padding:0 14px;font:400 10.5px var(--fm);letter-spacing:.16em;text-transform:uppercase;border:1px solid var(--brass-dim);border-radius:0;background:transparent;color:var(--parch)}.hm .hm-tools button:disabled{opacity:.4}.hm .hm-tools[hidden]{display:none}
 .hm .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(20px,3vw,34px);align-items:start}
 .hm .cols.hm-legend-open{grid-template-columns:minmax(0,1.62fr) minmax(0,1fr)}
 @media (max-width:860px){.hm .cols.hm-legend-open{grid-template-columns:1fr}}
@@ -109,6 +110,7 @@ export const HALL_PLAN_STYLE = `@font-face{font-family:"HM Cormorant";src:url("/
 .hm .hm-detail-head p{margin:6px 0 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--parch-dim)}
 .hm .hm-close{flex:0 0 44px;min-height:44px;width:44px;padding:0;font:300 28px/1 var(--fd);letter-spacing:0;text-transform:none;border:1px solid var(--brass-dim);border-radius:0;background:transparent;color:var(--parch)}
 .hm .hm-facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 12px;font-size:12.5px;color:var(--brass)}
+.hm .hm-spend{display:grid;grid-template-columns:1fr auto;gap:8px;margin:0 0 12px}.hm .hm-spend input{min-width:0;min-height:44px;padding:0 12px;font:400 15px var(--fm);letter-spacing:0;text-transform:none;border:1px solid var(--brass-dim);border-radius:0;background:var(--ink);color:var(--parch)}.hm .hm-spend button{min-height:44px;padding:0 14px;font:400 10.5px var(--fm);letter-spacing:.16em;text-transform:uppercase;border:1px solid var(--brass);border-radius:0;background:var(--brass);color:var(--ink)}
 .hm .hm-place{display:block;width:100%;min-height:46px;margin:0 0 12px;padding:0 16px;font:400 11px var(--fm);letter-spacing:.22em;text-transform:uppercase;border:1px solid var(--brass);border-radius:0;background:var(--brass);color:var(--ink);cursor:pointer}
 .hm .hm-group{border-top:1px solid #241F17;padding:10px 0;font-size:12.5px}
 .hm .hm-group b{font-family:var(--fd);font-weight:400;font-size:19px;color:var(--parch)}
@@ -275,7 +277,7 @@ export function renderHallPlanView() {
   return `<div class="view" id="view-hallmap">
 <section class="hm" id="hallPlan">
 <div class="sheet">
-<div class="hm-bar"><p class="hm-hint" id="hmHint">Tap a table for details</p><button type="button" class="hm-legend-toggle" id="hmLegendToggle" aria-expanded="false" aria-controls="hmLegend">Legend</button></div>
+<div class="hm-bar"><p class="hm-hint" id="hmHint">Tap a table for details</p><div class="hm-tools" id="hmTools"><button type="button" id="hmUndo" disabled>Undo</button><button type="button" id="hmSave" disabled>Save</button><button type="button" class="hm-legend-toggle" id="hmLegendToggle" aria-expanded="false" aria-controls="hmLegend">Legend</button></div></div>
 <div class="cols" id="hmCols">
 <div class="hm-left">
 <div class="draw" id="hmFrame"><svg id="hmPlan" viewBox="-56 -52 849 895" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Scaled floor plan of the Hotel Juno garage level. Tap a table for details.">

@@ -120,8 +120,8 @@ test("MAP asset drags with pointer events and saves to its own API", () => {
   assert.match(asset, /addEventListener\('pointercancel'/);
   assert.match(asset, /getScreenCTM\(\)\.inverse\(\)/);
   assert.match(asset, /fetch\('\/api\/staff\/hall-map',\{method:'PATCH'/);
-  assert.match(asset, /JSON\.stringify\(\{tableId:t\.id,hallX:t\.hallX,hallY:t\.hallY\}\)/);
-  assert.doesNotMatch(asset, /\/api\/staff\/tables',\{method:'PATCH'|mapX|mapY/);
+  assert.match(asset, /JSON\.stringify\(\{tableId:entry\.id,hallX:entry\.position\.x,hallY:entry\.position\.y\}\)/);
+  assert.doesNotMatch(asset, /mapX|mapY/);
   assert.match(asset, /const CAN_DRAG=\['owner','admin','door'\]\.includes\(app\.dataset\.staffRole\)/);
   assert.match(asset, /if\(CAN_DRAG\)root\.classList\.add\('hm-drag'\)/);
 });
@@ -144,7 +144,7 @@ test("MAP asset loads when its view becomes active", () => {
 
 test("MAP polish: hint, hover, selection, detail motion, saved fade", async () => {
   const { HALL_PLAN_STYLE, renderHallPlanView } = await import("../functions/_shared/hall-plan-markup.js");
-  assert.match(renderHallPlanView(), /<div class="hm-bar"><p class="hm-hint" id="hmHint">Tap a table for details<\/p><button type="button" class="hm-legend-toggle"/);
+  assert.match(renderHallPlanView(), /<div class="hm-bar"><p class="hm-hint" id="hmHint">Tap a table for details<\/p><div class="hm-tools"/);
   assert.match(asset, /hint\.textContent=CAN_DRAG\?'Drag a table to move it · tap for details':'Tap a table for details'/);
   assert.match(asset, /setTimeout\(\(\)=>\{if\(state\.textContent==='Saved\.'\)setState\(''\);\},2000\)/);
   assert.match(HALL_PLAN_STYLE, /@media \(hover:hover\)\{\.hm \.hm-t:hover \.t\{stroke:var\(--parch\)\}/);
@@ -169,7 +169,7 @@ test("MAP stops a dragged table before its top overlaps another table", () => {
 test("MAP lets owner, admin and door place off-plan tables on the map", async () => {
   assert.match(asset, /CAN_DRAG&&!placed\(t\)\?'<button type="button" class="hm-place" id="hmPlace">Place on map<\/button>':''/);
   assert.match(asset, /function freeSpot\(\)/);
-  assert.match(asset, /async function placeOnMap\(t\)/);
+  assert.match(asset, /function placeOnMap\(t\)/);
   assert.match(asset, /if\(e\.target\.closest\('#hmPlace'\)\)/);
   const { HALL_PLAN_STYLE } = await import("../functions/_shared/hall-plan-markup.js");
   assert.match(HALL_PLAN_STYLE, /\.hm \.hm-place\{/);
@@ -204,7 +204,7 @@ test("admin shows a MAP tab right after Tables", () => {
   assert.match(staffPage, /<\/style>\r?\n<style>#view-hallmap:target\{display:block\}main:has\(#view-hallmap:target\) #view-scanner\{display:none\}\$\{HALL_PLAN_STYLE\}<\/style>/);
   assert.match(staffPage, /\$\{renderHallPlanView\(\)\}\r?\n<div class="view" id="view-invite">/);
   assert.match(staffPage, /location\.hash==='#hallmap'\|\|location\.hash==='#view-hallmap'\?'hallmap'/);
-  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261008-map5"><\/script>/);
+  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261009-draft1"><\/script>/);
 });
 
 test("fallback admin knows the MAP view", () => {
@@ -214,4 +214,17 @@ test("fallback admin knows the MAP view", () => {
 test("Tables and Show map are untouched by MAP", () => {
   assert.match(staffPage, /id="toggleHallMap" type="button">Open map/);
   assert.doesNotMatch(staffPage.slice(staffPage.indexOf('<div class="view" id="view-tables">'), staffPage.indexOf('<div class="view" id="view-invite">')), /hm-|hallPlan|view-hallmap/);
+});
+
+test("MAP stages table moves and edits minimum spend", async () => {
+  const { renderHallPlanView } = await import("../functions/_shared/hall-plan-markup.js");
+  const markup = renderHallPlanView();
+  assert.match(markup, /id="hmUndo"/);
+  assert.match(markup, /id="hmSave"/);
+  assert.match(asset, /WhispersMapDraft\.create/);
+  assert.match(asset, /registry\.register\('hall-map'/);
+  assert.match(asset, /async function saveDrafts/);
+  assert.match(asset, /id="hmMinimumSpend"/);
+  assert.match(asset, /\/api\/staff\/tables/);
+  assert.match(asset, /minimumSpendEur/);
 });

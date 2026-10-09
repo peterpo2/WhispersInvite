@@ -8,8 +8,9 @@
   const PRINT_SIZE=2400;
   const allowed={owner:["scanner","members","tables","invite","menu","staff","settings","hallmap"],admin:["scanner","members","tables","invite","menu","hallmap"],door:["scanner","members","tables","invite","menu","hallmap"],service:["tables","hallmap"]}[role]||["scanner"];
   const PAGE_SIZE=20;
-  let members=[],membersPage=1,invites=[],invitesPage=1,inviteEditId="",staffUsers=[],rsvpSettings={confirmation:null,updates:null},tablesData={tables:[],groups:[]},selectedTableId=null,tableSearch="",tablePeopleSearch="",tableSpendNotice=null,hallMapOpen=false,mapDrag=null,stream=null,loop=null,ctx=null,currentView="";
+  let members=[],membersPage=1,invites=[],invitesPage=1,inviteEditId="",staffUsers=[],rsvpSettings={confirmation:null,updates:null},tablesData={tables:[],groups:[]},selectedTableId=null,tableSearch="",tablePeopleSearch="",tableSpendNotice=null,hallMapOpen=false,mapDrag=null,unassignedExpanded=matchMedia("(min-width: 760px)").matches,stream=null,loop=null,ctx=null,currentView="";
   const MAP_DRAG_THRESHOLD=6;
+  const tableMapDraft=window.WhispersMapDraft.create({historyLimit:5}),mapDraftRegistry=window.WhispersMapDraft.registry;
   const RSVP_SETTING_UI={confirmation:{status:"confirmationSettingsStatus",scheduled:"confirmationScheduledChange",input:"confirmationChangeAt",apply:"applyConfirmationSetting",cancel:"cancelConfirmationSchedule",state:"confirmationSettingsState"},updates:{status:"updatesSettingsStatus",scheduled:"updatesScheduledChange",input:"updatesChangeAt",apply:"applyUpdatesSetting",cancel:"cancelUpdatesSchedule",state:"updatesSettingsState"}};
   const esc=(s)=>String(s??"").replace(/[&<>'"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
   const viewFromHash=()=>location.hash==="#view-members"||location.hash==="#members"?"members":location.hash==="#view-tables"||location.hash==="#tables"?"tables":location.hash==="#view-invite"||location.hash==="#invite"?"invite":location.hash==="#view-menu"||location.hash==="#menu"?"menu":location.hash==="#view-staff"||location.hash==="#staff"?"staff":location.hash==="#view-settings"||location.hash==="#settings"?"settings":location.hash==="#view-hallmap"||location.hash==="#hallmap"?"hallmap":location.hash==="#view-scanner"||location.hash==="#scanner"?"scanner":allowed[0]||"scanner";
@@ -36,6 +37,8 @@
     history.replaceState(null,"","#view-tables");setView("tables");
     requestAnimationFrame(()=>byId("view-tables")?.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}));
   }
+  function askUnsaved(){return new Promise((resolve)=>{const modal=byId("unsavedModal");modal.hidden=false;const finish=(value)=>{modal.hidden=true;resolve(value);};byId("unsavedSave").onclick=()=>finish("save");byId("unsavedDiscard").onclick=()=>finish("discard");byId("unsavedCancel").onclick=()=>finish("cancel");});}
+  async function guardMapChanges(action){if(!mapDraftRegistry.hasChanges()){await action();return true;}const choice=await askUnsaved();if(choice==="cancel")return false;if(choice==="save"&&!await mapDraftRegistry.saveAll())return false;if(choice==="discard")mapDraftRegistry.discardAll();await action();return true;}
   async function getJson(url){
     const res=await fetch(url,{headers:{"Accept":"application/json"}});
     const data=await res.json().catch(()=>({}));
@@ -370,26 +373,28 @@
   async function loadTables(){
     const box=byId("tablesView");if(!box)return;
     box.innerHTML='<div class="empty-state">Loading...</div>';
-    try{tablesData=await getJson("/api/staff/tables");renderHallMap();renderTables();renderTablePeopleSearch();}
+    try{tablesData=await getJson("/api/staff/tables");if(tableMapDraft.hasChanges()){for(const table of tablesData.tables||[]){const p=tableMapDraft.position(table.id);table.mapX=p.x;table.mapY=p.y;}}else tableMapDraft.load((tablesData.tables||[]).map((table)=>({id:table.id,position:{x:table.mapX,y:table.mapY}})));renderHallMap();renderTables();renderTablePeopleSearch();}
     catch(_){box.innerHTML='<div class="empty-state">Could not load tables.</div>';}
   }
   function tableNumber(table){return String(table.sortOrder||table.label||"").replace(/\D/g,"")||table.label;}
   function renderHallMap(){
     const button=byId("toggleHallMap"),shell=byId("hallMapShell"),map=byId("hallMap");if(!button||!shell||!map)return;
-    button.textContent=hallMapOpen?"Close map":"Open map";shell.hidden=!hallMapOpen;if(!hallMapOpen)return;
+    button.textContent=hallMapOpen?"Close map":"Open map";shell.hidden=!hallMapOpen;const undo=byId("undoHallMap"),save=byId("saveHallMap");if(undo)undo.disabled=!tableMapDraft.canUndo();if(save)save.disabled=!tableMapDraft.hasChanges();if(!hallMapOpen)return;
     map.innerHTML=(tablesData.tables||[]).map((t)=>'<button type="button" class="map-table '+(selectedTableId===t.id?"active":"")+'" data-map-table="'+esc(t.id)+'" style="left:'+Number(t.mapX??50)+'%;top:'+Number(t.mapY??50)+'%" aria-label="'+esc(t.label)+'">'+esc(tableNumber(t))+"</button>").join("");
     qsa("[data-map-table]",map).forEach(bindMapTable);
   }
   function bindMapTable(el){
     if(tablesReadOnly){el.onclick=()=>openTableFromMap(el.dataset.mapTable);return;}
-    el.addEventListener("pointerdown",(e)=>{if(e.button!==undefined&&e.button!==0)return;e.preventDefault();el.setPointerCapture(e.pointerId);mapDrag={pointerId:e.pointerId,tableId:el.dataset.mapTable,startX:e.clientX,startY:e.clientY,dragged:false,el};});
+    el.addEventListener("pointerdown",(e)=>{if(e.button!==undefined&&e.button!==0)return;e.preventDefault();const table=(tablesData.tables||[]).find((t)=>t.id===el.dataset.mapTable);el.setPointerCapture(e.pointerId);mapDrag={pointerId:e.pointerId,tableId:el.dataset.mapTable,startX:e.clientX,startY:e.clientY,start:{x:table?.mapX??50,y:table?.mapY??50},dragged:false,el};});
     el.addEventListener("pointermove",(e)=>{if(!mapDrag||mapDrag.pointerId!==e.pointerId||mapDrag.el!==el)return;if(!mapDrag.dragged&&Math.hypot(e.clientX-mapDrag.startX,e.clientY-mapDrag.startY)<MAP_DRAG_THRESHOLD)return;mapDrag.dragged=true;el.classList.add("dragging");const map=byId("hallMap"),rect=map.getBoundingClientRect(),padX=el.offsetWidth/2/rect.width*100,padY=el.offsetHeight/2/rect.height*100,mapX=Math.max(padX,Math.min(100-padX,(e.clientX-rect.left)/rect.width*100)),mapY=Math.max(padY,Math.min(100-padY,(e.clientY-rect.top)/rect.height*100));el.style.left=mapX+"%";el.style.top=mapY+"%";const table=(tablesData.tables||[]).find((t)=>t.id===mapDrag.tableId);if(table){table.mapX=Math.round(mapX*100)/100;table.mapY=Math.round(mapY*100)/100;}});
-    el.addEventListener("pointerup",(e)=>{if(!mapDrag||mapDrag.pointerId!==e.pointerId||mapDrag.el!==el)return;const drag=mapDrag;mapDrag=null;el.classList.remove("dragging");if(el.hasPointerCapture(e.pointerId))el.releasePointerCapture(e.pointerId);if(drag.dragged){const table=(tablesData.tables||[]).find((t)=>t.id===drag.tableId);if(table)saveTablePosition(table.id,table.mapX,table.mapY);}else openTableFromMap(drag.tableId);});
-    el.addEventListener("pointercancel",(e)=>{if(mapDrag&&mapDrag.pointerId===e.pointerId&&mapDrag.el===el){mapDrag=null;el.classList.remove("dragging");}});
+    el.addEventListener("pointerup",(e)=>{if(!mapDrag||mapDrag.pointerId!==e.pointerId||mapDrag.el!==el)return;const drag=mapDrag;mapDrag=null;el.classList.remove("dragging");if(el.hasPointerCapture(e.pointerId))el.releasePointerCapture(e.pointerId);if(drag.dragged){const table=(tablesData.tables||[]).find((t)=>t.id===drag.tableId);if(table)tableMapDraft.move(table.id,{x:table.mapX,y:table.mapY});renderHallMap();}else openTableFromMap(drag.tableId);});
+    el.addEventListener("pointercancel",(e)=>{if(mapDrag&&mapDrag.pointerId===e.pointerId&&mapDrag.el===el){const table=(tablesData.tables||[]).find((t)=>t.id===mapDrag.tableId);if(table){table.mapX=mapDrag.start.x;table.mapY=mapDrag.start.y;}mapDrag=null;renderHallMap();}});
   }
-  async function saveTablePosition(tableId,mapX,mapY){
-    setNotice("hallMapState","Saving...",false);try{const data=await postJson("/api/staff/tables",{tableId,mapX,mapY},"PATCH"),table=(tablesData.tables||[]).find((t)=>t.id===tableId);if(table){table.mapX=data.mapX;table.mapY=data.mapY;}setNotice("hallMapState","Saved.",false);}catch(err){setNotice("hallMapState",err.message||"Could not save table position.",true);}
-  }
+  function applyTableMapPosition(entry){const table=(tablesData.tables||[]).find((t)=>String(t.id)===String(entry.id));if(table){table.mapX=entry.position.x;table.mapY=entry.position.y;}}
+  function undoTableMap(){const entry=tableMapDraft.undo();if(entry){applyTableMapPosition(entry);renderHallMap();}}
+  async function saveTableMapDrafts(){setNotice("hallMapState","Saving...",false);for(const entry of tableMapDraft.pending()){try{const data=await postJson("/api/staff/tables",{tableId:entry.id,mapX:entry.position.x,mapY:entry.position.y},"PATCH");tableMapDraft.confirm(entry.id,{x:data.mapX,y:data.mapY});applyTableMapPosition({id:entry.id,position:{x:data.mapX,y:data.mapY}});}catch(err){setNotice("hallMapState",err.message||"Could not save table position.",true);renderHallMap();return false;}}setNotice("hallMapState","Saved.",false);renderHallMap();return true;}
+  function discardTableMapDrafts(){for(const entry of tableMapDraft.discard())applyTableMapPosition(entry);renderHallMap();}
+  mapDraftRegistry.register("tables-map",{isDirty:()=>tableMapDraft.hasChanges(),save:saveTableMapDrafts,discard:discardTableMapDrafts});
   function openTableFromMap(tableId){hallMapOpen=false;selectedTableId=tableId;tableSpendNotice=null;renderHallMap();renderTables();requestAnimationFrame(()=>byId("selectedTableDetail")?.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}));}
   function renderTablePeopleSearch(){
     const input=byId("tablePeopleSearch"),results=byId("tablePeopleResults");if(!input||!results)return;tablePeopleSearch=input.value;const query=tablePeopleSearch.trim().toLowerCase();results.hidden=!query;if(!query){results.innerHTML="";return;}
@@ -398,7 +403,7 @@
     qsa("[data-table-person]",results).forEach((button)=>button.onclick=()=>openTableFromSearch(button.dataset.tableId||null,button.dataset.rsvpId));
   }
   function openTableFromSearch(tableId,rsvpId){
-    hallMapOpen=false;selectedTableId=tableId||null;tableSpendNotice=null;renderHallMap();renderTables();const results=byId("tablePeopleResults");if(results)results.hidden=true;requestAnimationFrame(()=>{const target=qsa("[data-group-rsvp]").find((element)=>element.dataset.groupRsvp===String(rsvpId))||byId("selectedTableDetail");if(!target)return;target.classList.add("search-hit");target.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});setTimeout(()=>target.classList.remove("search-hit"),1400);});
+    if(!tableId)unassignedExpanded=true;hallMapOpen=false;selectedTableId=tableId||null;tableSpendNotice=null;renderHallMap();renderTables();const results=byId("tablePeopleResults");if(results)results.hidden=true;requestAnimationFrame(()=>{const target=qsa("[data-group-rsvp]").find((element)=>element.dataset.groupRsvp===String(rsvpId))||byId("selectedTableDetail");if(!target)return;target.classList.add("search-hit");target.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});setTimeout(()=>target.classList.remove("search-hit"),1400);});
   }
   function renderTables(){
     const box=byId("tablesView");if(!box)return;
@@ -407,8 +412,10 @@
     const current=cards.find((t)=>(t.id||null)===selectedTableId)||cards[0],assigned=groups.filter((g)=>(g.tableId||null)===(current.id||null)),available=groups.filter((g)=>(g.tableId||null)!==(current.id||null)).filter(groupMatchesTableSearch);
     const used=assigned.reduce((sum,g)=>sum+(g.size||0),0);
     const spend=current.id?(tablesReadOnly?minimumSpendReadOnly(current):minimumSpendEditor(current)):"";
-    box.innerHTML='<div class="table-list">'+cards.map((t)=>{const rows=groups.filter((g)=>(g.tableId||null)===(t.id||null)),guests=rows.reduce((sum,g)=>sum+(g.size||0),0),active=(t.id||null)===(current.id||null);return '<button class="table-chip '+(active?"active":"")+'" data-table-id="'+esc(t.id||"")+'"><b>'+esc(t.label)+'</b><small>'+(t.id?guests+" guest"+(guests===1?"":"s")+" · "+formatMinimumSpend(t.minimumSpendEur)+" min":rows.length+" waiting")+"</small></button>";}).join("")+'</div><div class="table-detail" id="selectedTableDetail"><div class="table-detail-head"><div><h2>'+esc(current.label)+'</h2><p class="small">'+(current.id?"Assigned reservation groups":"Attending groups waiting for a table")+'</p></div><div class="guest-count">'+(current.id?used+" guest"+(used===1?"":"s"):"Unassigned")+'</div></div>'+spend+'<div class="table-groups">'+(assigned.map((g)=>groupCard(g,current.id,tables)).join("")||'<div class="empty-state">No groups here.</div>')+'</div>'+(current.id&&!tablesReadOnly?'<div class="table-add"><div class="table-add-head"><h3>Add to '+esc(current.label)+'</h3><input class="table-search" id="tableSearch" placeholder="Search all guests" value="'+esc(tableSearch)+'" autocomplete="off"/></div><div class="available-list">'+(available.map((g)=>groupCard(g,current.id,tables,true)).join("")||'<div class="empty-state">No other reservation groups.</div>')+"</div></div>":"")+"</div>";
-    qsa(".table-chip",box).forEach((b)=>b.onclick=()=>{selectedTableId=b.dataset.tableId||null;tableSpendNotice=null;renderTables();});
+    const unassignedCollapsed=!current.id&&!unassignedExpanded&&!matchMedia("(min-width: 760px)").matches,detailBody=spend+'<div class="table-groups">'+(assigned.map((g)=>groupCard(g,current.id,tables)).join("")||'<div class="empty-state">No groups here.</div>')+'</div>'+(current.id&&!tablesReadOnly?'<div class="table-add"><div class="table-add-head"><h3>Add to '+esc(current.label)+'</h3><input class="table-search" id="tableSearch" placeholder="Search all guests" value="'+esc(tableSearch)+'" autocomplete="off"/></div><div class="available-list">'+(available.map((g)=>groupCard(g,current.id,tables,true)).join("")||'<div class="empty-state">No other reservation groups.</div>')+"</div></div>":"");
+    box.innerHTML='<div class="table-list">'+cards.map((t)=>{const rows=groups.filter((g)=>(g.tableId||null)===(t.id||null)),guests=rows.reduce((sum,g)=>sum+(g.size||0),0),active=(t.id||null)===(current.id||null);return '<button class="table-chip '+(active?"active":"")+'" data-table-id="'+esc(t.id||"")+'"><b>'+esc(t.label)+'</b><small>'+(t.id?guests+" guest"+(guests===1?"":"s")+" · "+formatMinimumSpend(t.minimumSpendEur)+" min":rows.length+" waiting")+"</small></button>";}).join("")+'</div><div class="table-detail '+(unassignedCollapsed?"unassigned-collapsed":"")+'" id="selectedTableDetail"><div class="table-detail-head"><div><h2>'+esc(current.label)+'</h2><p class="small">'+(current.id?"Assigned reservation groups":"Attending groups waiting for a table")+'</p></div><div class="guest-count">'+(current.id?used+" guest"+(used===1?"":"s"):"Unassigned")+'</div></div>'+(!current.id?'<button class="unassigned-toggle" type="button" data-toggle-unassigned aria-expanded="'+String(!unassignedCollapsed)+'">'+(unassignedCollapsed?"Show unassigned":"Hide unassigned")+"</button>":"")+'<div class="table-detail-body">'+detailBody+"</div></div>";
+    qsa(".table-chip",box).forEach((b)=>b.onclick=()=>{selectedTableId=b.dataset.tableId||null;if(!selectedTableId)unassignedExpanded=true;tableSpendNotice=null;renderTables();});
+    const unassignedToggle=box.querySelector("[data-toggle-unassigned]");if(unassignedToggle)unassignedToggle.onclick=()=>{unassignedExpanded=!unassignedExpanded;renderTables();};
     const spendInput=box.querySelector("[data-minimum-spend]"),spendButton=box.querySelector("[data-save-minimum-spend]");if(spendInput&&spendButton){spendButton.onclick=()=>saveMinimumSpend(spendInput);spendInput.onkeydown=(e)=>{if(e.key==="Enter"){e.preventDefault();saveMinimumSpend(spendInput);}};}
     const search=byId("tableSearch");if(search)search.oninput=()=>{tableSearch=search.value;renderTables();};
     qsa("[data-assign]",box).forEach((b)=>b.onclick=()=>assignTable(b.dataset.rsvpId,b.dataset.assign||null));
@@ -438,6 +445,8 @@
   function exportTablesCsv(){const tables=tablesData.tables||[],groups=tablesData.groups||[],tableName=(id)=>{const table=tables.find((t)=>t.id===id);return table?table.label:"Unassigned";};const rows=[["Table","Minimum spend EUR","Guests","Group","People","Reservation requested","Reservation confirmed"]].concat(groups.map((g)=>{const table=tables.find((t)=>t.id===g.tableId),same=groups.filter((x)=>(x.tableId||null)===(g.tableId||null)),used=same.reduce((sum,x)=>sum+(x.size||0),0);return [tableName(g.tableId),table?.minimumSpendEur||0,used,g.name,(g.people||[]).join(" | "),g.wantsTableReservation?"yes":"no",g.reservationConfirmed?"yes":"no"];}));downloadCsv("whispers-tables.csv",rows);}
   byId("exportTables")&&(byId("exportTables").onclick=exportTablesCsv);
   byId("toggleHallMap")&&(byId("toggleHallMap").onclick=()=>{hallMapOpen=!hallMapOpen;setNotice("hallMapState","",false);renderHallMap();if(hallMapOpen)requestAnimationFrame(()=>byId("hallMap")?.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}));});
+  byId("undoHallMap")&&(byId("undoHallMap").onclick=undoTableMap);
+  byId("saveHallMap")&&(byId("saveHallMap").onclick=saveTableMapDrafts);
   byId("tablePeopleSearch")&&(byId("tablePeopleSearch").oninput=renderTablePeopleSearch);
   byId("tablesToTop")&&(byId("tablesToTop").onclick=()=>window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}));
   window.addEventListener("scroll",updateTablesToTop,{passive:true});
@@ -451,7 +460,10 @@
   byId("stop")&&(byId("stop").onclick=stopCamera);
   byId("manualBtn")&&(byId("manualBtn").onclick=()=>scanValue(byId("manual")?.value.trim()||"",true));
   byId("switch")&&(byId("switch").onclick=()=>showScan("warn","Switch unavailable.",scanMessage("Close and reopen the camera if you need another lens.")));
-  qsa(".tab").forEach((tab)=>{if(!allowed.includes(tab.dataset.view))tab.hidden=true;tab.addEventListener("click",(e)=>{if(tab.dataset.view==="tables"){e.preventDefault();openTablesOverview();return;}setTimeout(()=>setView(viewFromHash()),0);});});
+  qsa(".tab").forEach((tab)=>{if(!allowed.includes(tab.dataset.view))tab.hidden=true;tab.addEventListener("click",(e)=>{e.preventDefault();guardMapChanges(()=>{history.replaceState(null,"","#view-"+tab.dataset.view);return tab.dataset.view==="tables"?openTablesOverview():setView(tab.dataset.view);});});});
+  byId("refresh")&&(byId("refresh").onclick=(e)=>{e.preventDefault();guardMapChanges(()=>location.reload());});
+  byId("logout")&&(byId("logout").onclick=(e)=>{e.preventDefault();guardMapChanges(()=>location.assign("/api/staff/logout"));});
+  window.addEventListener("beforeunload",(e)=>{if(mapDraftRegistry.hasChanges()){e.preventDefault();e.returnValue="";}});
   window.addEventListener("hashchange",()=>setView(viewFromHash()));
   setView(viewFromHash());
 })();

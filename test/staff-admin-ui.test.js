@@ -215,8 +215,8 @@ test("staff navigation binds before scanner setup can fail", () => {
   assert.ok(staffPage.indexOf("if(currentView==='scanner')loadList();") < staffPage.indexOf("window.__WHISPERS_STAFF_MAIN_READY=true"));
   assert.match(staffPage, /document\.addEventListener\('click',e=>\{/);
   assert.match(staffPage, /e\.target\.closest\('\.tab\[data-view\]'\)/);
-  assert.match(staffPage, /e\.stopImmediatePropagation\(\);if\(tab\.dataset\.view==='tables'\)/);
-  assert.match(staffPage, /showView\(tab\.dataset\.view\)/);
+  assert.match(staffPage, /e\.stopImmediatePropagation\(\);guardMapChanges/);
+  assert.match(staffPage, /guardMapChanges\(\(\)=>tab\.dataset\.view==='tables'/);
 });
 
 test("staff fallback keeps scanner camera and manual check usable", () => {
@@ -251,7 +251,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261008-settings2/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261009-draft1/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -345,7 +345,7 @@ test("door staff can use operational views without exports or owner actions", ()
   assert.match(staffPage, /door:\['scanner','members','tables','invite','menu','hallmap'\]/);
   assert.match(staffPage, /if\(!allowedViews\.includes\(btn\.dataset\.view\)\)btn\.hidden=true/);
   assert.match(staffPage, /if\(name==='tables'\)loadTables\(\)/);
-  assert.match(staffPage, /if\(currentView==='members'\)loadMembers\(\);else if\(currentView==='tables'\)loadTables\(\)/);
+  assert.match(staffPage, /if\(currentView==='members'\)loadMembers\(\);else if\(currentView==='tables'\)loadTables\(true\)/);
   assert.match(staffPage, /STAFF_USER\.role==='owner'/);
   assert.match(staffPage, /staff\.user\.role === "owner" \? '<th class="invite-owner-actions">Actions<\/th>' : ''/);
   assert.match(staffPage, /const canExport = staff\.user\.role === "owner" \|\| staff\.user\.role === "admin"/);
@@ -431,7 +431,7 @@ test("tables view provides a draggable hall map with tap navigation", () => {
     assert.match(source, /pointermove/);
     assert.match(source, /pointerup/);
     assert.match(source, /setPointerCapture/);
-    assert.match(source, /saveTablePosition/);
+    assert.match(source, /saveTableMapDrafts/);
     assert.match(source, /mapX/);
     assert.match(source, /mapY/);
     assert.match(source, /t\.mapX\?\?50/);
@@ -453,7 +453,7 @@ test("pressing the Tables tab returns to the complete hall overview", () => {
     assert.match(source, /view-tables/);
     assert.match(source, /scrollIntoView/);
   }
-  assert.match(staffPage, /tab\.dataset\.view==='tables'\)\{openTablesOverview\(\);return;\}/);
+  assert.match(staffPage, /tab\.dataset\.view==='tables'\?openTablesOverview\(\):showView/);
   assert.match(staffFallback, /tab\.dataset\.view==="tables"/);
   assert.match(staffFallback, /openTablesOverview\(\)/);
 });
@@ -469,6 +469,37 @@ test("tables main search finds people and opens their assigned table", () => {
     assert.match(source, /function openTableFromSearch\(tableId,rsvpId\)/);
     assert.match(source, /data-group-rsvp/);
     assert.match(source, /scrollIntoView/);
+  }
+});
+
+test("tables map stages moves with undo and explicit save", () => {
+  assert.match(staffPage, /id="undoHallMap"/);
+  assert.match(staffPage, /id="saveHallMap"/);
+  for (const source of [staffPage, staffFallback]) {
+    assert.match(source, /WhispersMapDraft\.create/);
+    assert.match(source, /function undoTableMap/);
+    assert.match(source, /async function saveTableMapDrafts/);
+    assert.match(source, /mapDraftRegistry\.register\(['"]tables-map['"]/);
+  }
+});
+
+test("mobile tables collapse Unassigned until opened or found by search", () => {
+  for (const source of [staffPage, staffFallback]) {
+    assert.match(source, /unassignedExpanded/);
+    assert.match(source, /data-toggle-unassigned/);
+    assert.match(source, /matchMedia\(['"]\(min-width: 760px\)['"]\)/);
+    assert.match(source, /if\(!tableId\)unassignedExpanded=true/);
+  }
+});
+
+test("staff shell protects unsaved map drafts", () => {
+  assert.match(staffPage, /Save and leave/);
+  assert.match(staffPage, /Leave without saving/);
+  assert.match(staffPage, /id="unsavedCancel"/);
+  for (const source of [staffPage, staffFallback]) {
+    assert.match(source, /beforeunload/);
+    assert.match(source, /guardMapChanges/);
+    assert.match(source, /WhispersMapDraft\.registry/);
   }
 });
 
