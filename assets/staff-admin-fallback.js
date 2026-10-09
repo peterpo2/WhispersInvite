@@ -382,9 +382,18 @@
   function updateTicketBulkActionLabel(){const input=byId("ticketBulkSendAt"),button=byId("sendTicketBulkSend");if(!button)return;const at=input?.value?new Date(input.value):null;button.textContent=at&&at.getTime()>Date.now()+30000?"Schedule tickets":"Send all tickets";}
   function ticketBulkPayload(dryRun){const scheduledAtLocal=byId("ticketBulkSendAt")?.value||null;return dryRun?{dryRun:true,scheduledAtLocal}:{dryRun:false,scheduledAtLocal};}
   async function callTicketBulkSend(dryRun){return postJson("/api/staff/ticket-bulk-send",ticketBulkPayload(dryRun));}
+  function renderTicketEmailLists(data){
+    const box=byId("ticketEmailLists");if(!box)return;
+    const pending=data.pendingRecipients||[],issues=data.deliveryIssues||[];
+    const issueRows=issues.map((item)=>'<tr><td>'+esc(item.name||"Guest")+'</td><td>'+esc(item.email)+'</td><td>'+esc(item.type)+'</td><td>'+esc(item.description||"")+'</td><td>'+esc(item.bouncedAt?new Date(item.bouncedAt).toLocaleString():"")+'</td></tr>').join("");
+    const pendingRows=pending.map((item)=>'<tr><td>'+esc(item.name||"Guest")+'</td><td>'+esc(item.email)+'</td><td>'+esc(item.kind==="companion"?"Added guest":"Guest")+'</td></tr>').join("");
+    box.innerHTML=(data.deliveryIssueWarning?'<div class="ticket-email-warning">'+esc(data.deliveryIssueWarning)+'</div>':"")+
+      '<div class="ticket-email-list"><h3>Postmark delivery issues ('+issues.length+')</h3>'+(issueRows?'<div class="grid"><table><thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Reason</th><th>Time</th></tr></thead><tbody>'+issueRows+'</tbody></table></div>':'<div class="ticket-email-empty">No ticket delivery issues found in Postmark.</div>')+"</div>"+
+      '<div class="ticket-email-list"><h3>Pending in database ('+pending.length+')</h3>'+(pendingRows?'<div class="grid"><table><thead><tr><th>Name</th><th>Email</th><th>Type</th></tr></thead><tbody>'+pendingRows+'</tbody></table></div>':'<div class="ticket-email-empty">No pending ticket emails in the database.</div>')+"</div>";
+  }
   async function previewTicketBulkSend(){
     if(role!=="owner"||!byId("previewTicketBulkSend"))return;setTicketBulkBusy(true);setNotice("ticketBulkSendState","Checking pending tickets...",false);
-    try{const data=await callTicketBulkSend(true);setNotice("ticketBulkSendState",data.pending+" pending ticket email"+(data.pending===1?"":"s")+" ("+data.primary+" guests, "+data.companions+" added guests).",false);}catch(err){setNotice("ticketBulkSendState",err.message||"Could not preview ticket emails",true);}
+    try{const data=await callTicketBulkSend(true);renderTicketEmailLists(data);setNotice("ticketBulkSendState",data.pending+" pending ticket email"+(data.pending===1?"":"s")+" ("+data.primary+" guests, "+data.companions+" added guests). Delivery issues: "+(data.deliveryIssues||[]).length+".",false);}catch(err){setNotice("ticketBulkSendState",err.message||"Could not preview ticket emails",true);}
     finally{setTicketBulkBusy(false);}
   }
   let ticketBulkTimer=null;

@@ -108,6 +108,9 @@ test("staff page renders RSVP settings only for the owner", () => {
   assert.match(source, /id="previewTicketBulkSend"/);
   assert.match(source, /id="sendTicketBulkSend"/);
   assert.match(source, /id="ticketBulkSendState"/);
+  assert.match(source, /id="ticketEmailLists"/);
+  assert.match(source, /Postmark delivery issues/);
+  assert.match(source, /Pending in database/);
   assert.match(source, /owner:\['scanner','members','tables','invite','menu','staff','settings','hallmap'\]/);
   assert.doesNotMatch(source, /admin:\[[^\]]*settings/);
   assert.doesNotMatch(source, /door:\[[^\]]*settings/);
@@ -151,6 +154,8 @@ test("staff fallback preserves the owner RSVP settings controls", () => {
   assert.match(source, /previewTicketBulkSend/);
   assert.match(source, /sendTicketBulkSend/);
   assert.match(source, /\/api\/staff\/ticket-bulk-send/);
+  assert.match(source, /renderTicketEmailLists/);
+  assert.match(source, /deliveryIssues/);
 });
 
 test("ticket bulk send API sends only pending registered ticket emails and records successes", () => {
@@ -168,7 +173,18 @@ test("ticket bulk send API sends only pending registered ticket emails and recor
   assert.match(source, /markCompanionSent/);
   assert.match(source, /id=in\.\(/);
   assert.doesNotMatch(source, /markPrimarySent\(env, item\.id/);
+  assert.match(source, /pendingRecipients/);
+  assert.match(source, /deliveryIssues/);
+  assert.match(source, /loadDeliveryIssues/);
   assert.match(source, /sentAt/);
   assert.match(source, /skipped/);
   assert.match(source, /failed/);
+});
+
+test("Postmark helper can load outbound bounces for ticket delivery review", () => {
+  const source = read("functions/_shared/postmark.js");
+  assert.match(source, /export async function postmarkBounces/);
+  assert.match(source, /\/bounces\?/);
+  assert.match(source, /messagestream/);
+  assert.match(source, /outbound/);
 });

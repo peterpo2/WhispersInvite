@@ -1,5 +1,5 @@
 import { buildTicketEmail, emailConfigFromEnv } from "../../_shared/email-content.js";
-import { postmarkBatchSend } from "../../_shared/postmark.js";
+import { postmarkBatchSend, postmarkBounces } from "../../_shared/postmark.js";
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { EVENT_KEY, buildTicketUrl } from "../../_shared/rsvp.js";
 import { requireStaff } from "../../_shared/staff-auth.js";
@@ -37,12 +37,16 @@ export async function onRequestPost({ request, env }) {
   const skipped = { alreadySent: 0, noEmail: 0, noTicket: 0 };
   const emails = pending.items;
   if (dryRun) {
+    const delivery = await loadDeliveryIssues(config);
     return json({
       ok: true,
       dryRun: true,
       pending: emails.length,
       primary: emails.filter((item) => item.kind === "primary").length,
       companions: emails.filter((item) => item.kind === "companion").length,
+      pendingRecipients: emails.map(publicRecipient).slice(0, BATCH_LIMIT),
+      deliveryIssues: delivery.issues,
+      deliveryIssueWarning: delivery.warning,
       skipped,
     });
   }
@@ -89,6 +93,36 @@ export async function onRequestPost({ request, env }) {
 
   const sent = primarySentIds.length + companionSentIds.length;
   return json({ ok: true, dryRun: false, sent, failed: failures.length, skipped, failures: failures.slice(0, 20), sentAt });
+}
+
+function publicRecipient(item) {
+  return {
+    kind: item.kind,
+    name: item.name || "Guest",
+    email: item.to,
+  };
+}
+
+async function loadDeliveryIssues(config) {
+  try {
+    const since = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString().slice(0, 19);
+    const result = await postmarkBounces(config, { fromDate: since, count: 100 });
+    return {
+      issues: result.bounces
+        .filter((bounce) => String(bounce.Subject || "").startsWith("Your WHISPERS Ticket - "))
+        .map((bounce) => ({
+          email: String(bounce.Email || "").toLowerCase(),
+          type: bounce.Type || bounce.Name || "Bounce",
+          name: bounce.Subject ? String(bounce.Subject).replace(/^Your WHISPERS Ticket -\s*/, "") : "",
+          description: bounce.Description || bounce.Details || "",
+          bouncedAt: bounce.BouncedAt || "",
+          inactive: Boolean(bounce.Inactive),
+        })),
+      warning: "",
+    };
+  } catch (error) {
+    return { issues: [], warning: `Could not load Postmark delivery issues: ${String(error?.message || error)}` };
+  }
 }
 
 async function loadPendingTicketEmails({ env, requestUrl, config }) {
