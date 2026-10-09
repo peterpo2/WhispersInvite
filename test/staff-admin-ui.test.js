@@ -497,7 +497,10 @@ test("staff tables persist independent edit dates for both maps", () => {
   assert.match(schema, /table_map_edited_at timestamptz/);
 });
 
-test("tables view provides a draggable hall map with tap navigation", () => {
+test("tables embedded map stays hidden while its implementation remains available", () => {
+  assert.match(staffPage, /<div class="hall-map-toolbar" hidden>/);
+  assert.match(staffPage, /<div class="hall-map-shell" id="hallMapShell" hidden>/);
+  assert.match(staffPage, /\.hall-map-toolbar\[hidden\]\{display:none\}/);
   assert.match(staffPage, /id=["']toggleHallMap["']/);
   assert.match(staffPage, /id=["']hallMap["']/);
   for (const source of [staffPage, staffFallback]) {
@@ -663,6 +666,18 @@ test("tables map permanently marks and dates its own saved positions", () => {
   assert.doesNotMatch(staffPage, /\.map-table\.edited\.active\{[^}]*linear-gradient/);
   for (const source of [staffPage, staffFallback]) {
     assert.match(source, /Could not save table position[\s\S]{0,180}renderHallMap\(\);renderTables\(\);return false/);
+  }
+});
+
+test("saved map status is shared through database-backed reloads", () => {
+  assert.match(tablesApi, /select=id,label,sort_order,minimum_spend_eur,map_x,map_y,table_map_edited_at/);
+  assert.match(tablesApi, /tableMapEditedAt: table\.table_map_edited_at \|\| null/);
+  assert.match(tablesApi, /id=eq\.\$\{encodeURIComponent\(value\.tableId\)\}/);
+  assert.doesNotMatch(tablesApi, /staff\.user|user_id|username/);
+  for (const source of [staffPage, staffFallback]) {
+    assert.match(source, /async function loadTables\(.*\)[\s\S]*\/api\/staff\/tables/);
+    assert.match(source, /tablesData=.*\/api\/staff\/tables|tablesData=data/);
+    assert.match(source, /tableMapEditedAt/);
   }
 });
 

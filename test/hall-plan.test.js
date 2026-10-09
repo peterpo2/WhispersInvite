@@ -239,9 +239,21 @@ test("fallback admin knows the MAP view", () => {
   assert.match(fallback, /location\.hash==="#view-hallmap"\|\|location\.hash==="#hallmap"\?"hallmap"/);
 });
 
-test("Tables and Show map are untouched by MAP", () => {
+test("Tables embedded map is hidden without affecting the dedicated MAP tab", () => {
+  assert.match(staffPage, /<div class="hall-map-toolbar" hidden>/);
   assert.match(staffPage, /id="toggleHallMap" type="button">Open map/);
+  assert.match(staffPage, /<div class="hall-map-shell" id="hallMapShell" hidden>/);
+  assert.match(staffPage, /data-view="hallmap">MAP<\/a>/);
   assert.doesNotMatch(staffPage.slice(staffPage.indexOf('<div class="view" id="view-tables">'), staffPage.indexOf('<div class="view" id="view-invite">')), /hm-|hallPlan|view-hallmap/);
+});
+
+test("dedicated MAP edit markers are loaded from shared persisted table state", () => {
+  assert.match(api, /select=id,label,sort_order,hall_x,hall_y,hall_map_edited_at/);
+  assert.match(api, /hallMapEditedAt: table\.hall_map_edited_at \|\| null/);
+  assert.match(api, /id=eq\.\$\{encodeURIComponent\(position\.tableId\)\}/);
+  assert.doesNotMatch(api, /staff\.user|user_id|username/);
+  assert.match(asset, /fetch\('\/api\/staff\/hall-map'/);
+  assert.match(asset, /t\.hallMapEditedAt\?' hm-edited'/);
 });
 
 test("MAP stages table moves and edits minimum spend", async () => {
