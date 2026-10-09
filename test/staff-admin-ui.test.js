@@ -299,7 +299,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-grouped-rows1/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-confirmed-called1/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -314,20 +314,23 @@ test("staff fallback renders owner invite actions and grouped members without po
   assert.doesNotMatch(staffFallback, /setInterval\(patchStaffTables/);
 });
 
-test("members table edits request, confirmation and check-in through confirmed checkboxes", () => {
+test("members table shows read-only RSVP confirmation and edits request, called and check-in", () => {
   assert.match(staffPage, /data-request-id/);
+  assert.match(staffPage, /data-confirmed-status/);
+  assert.match(staffPage, /disabled[^>]*data-confirmed-status|data-confirmed-status[^>]*disabled/);
+  assert.match(staffPage, /data-called-id/);
   assert.match(staffPage, /function confirmToggle\(cb,message\)/);
   assert.match(staffPage, /window\.confirm\(message\)/);
   assert.match(staffPage, /cb\.checked=!cb\.checked/);
   assert.match(staffPage, /if\(!checkedIn&&!confirmToggle\(cb,'Remove this guest check-in\?'\)\)return;/);
   assert.match(staffPage, /if\(!wantsTableReservation&&!confirmToggle\(cb,'Remove table request for this group\?'\)\)return;/);
-  assert.match(staffPage, /if\(!reservationConfirmed&&!confirmToggle\(cb,'Remove table reservation confirmation\?'\)\)return;/);
+  assert.match(staffPage, /if\(!called&&!confirmToggle\(cb,'Remove called status for this group\?'\)\)return;/);
   assert.doesNotMatch(staffPage, /checkedIn\?'Mark this guest as inside\?':'Remove this guest check-in\?'/);
   assert.doesNotMatch(staffPage, /wantsTableReservation\?'Mark table request for this group\?':'Remove table request for this group\?'/);
-  assert.doesNotMatch(staffPage, /reservationConfirmed\?'Confirm this table reservation\?':'Remove table reservation confirmation\?'/);
   assert.match(staffPage, /toggleRequest\(cb,cb\.dataset\.requestId,cb\.checked\)/);
-  assert.match(staffPage, /toggleReservation\(cb,cb\.dataset\.reservationId,cb\.checked\)/);
+  assert.match(staffPage, /toggleCalled\(cb,cb\.dataset\.calledId,cb\.checked\)/);
   assert.match(staffPage, /toggleMember\(cb,cb\.dataset\.checkinId,cb\.checked\)/);
+  assert.doesNotMatch(staffPage, /reservationConfirmed|reservation_confirmed|data-reservation-id|toggleReservation/);
 });
 
 test("member checkbox updates preserve the current list and scroll position", () => {
@@ -336,7 +339,7 @@ test("member checkbox updates preserve the current list and scroll position", ()
   assert.match(staffPage, /cb\.disabled=true/);
   assert.match(staffPage, /checkedInAt:data\.checkedInAt/);
   assert.match(staffPage, /updateMembersByRsvp\(rsvpId,\{wantsTableReservation\}\)/);
-  assert.match(staffPage, /updateMembersByRsvp\(rsvpId,\{reservationConfirmed\}\)/);
+  assert.match(staffPage, /updateMembersByRsvp\(rsvpId,\{called\}\)/);
   assert.match(staffFallback, /function renderMembersAtCurrentScroll\(\)/);
   assert.match(staffFallback, /function updateMembersByRsvp\(rsvpId,patch\)/);
 });
@@ -354,15 +357,29 @@ test("scanner list shows assigned tables and filters cached scans", () => {
 
 test("members table groups table and door status columns", () => {
   assert.match(staffPage, /<tr class="member-groups">/);
-  assert.match(staffPage, /<th class="member-group" colspan="3">Table<\/th>/);
+  assert.match(staffPage, /<th class="member-group" colspan="4">Table<\/th>/);
   assert.match(staffPage, /<th class="member-group" colspan="2">Door<\/th>/);
-  assert.match(staffPage, /<th class="group-start" data-sort="wantsTableReservation">Request<\/th>/);
+  assert.match(staffPage, /<th class="group-start" data-sort="confirmed">Confirmed<\/th>/);
+  assert.match(staffPage, /<th data-sort="wantsTableReservation">Request<\/th>/);
+  assert.match(staffPage, /<th data-sort="called">Called<\/th>/);
   assert.match(staffPage, /<th class="group-end" data-sort="table">Table<\/th>/);
   assert.match(staffPage, /<th class="group-start" data-sort="checkedIn">In<\/th>/);
   assert.match(staffPage, /<th class="group-end" data-sort="checkedInAt">Scanned<\/th>/);
   assert.match(staffPage, /document\.querySelectorAll\('#membersTable th\[data-sort\]'\)/);
   assert.match(staffPage, /\.member-group\{/);
   assert.match(staffPage, /td\.group-start,th\.group-start/);
+});
+
+test("Tables render confirmed and called as independent polished statuses", () => {
+  assert.match(staffPage, /g\.confirmed\?' <span class="pill status-confirmed">confirmed<\/span>':''/);
+  assert.match(staffPage, /g\.called\?' <span class="pill status-called">called<\/span>':''/);
+  assert.match(staffPage, /data-called-id/);
+  assert.match(staffPage, /<span>Called<\/span>/);
+  assert.match(staffPage, /RSVP confirmed/);
+  assert.match(staffPage, /\.pill\.status-confirmed\{/);
+  assert.match(staffPage, /\.pill\.status-called\{/);
+  assert.doesNotMatch(staffPage, /Reserved|RESERVED|reservationConfirmed/);
+  assert.doesNotMatch(staffFallback, /Reserved|RESERVED|reservationConfirmed/);
 });
 
 test("members table keeps guests and their added guests together", () => {

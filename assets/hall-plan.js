@@ -89,7 +89,9 @@
     return details.map((person,index)=>{const name=index===0?(primaryName||person.name):person.name,contact=[person.email,person.phone].filter(Boolean).join(' · ');return '<div class="hm-person-row"><b>'+esc(name||'Guest')+'</b>'+(contact?'<small>'+esc(contact)+'</small>':'')+'</div>';}).join('');
   }
   function groupRow(g,action,note){
-    return '<div class="hm-group"><div class="hm-group-main"><div class="hm-group-meta">'+(g.reservationConfirmed?'<span class="hm-pill">Reserved</span>':'')
+    return '<div class="hm-group"><div class="hm-group-main"><div class="hm-group-meta">'+(g.confirmed?'<span class="hm-pill status-confirmed">Confirmed</span>':'')
+      +(g.wantsTableReservation?'<span class="hm-pill status-request">Requested table</span>':'')
+      +(g.called?'<span class="hm-pill status-called">Called</span>':'')
       +(note?'<span class="hm-at">'+esc(note)+'</span>':'')+'</div><div class="hm-person-rows">'+groupPeopleRows(g)+'</div></div>'+action+'</div>';
   }
   function searchPersonRow(person){

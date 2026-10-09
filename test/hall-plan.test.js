@@ -16,7 +16,7 @@ const staffPage = read("functions/staff/rose-door-10.js");
 const fallback = read("assets/staff-admin-fallback.js");
 
 test("staff page cache-busts the combined MAP search asset", () => {
-  assert.match(staffPage, /hall-plan\.js\?v=20261010-grouped-rows1/);
+  assert.match(staffPage, /hall-plan\.js\?v=20261010-confirmed-called1/);
 });
 
 function seeds(sql) {
@@ -220,6 +220,15 @@ test("MAP detail lists the table's guests and lets door+ search, add and remove"
   assert.match(HALL_PLAN_STYLE, /\.hm \.hm-person-row\+\.hm-person-row\{/);
 });
 
+test("MAP shows RSVP confirmed and manual called as separate statuses", async () => {
+  assert.match(asset, /g\.confirmed\?'<span class="hm-pill status-confirmed">Confirmed<\/span>':''/);
+  assert.match(asset, /g\.called\?'<span class="hm-pill status-called">Called<\/span>':''/);
+  assert.doesNotMatch(asset, /Reserved|RESERVED|reservationConfirmed/);
+  const { HALL_PLAN_STYLE } = await import("../functions/_shared/hall-plan-markup.js");
+  assert.match(HALL_PLAN_STYLE, /\.hm \.hm-pill\.status-confirmed\{/);
+  assert.match(HALL_PLAN_STYLE, /\.hm \.hm-pill\.status-called\{/);
+});
+
 test("opening MAP keeps the staff tabs in view", () => {
   assert.match(asset, /function toTop\(\)\{requestAnimationFrame\(\(\)=>window\.scrollTo\(0,0\)\);\}/);
   assert.match(asset, /if\(active&&!wasActive\)\{load\(\);toTop\(\);\}/);
@@ -232,7 +241,7 @@ test("admin shows a MAP tab right after Tables", () => {
   assert.match(staffPage, /<\/style>\r?\n<style>#view-hallmap:target\{display:block\}main:has\(#view-hallmap:target\) #view-scanner\{display:none\}\$\{HALL_PLAN_STYLE\}<\/style>/);
   assert.match(staffPage, /\$\{renderHallPlanView\(\)\}\r?\n<div class="view" id="view-invite">/);
   assert.match(staffPage, /location\.hash==='#hallmap'\|\|location\.hash==='#view-hallmap'\?'hallmap'/);
-  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261010-grouped-rows1"><\/script>/);
+  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261010-confirmed-called1"><\/script>/);
 });
 
 test("fallback admin knows the MAP view", () => {
