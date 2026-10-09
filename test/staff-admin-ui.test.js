@@ -16,6 +16,8 @@ const minimumSpendMigrationPath = "sql/2026-10-06-table-minimum-spend.sql";
 const minimumSpendMigration = existsSync(minimumSpendMigrationPath) ? readFileSync(minimumSpendMigrationPath, "utf8") : "";
 const hallMapMigrationPath = "sql/2026-10-06-thirty-five-table-map.sql";
 const hallMapMigration = existsSync(hallMapMigrationPath) ? readFileSync(hallMapMigrationPath, "utf8") : "";
+const fortyFiveTablesMigrationPath = "sql/2026-10-09-forty-five-staff-tables.sql";
+const fortyFiveTablesMigration = existsSync(fortyFiveTablesMigrationPath) ? readFileSync(fortyFiveTablesMigrationPath, "utf8") : "";
 
 test("tables add-to-table panel has a broad guest search", () => {
   assert.match(staffPage, /id="tableSearch"/);
@@ -394,8 +396,10 @@ test("database staff role constraint accepts service", () => {
   assert.match(serviceRoleMigration, /add constraint staff_users_role_check\s+check \(role in \('owner', 'admin', 'door', 'service'\)\)/);
 });
 
-test("staff tables include thirty-five unlimited defaults with a backward-compatible rollout", () => {
+test("staff tables include forty-five unlimited defaults with an idempotent rollout", () => {
   assert.match(schema, /\('t35', 'Table 35', 35, 90, 91\)/);
+  assert.match(schema, /\('t36', 'Table 36', 36, 10, 14\)/);
+  assert.match(schema, /\('t45', 'Table 45', 45, 90, 28\)/);
   assert.match(tablesMigration, /\('t11', 'Table 11', 6, 11\)/);
   assert.match(tablesMigration, /\('t20', 'Table 20', 4, 20\)/);
   assert.match(tablesMigration, /on conflict \(id\) do nothing/);
@@ -405,6 +409,12 @@ test("staff tables include thirty-five unlimited defaults with a backward-compat
   assert.match(hallMapMigration, /\('t35', 'Table 35', 1, 35\)/);
   assert.match(hallMapMigration, /\('t35', 'Table 35', 35\)/);
   assert.match(hallMapMigration, /on conflict \(id\) do nothing/);
+  assert.match(fortyFiveTablesMigration, /insert into public\.staff_tables \(id, label, sort_order, map_x, map_y\)/);
+  assert.match(fortyFiveTablesMigration, /\('t36', 'Table 36', 36, 10, 14\)/);
+  assert.match(fortyFiveTablesMigration, /\('t45', 'Table 45', 45, 90, 28\)/);
+  assert.match(fortyFiveTablesMigration, /on conflict \(id\) do nothing/);
+  assert.doesNotMatch(fortyFiveTablesMigration, /\bupdate\s+public\.staff_tables\b/i);
+  assert.doesNotMatch(fortyFiveTablesMigration, /hall_x|hall_y|minimum_spend_eur|capacity/);
 });
 
 test("staff tables store a non-negative whole-euro minimum spend", () => {
