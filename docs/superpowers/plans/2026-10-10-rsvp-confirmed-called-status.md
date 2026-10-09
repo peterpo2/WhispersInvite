@@ -239,17 +239,11 @@ Stage only the files changed by this feature and commit as `test: guard confirme
 **Files:**
 - No additional source files.
 
-- [ ] **Step 1: Push code commits without deploying the new runtime yet**
-
-Run: `git push origin main`
-
-Expected: remote `main` contains the additive migration and implementation commits.
-
-- [ ] **Step 2: Apply the additive migration to production Supabase**
+- [ ] **Step 1: Apply the additive migration to production Supabase**
 
 Use the existing secure linked-project or Supabase SQL Editor workflow to run `sql/2026-10-10-rsvp-called.sql`. Never print connection secrets.
 
-- [ ] **Step 3: Verify the backfill before deployment**
+- [ ] **Step 2: Verify the backfill before deployment**
 
 Run these read-only checks in Supabase:
 
@@ -263,7 +257,13 @@ from public.rsvps;
 
 Expected: `old_checked = called_checked` and `mismatches = 0`.
 
-- [ ] **Step 4: Deploy Cloudflare Pages**
+- [ ] **Step 3: Merge and push only after the database is ready**
+
+Run: `git push origin main`
+
+Expected: remote `main` contains the migration and implementation commits, with the `called` column already available to the automatic deployment.
+
+- [ ] **Step 4: Deploy Cloudflare Pages explicitly if the automatic deployment is not current**
 
 Run:
 

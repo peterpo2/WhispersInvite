@@ -1,4 +1,5 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
+import { reservationStatePatch } from "../../_shared/reservation-state.js";
 import { EVENT_KEY } from "../../_shared/rsvp.js";
 import { requireStaff } from "../../_shared/staff-auth.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
@@ -15,11 +16,9 @@ export async function onRequestPost({ request, env }) {
   }
 
   const rsvpId = Number(body?.rsvpId);
-  const patch = {};
-  if (typeof body?.wantsTableReservation === "boolean") patch.wants_table_reservation = body.wantsTableReservation;
-  if (typeof body?.called === "boolean") patch.called = body.called;
+  const patch = reservationStatePatch(body);
 
-  if (!Number.isInteger(rsvpId) || rsvpId <= 0 || !Object.keys(patch).length) {
+  if (!Number.isInteger(rsvpId) || rsvpId <= 0 || !patch) {
     return json({ error: "Invalid reservation update" }, 400);
   }
 

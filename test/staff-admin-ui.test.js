@@ -60,6 +60,8 @@ test("called migration preserves every existing manual confirmation", () => {
   assert.match(calledMigration, /set called = reservation_confirmed/i);
   assert.match(calledMigration, /where called is distinct from reservation_confirmed/i);
   assert.match(calledMigration, /if not exists[\s\S]*column_name = 'called'/i);
+  assert.match(calledMigration, /before update of reservation_confirmed on public\.rsvps/i);
+  assert.match(calledMigration, /new\.called := new\.reservation_confirmed/i);
   assert.match(calledMigration, /notify pgrst, 'reload schema'/i);
   assert.match(schema, /called boolean not null default false/i);
 });
@@ -405,10 +407,7 @@ test("staff APIs separate RSVP confirmation from the editable called state", () 
   assert.match(membersApi, /called: parent\?\.called === true/);
   assert.match(tablesApi, /confirmed: row\.status === "attending"/);
   assert.match(tablesApi, /called: row\.called === true/);
-  assert.match(reservationStateApi, /wantsTableReservation/);
-  assert.match(reservationStateApi, /wants_table_reservation/);
-  assert.match(reservationStateApi, /typeof body\?\.called === "boolean"/);
-  assert.match(reservationStateApi, /patch\.called = body\.called/);
+  assert.match(reservationStateApi, /reservationStatePatch\(body\)/);
   assert.match(reservationStateApi, /called: body\.called/);
   assert.doesNotMatch(reservationStateApi, /reservationConfirmed|reservation_confirmed/);
 });
