@@ -96,6 +96,7 @@ test("tables API shares ready state and limits manual changes to owners", () => 
   assert.match(tables, /ready && staff\.user\.role !== "owner"/);
   assert.match(tables, /return json\(\{ error: "Forbidden" \}, 403\)/);
   assert.match(tables, /is_ready: true/);
+  assert.match(tables, /: edited\s*\?/);
   assert.match(tables, /isReady: rows\[0\]\.is_ready === true/);
 });
 

@@ -337,7 +337,7 @@ test("staff fallback keeps the menu QR usable for every staff role", () => {
 });
 
 test("staff fallback renders owner invite actions and grouped members without post-render patching", () => {
-  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-invited-tables1/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-mobile-modal1/);
   assert.match(staffFallback, /function groupMembersForDisplay\(rows,q\)/);
   assert.match(staffFallback, /return groupMembersForDisplay\(members,q\)/);
   assert.match(staffFallback, /m\.holder!=="guest"\?' class="member-row-companion"':""/);
@@ -775,8 +775,8 @@ test("tables map permanently marks and dates its own saved positions", () => {
   }
   assert.match(staffPage, /map-table ['"]\+\(t\.isReady\?['"]edited ['"]:/);
   assert.match(staffPage, /table-chip ['"]\+\(t\.isReady\?["']edited ["']:/);
-  assert.match(staffFallback, /map-table ['"]\+\(t\.tableMapEditedAt\?['"]edited ['"]:/);
-  assert.match(staffFallback, /table-chip ['"]\+\(t\.tableMapEditedAt\?["']edited ["']:/);
+  assert.match(staffFallback, /map-table ['"]\+\(t\.isReady\?["']edited ["']:/);
+  assert.match(staffFallback, /table-chip ['"]\+\(t\.isReady\?["']edited ["']:/);
   assert.match(tablesApi, /edited\.editSurface === "hall"/);
   assert.match(tablesApi, /edited\.editSurface === "tables"/);
   assert.match(tablesApi, /hall_map_edited_at: editedAt/);
@@ -807,8 +807,7 @@ test("mobile tables collapse Unassigned until opened or found by search", () => 
     assert.match(source, /data-toggle-unassigned/);
     assert.match(source, /matchMedia\(['"]\(min-width: 760px\)['"]\)/);
   }
-  assert.match(staffPage, /if\(!selectedTableId\)unassignedExpanded=true/);
-  assert.match(staffFallback, /if\(!tableId\)unassignedExpanded=true/);
+  for (const source of [staffPage, staffFallback]) assert.match(source, /if\(!selectedTableId\)unassignedExpanded=true/);
 });
 
 test("mobile tables open one shared table detail as a closable dialog", () => {
@@ -830,6 +829,24 @@ test("primary tables client exposes owner-only ready control and automatic save"
   assert.match(staffPage, /JSON\.stringify\(\{tableId,isReady:input\.checked\}\)/);
   assert.match(staffPage, /table\.isReady=data\.isReady/);
   assert.match(staffPage, /t\.isReady\?'edited '/);
+});
+
+test("fallback tables client mirrors the mobile dialog and ready controls", () => {
+  assert.match(staffFallback, /role="dialog"/);
+  assert.match(staffFallback, /aria-modal="true"/);
+  assert.match(staffFallback, /data-close-table-modal/);
+  assert.match(staffFallback, /data-table-modal-backdrop/);
+  assert.match(staffFallback, /classList\.toggle\("table-modal-open"/);
+  assert.match(staffFallback, /e\.key==="Escape"/);
+  assert.match(staffFallback, /data-table-ready/);
+  assert.match(staffFallback, /role==="owner"\?"":"disabled"/);
+  assert.match(staffFallback, /async function saveTableReady\(/);
+  assert.match(staffFallback, /t\.isReady\?"edited ":""/);
+});
+
+test("staff shell cache busts both ready-aware client assets together", () => {
+  assert.match(staffPage, /hall-plan\.js\?v=20261010-mobile-modal1/);
+  assert.match(staffPage, /staff-admin-fallback\.js\?v=20261010-mobile-modal1/);
 });
 
 test("staff shell protects unsaved map drafts", () => {

@@ -16,7 +16,7 @@ const staffPage = read("functions/staff/rose-door-10.js");
 const fallback = read("assets/staff-admin-fallback.js");
 
 test("staff page cache-busts the combined MAP search asset", () => {
-  assert.match(staffPage, /hall-plan\.js\?v=20261010-invited-tables1/);
+  assert.match(staffPage, /hall-plan\.js\?v=20261010-mobile-modal1/);
 });
 
 function seeds(sql) {
@@ -56,7 +56,7 @@ test("map edit status migration keeps independent nullable timestamps", () => {
 test("hall map API reads with service and writes with door, only hall columns", () => {
   assert.match(api, /export async function onRequestGet[\s\S]*requireStaff\(request, env, "service"\)/);
   assert.match(api, /export async function onRequestPatch[\s\S]*requireStaff\(request, env, "door"\)/);
-  assert.match(api, /select=id,label,sort_order,hall_x,hall_y,hall_map_edited_at&order=sort_order\.asc/);
+  assert.match(api, /select=id,label,sort_order,hall_x,hall_y,hall_map_edited_at,is_ready&order=sort_order\.asc/);
   assert.match(api, /hallMapEditedAt: table\.hall_map_edited_at \|\| null/);
   assert.match(api, /validateHallPositionPayload\(body\)/);
   assert.match(api, /hall_map_edited_at: editedAt/);
@@ -65,6 +65,13 @@ test("hall map API reads with service and writes with door, only hall columns", 
   assert.doesNotMatch(api, /map_x|map_y|minimum_spend/);
   assert.match(api, /catch \{\s*return json\(\{ error: "Invalid table position" \}, 400\);/);
   assert.match(api, /return json\(\{ error: "Table not found" \}, 404\)/);
+});
+
+test("hall map shares the persisted ready state", () => {
+  assert.match(api, /hall_map_edited_at,is_ready/);
+  assert.match(api, /isReady: table\.is_ready === true/);
+  assert.match(asset, /t\.isReady\?' hm-edited'/);
+  assert.match(asset, /t\.isReady=data\.isReady/);
 });
 
 test("MAP fonts are self-hosted", () => {
@@ -250,7 +257,7 @@ test("admin shows a MAP tab right after Tables", () => {
   assert.match(staffPage, /<\/style>\r?\n<style>#view-hallmap:target\{display:block\}main:has\(#view-hallmap:target\) #view-scanner\{display:none\}\$\{HALL_PLAN_STYLE\}<\/style>/);
   assert.match(staffPage, /\$\{renderHallPlanView\(\)\}\r?\n<div class="view" id="view-invite">/);
   assert.match(staffPage, /location\.hash==='#hallmap'\|\|location\.hash==='#view-hallmap'\?'hallmap'/);
-  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261010-invited-tables1"><\/script>/);
+  assert.match(staffPage, /<script defer src="\/assets\/hall-plan\.js\?v=20261010-mobile-modal1"><\/script>/);
 });
 
 test("fallback admin knows the MAP view", () => {
@@ -266,12 +273,12 @@ test("Tables embedded map is hidden without affecting the dedicated MAP tab", ()
 });
 
 test("dedicated MAP edit markers are loaded from shared persisted table state", () => {
-  assert.match(api, /select=id,label,sort_order,hall_x,hall_y,hall_map_edited_at/);
+  assert.match(api, /select=id,label,sort_order,hall_x,hall_y,hall_map_edited_at,is_ready/);
   assert.match(api, /hallMapEditedAt: table\.hall_map_edited_at \|\| null/);
   assert.match(api, /id=eq\.\$\{encodeURIComponent\(position\.tableId\)\}/);
   assert.doesNotMatch(api, /staff\.user|user_id|username/);
   assert.match(asset, /fetch\('\/api\/staff\/hall-map'/);
-  assert.match(asset, /t\.hallMapEditedAt\?' hm-edited'/);
+  assert.match(asset, /t\.isReady\?' hm-edited'/);
 });
 
 test("MAP stages table moves and edits minimum spend", async () => {
@@ -296,7 +303,7 @@ test("MAP permanently marks and dates tables saved in the dedicated map", async 
   assert.match(asset, /t\.hallMapEditedAt=data\.hallMapEditedAt/);
   assert.match(asset, /id="hmSaveTable"/);
   assert.match(asset, /markEdited:true,editSurface:'hall'/);
-  assert.match(asset, /saveTableStatus[\s\S]*t\.hallMapEditedAt=data\.hallMapEditedAt[\s\S]*renderTables\(\);renderDetail\(\)/);
+  assert.match(asset, /saveTableStatus[\s\S]*t\.hallMapEditedAt=data\.hallMapEditedAt;t\.isReady=data\.isReady[\s\S]*renderTables\(\);renderDetail\(\)/);
   assert.match(asset, /setState\('Saved\.'\);renderTables\(\);renderDetail\(\)/);
   assert.match(HALL_PLAN_STYLE, /\.hm \.hm-t\.hm-edited \.t\{/);
   assert.match(HALL_PLAN_STYLE, /\.hm \.hm-t\.hm-edited \.tn\{/);

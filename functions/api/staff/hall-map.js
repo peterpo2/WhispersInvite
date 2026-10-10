@@ -12,7 +12,7 @@ export async function onRequestGet({ request, env }) {
   const staff = await requireStaff(request, env, "service");
   if (staff.error) return staff.error;
 
-  const tables = await supabaseFetch(env, "/rest/v1/staff_tables?select=id,label,sort_order,hall_x,hall_y,hall_map_edited_at&order=sort_order.asc");
+  const tables = await supabaseFetch(env, "/rest/v1/staff_tables?select=id,label,sort_order,hall_x,hall_y,hall_map_edited_at,is_ready&order=sort_order.asc");
   if (tables.error) return tables.error;
   if (!tables.response.ok) return json({ error: "Could not load map" }, 502);
 
@@ -23,6 +23,7 @@ export async function onRequestGet({ request, env }) {
     hallX: toPosition(table.hall_x),
     hallY: toPosition(table.hall_y),
     hallMapEditedAt: table.hall_map_edited_at || null,
+    isReady: table.is_ready === true,
   }));
   return json({ ok: true, tables: rows });
 }

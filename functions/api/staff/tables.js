@@ -96,13 +96,13 @@ export async function onRequestPatch({ request, env }) {
     ? { map_x: value.mapX, map_y: value.mapY, table_map_edited_at: editedAt }
     : minimumSpend
       ? { minimum_spend_eur: value.minimumSpendEur }
-      : edited.editSurface === "hall"
-        ? { hall_map_edited_at: editedAt, is_ready: true }
-        : edited.editSurface === "tables"
-          ? { table_map_edited_at: editedAt, is_ready: true }
-          : ready
-            ? { is_ready: ready.isReady }
-            : {};
+        : edited
+          ? edited.editSurface === "hall"
+            ? { hall_map_edited_at: editedAt, is_ready: true }
+            : edited.editSurface === "tables"
+              ? { table_map_edited_at: editedAt, is_ready: true }
+              : {}
+          : { is_ready: ready.isReady };
 
   const updated = await supabaseFetch(
     env,
