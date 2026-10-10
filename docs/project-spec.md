@@ -200,6 +200,17 @@ so the placement is preserved without creating a duplicate. If the invite declin
 RSVP later declines, the assignment is removed. Assignments are visible to staff/admin. Guest
 tickets must not reveal the table label.
 
+Each table also stores an independent `is_ready` status. Saving a table from Tables or MAP sets
+it to ready automatically; only an owner can manually check or clear it. The value is persisted in
+`staff_tables`, so every signed-in staff session sees the same green tables after reload. Existing
+tables with a saved Tables or MAP edit are marked ready by the rollout migration.
+
+On desktop, Tables keeps the two-column table list and detail workspace. Below 760px, tapping a
+real table opens that same detail content in a scrollable modal with close, backdrop and Escape
+handling; closing it restores the table list position. Unassigned remains a collapsed inline
+section. The modal includes minimum spend, assigned groups, guest search/actions, Save table and
+the ready status. The ready checkbox is read-only outside the owner role.
+
 ## Routes and Asset Access
 
 The middleware allowlist permits only:
