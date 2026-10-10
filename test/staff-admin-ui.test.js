@@ -767,14 +767,16 @@ test("tables map permanently marks and dates its own saved positions", () => {
   assert.match(tablesApi, /tableMapEditedAt/);
   for (const source of [staffPage, staffFallback]) {
     assert.match(source, /tableMapEditedAt/);
-    assert.match(source, /map-table ['"]\+\(t\.tableMapEditedAt\?['"]edited ['"]:/);
     assert.match(source, /formatTableMapEditedAt/);
     assert.match(source, /Last map edit:/);
     assert.match(source, /table\.tableMapEditedAt=data\.tableMapEditedAt/);
     assert.match(source, /data-save-table-status/);
     assert.match(source, /markEdited:true,editSurface:["']tables["']/);
-    assert.match(source, /table-chip ['"]\+\(t\.tableMapEditedAt\?["']edited ["']:/);
   }
+  assert.match(staffPage, /map-table ['"]\+\(t\.isReady\?['"]edited ['"]:/);
+  assert.match(staffPage, /table-chip ['"]\+\(t\.isReady\?["']edited ["']:/);
+  assert.match(staffFallback, /map-table ['"]\+\(t\.tableMapEditedAt\?['"]edited ['"]:/);
+  assert.match(staffFallback, /table-chip ['"]\+\(t\.tableMapEditedAt\?["']edited ["']:/);
   assert.match(tablesApi, /edited\.editSurface === "hall"/);
   assert.match(tablesApi, /edited\.editSurface === "tables"/);
   assert.match(tablesApi, /hall_map_edited_at: editedAt/);
@@ -804,8 +806,30 @@ test("mobile tables collapse Unassigned until opened or found by search", () => 
     assert.match(source, /unassignedExpanded/);
     assert.match(source, /data-toggle-unassigned/);
     assert.match(source, /matchMedia\(['"]\(min-width: 760px\)['"]\)/);
-    assert.match(source, /if\(!tableId\)unassignedExpanded=true/);
   }
+  assert.match(staffPage, /if\(!selectedTableId\)unassignedExpanded=true/);
+  assert.match(staffFallback, /if\(!tableId\)unassignedExpanded=true/);
+});
+
+test("mobile tables open one shared table detail as a closable dialog", () => {
+  assert.match(staffPage, /role="dialog"/);
+  assert.match(staffPage, /aria-modal="true"/);
+  assert.match(staffPage, /data-close-table-modal/);
+  assert.match(staffPage, /data-table-modal-backdrop/);
+  assert.match(staffPage, /document\.body\.classList\.toggle\('table-modal-open'/);
+  assert.match(staffPage, /e\.key==='Escape'/);
+  assert.match(staffPage, /function openTableDetails\(/);
+  assert.match(staffPage, /@media\(min-width:760px\)\{\.tables-layout/);
+});
+
+test("primary tables client exposes owner-only ready control and automatic save", () => {
+  assert.match(staffPage, /data-table-ready/);
+  assert.match(staffPage, />Table ready</);
+  assert.match(staffPage, /IS_OWNER\?'':'disabled'/);
+  assert.match(staffPage, /async function saveTableReady\(/);
+  assert.match(staffPage, /JSON\.stringify\(\{tableId,isReady:input\.checked\}\)/);
+  assert.match(staffPage, /table\.isReady=data\.isReady/);
+  assert.match(staffPage, /t\.isReady\?'edited '/);
 });
 
 test("staff shell protects unsaved map drafts", () => {
