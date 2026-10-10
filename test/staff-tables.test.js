@@ -2,7 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as staffTables from "../functions/_shared/staff-tables.js";
 
-const { validateHallPositionPayload, validateMinimumSpendPayload, validateTableAssignmentPayload, validateTableEditedPayload, validateTablePositionPayload } = staffTables;
+const { validateHallPositionPayload, validateMinimumSpendPayload, validateTableAssignmentPayload, validateTableEditedPayload, validateTablePositionPayload, validateTableReadyPayload } = staffTables;
+
+test("table ready status accepts only a table ID and boolean", () => {
+  assert.deepEqual(validateTableReadyPayload({ tableId: "t4", isReady: true }), { tableId: "t4", isReady: true });
+  assert.deepEqual(validateTableReadyPayload({ tableId: "t4", isReady: false }), { tableId: "t4", isReady: false });
+  for (const body of [null, [], { tableId: "t4", isReady: "true" }, { tableId: "bad table", isReady: true }]) {
+    assert.equal(validateTableReadyPayload(body), null);
+  }
+});
 
 test("table assignment accepts typed RSVP and invite subjects", () => {
   assert.deepEqual(validateTableAssignmentPayload({ subjectType: "invite", subjectId: "invite-1", tableId: "t4" }), {

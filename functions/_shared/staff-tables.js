@@ -239,6 +239,14 @@ export function validateTableAssignmentPayload(body) {
   return { subjectType: body.subjectType, subjectId, tableId: tableId || null };
 }
 
+export function validateTableReadyPayload(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  if (typeof body.tableId !== "string" || typeof body.isReady !== "boolean") return null;
+  const tableId = body.tableId.trim();
+  if (!TABLE_ID_PATTERN.test(tableId)) return null;
+  return { tableId, isReady: body.isReady };
+}
+
 export function validateMinimumSpendPayload(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) return null;
   if (typeof body.tableId !== "string") return null;

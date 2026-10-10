@@ -58,6 +58,16 @@ const calledMigrationPath = "sql/2026-10-10-rsvp-called.sql";
 const calledMigration = existsSync(calledMigrationPath) ? readFileSync(calledMigrationPath, "utf8") : "";
 const invitedAssignmentsMigrationPath = "sql/2026-10-10-invited-table-assignments.sql";
 const invitedAssignmentsMigration = existsSync(invitedAssignmentsMigrationPath) ? readFileSync(invitedAssignmentsMigrationPath, "utf8") : "";
+const tableReadyMigrationPath = "sql/2026-10-10-table-ready-status.sql";
+const tableReadyMigration = existsSync(tableReadyMigrationPath) ? readFileSync(tableReadyMigrationPath, "utf8") : "";
+
+test("table ready migration preserves previously saved green tables", () => {
+  assert.match(tableReadyMigration, /add column if not exists is_ready boolean not null default false/i);
+  assert.match(tableReadyMigration, /set is_ready = true/i);
+  assert.match(tableReadyMigration, /table_map_edited_at is not null\s+or hall_map_edited_at is not null/i);
+  assert.match(tableReadyMigration, /notify pgrst, 'reload schema'/i);
+  assert.match(schema, /is_ready boolean not null default false/i);
+});
 
 test("called migration preserves every existing manual confirmation", () => {
   assert.match(calledMigration, /add column if not exists called boolean not null default false/i);

@@ -132,6 +132,7 @@ create table if not exists staff_tables (
   hall_y numeric(5,2) check (hall_y between 0 and 100),
   hall_map_edited_at timestamptz,
   table_map_edited_at timestamptz,
+  is_ready boolean not null default false,
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
