@@ -65,6 +65,7 @@ test("table ready migration preserves previously saved green tables", () => {
   assert.match(tableReadyMigration, /add column if not exists is_ready boolean not null default false/i);
   assert.match(tableReadyMigration, /set is_ready = true/i);
   assert.match(tableReadyMigration, /table_map_edited_at is not null\s+or hall_map_edited_at is not null/i);
+  assert.match(tableReadyMigration, /if not exists[\s\S]*information_schema\.columns/i);
   assert.match(tableReadyMigration, /notify pgrst, 'reload schema'/i);
   assert.match(schema, /is_ready boolean not null default false/i);
 });
@@ -818,6 +819,7 @@ test("mobile tables open one shared table detail as a closable dialog", () => {
   assert.match(staffPage, /document\.body\.classList\.toggle\('table-modal-open'/);
   assert.match(staffPage, /e\.key==='Escape'/);
   assert.match(staffPage, /function openTableDetails\(/);
+  assert.match(staffPage, /replacement=document\.querySelector\([^\n]+CSS\.escape\(openerTableId/);
   assert.match(staffPage, /@media\(min-width:760px\)\{\.tables-layout/);
 });
 
