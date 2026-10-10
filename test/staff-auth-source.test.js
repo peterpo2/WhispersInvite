@@ -88,6 +88,17 @@ test("tables API lets service read but requires door to update minimum spend", (
   assert.match(tables, /staff_tables\?id=eq\./);
 });
 
+test("tables API shares ready state and limits manual changes to owners", () => {
+  const tables = readFileSync("functions/api/staff/tables.js", "utf8");
+  assert.match(tables, /is_ready/);
+  assert.match(tables, /isReady: table\.is_ready === true/);
+  assert.match(tables, /validateTableReadyPayload/);
+  assert.match(tables, /ready && staff\.user\.role !== "owner"/);
+  assert.match(tables, /return json\(\{ error: "Forbidden" \}, 403\)/);
+  assert.match(tables, /is_ready: true/);
+  assert.match(tables, /isReady: rows\[0\]\.is_ready === true/);
+});
+
 test("tables API includes contact details for the main people search", () => {
   const tables = readFileSync("functions/api/staff/tables.js", "utf8");
   assert.match(tables, /guest_email/);

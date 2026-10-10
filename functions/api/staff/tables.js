@@ -1,14 +1,14 @@
 import { json, methodNotAllowed } from "../../_shared/responses.js";
 import { EVENT_KEY } from "../../_shared/rsvp.js";
 import { requireStaff } from "../../_shared/staff-auth.js";
-import { buildTableRegistry, validateMinimumSpendPayload, validateTableEditedPayload, validateTablePositionPayload } from "../../_shared/staff-tables.js";
+import { buildTableRegistry, validateMinimumSpendPayload, validateTableEditedPayload, validateTablePositionPayload, validateTableReadyPayload } from "../../_shared/staff-tables.js";
 import { supabaseFetch } from "../../_shared/supabase.js";
 
 export async function onRequestGet({ request, env }) {
   const staff = await requireStaff(request, env, "service");
   if (staff.error) return staff.error;
 
-  const tables = await supabaseFetch(env, "/rest/v1/staff_tables?select=id,label,sort_order,minimum_spend_eur,map_x,map_y,table_map_edited_at&order=sort_order.asc");
+  const tables = await supabaseFetch(env, "/rest/v1/staff_tables?select=id,label,sort_order,minimum_spend_eur,map_x,map_y,table_map_edited_at,is_ready&order=sort_order.asc");
   if (tables.error) return tables.error;
   if (!tables.response.ok) return json({ error: "Could not load tables" }, 502);
 
@@ -60,6 +60,7 @@ export async function onRequestGet({ request, env }) {
     mapX: Number(table.map_x),
     mapY: Number(table.map_y),
     tableMapEditedAt: table.table_map_edited_at || null,
+    isReady: table.is_ready === true,
   }));
 
   const { groups, searchPeople } = buildTableRegistry({
@@ -86,7 +87,9 @@ export async function onRequestPatch({ request, env }) {
   const position = validateTablePositionPayload(body);
   const minimumSpend = position ? null : validateMinimumSpendPayload(body);
   const edited = position || minimumSpend ? null : validateTableEditedPayload(body);
-  const value = position || minimumSpend || edited;
+  const ready = position || minimumSpend || edited ? null : validateTableReadyPayload(body);
+  if (ready && staff.user.role !== "owner") return json({ error: "Forbidden" }, 403);
+  const value = position || minimumSpend || edited || ready;
   if (!value) return json({ error: "Invalid table update" }, 400);
   const editedAt = new Date().toISOString();
   const patch = position
@@ -94,14 +97,16 @@ export async function onRequestPatch({ request, env }) {
     : minimumSpend
       ? { minimum_spend_eur: value.minimumSpendEur }
       : edited.editSurface === "hall"
-        ? { hall_map_edited_at: editedAt }
+        ? { hall_map_edited_at: editedAt, is_ready: true }
         : edited.editSurface === "tables"
-          ? { table_map_edited_at: editedAt }
-          : {};
+          ? { table_map_edited_at: editedAt, is_ready: true }
+          : ready
+            ? { is_ready: ready.isReady }
+            : {};
 
   const updated = await supabaseFetch(
     env,
-    `/rest/v1/staff_tables?id=eq.${encodeURIComponent(value.tableId)}&select=id,minimum_spend_eur,map_x,map_y,table_map_edited_at,hall_map_edited_at`,
+    `/rest/v1/staff_tables?id=eq.${encodeURIComponent(value.tableId)}&select=id,minimum_spend_eur,map_x,map_y,table_map_edited_at,hall_map_edited_at,is_ready`,
     {
       method: "PATCH",
       headers: { Prefer: "return=representation" },
@@ -113,13 +118,14 @@ export async function onRequestPatch({ request, env }) {
 
   const rows = await updated.response.json();
   if (!rows.length) return json({ error: "Table not found" }, 404);
-  if (position) return json({ ok: true, tableId: rows[0].id, mapX: Number(rows[0].map_x), mapY: Number(rows[0].map_y), tableMapEditedAt: rows[0].table_map_edited_at });
+  if (position) return json({ ok: true, tableId: rows[0].id, mapX: Number(rows[0].map_x), mapY: Number(rows[0].map_y), tableMapEditedAt: rows[0].table_map_edited_at, isReady: rows[0].is_ready === true });
   return json({
     ok: true,
     tableId: rows[0].id,
     minimumSpendEur: rows[0].minimum_spend_eur,
     tableMapEditedAt: rows[0].table_map_edited_at,
     hallMapEditedAt: rows[0].hall_map_edited_at,
+    isReady: rows[0].is_ready === true,
   });
 }
 

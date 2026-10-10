@@ -787,10 +787,11 @@ test("tables map permanently marks and dates its own saved positions", () => {
 });
 
 test("saved map status is shared through database-backed reloads", () => {
-  assert.match(tablesApi, /select=id,label,sort_order,minimum_spend_eur,map_x,map_y,table_map_edited_at/);
+  assert.match(tablesApi, /select=id,label,sort_order,minimum_spend_eur,map_x,map_y,table_map_edited_at,is_ready/);
   assert.match(tablesApi, /tableMapEditedAt: table\.table_map_edited_at \|\| null/);
+  assert.match(tablesApi, /isReady: table\.is_ready === true/);
   assert.match(tablesApi, /id=eq\.\$\{encodeURIComponent\(value\.tableId\)\}/);
-  assert.doesNotMatch(tablesApi, /staff\.user|user_id|username/);
+  assert.doesNotMatch(tablesApi, /user_id|username/);
   for (const source of [staffPage, staffFallback]) {
     assert.match(source, /async function loadTables\(.*\)[\s\S]*\/api\/staff\/tables/);
     assert.match(source, /tablesData=.*\/api\/staff\/tables|tablesData=data/);
